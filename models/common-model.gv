@@ -1,0 +1,381 @@
+digraph common_model_diagram {
+
+    ratio="fill";
+    //size="18,11!";
+    //margin=0;
+    node [style=rounded];
+
+    subgraph cluster_0 {
+
+        label="isa";
+
+        "investigation" [shape=record, fontsize=14, label="{investigation|\
+        id [PK]\l\
+        accession_number\l\
+        title \l\
+        description \l\
+        submission_date \l\
+        public_release_date \l\
+        }"]
+
+        "publication" [shape=record, fontsize=14, label="{publication|\
+        id [PK] \l\
+        investigation_id [FK] \l\
+        study_id [FK] \l\
+        pubmed_id \l\
+        doi \l\
+        title \l\
+        status (V) \l\
+        }"]
+
+        "person" [shape=record, fontsize=14, label="{person|\
+        id [PK] \l\
+        orcid \l\
+        last_name \l\
+        first_name \l\
+        mid_initials \l\
+        email \l\
+        phone \l\
+        fax \l\
+        address \l\
+        affiliation \l\
+        }"]
+
+        "study" [shape=record, fontsize=14, label="{study|\
+        id [PK] \l\
+        investigation_id [FK] \l\
+        accession_number \l\
+        title \l\
+        description \l\
+        study_design_type (V:OBI) \l\
+        protocol_type (V:OBI) \l\
+        submission_date \l\
+        public_release_date \l\
+        local_identifier \l\
+        protocol_uri \l\
+        }"]
+
+        "assay" [shape=record, fontsize=14, label="{assay|\
+        id [PK] \l\
+        study_id [FK] \l\
+        accession_number \l\
+        name \l\
+        description \l\
+        measurement_type (V:OBI) \l\
+        technology_type (V:OBI) \l\
+        technology_platform (V:OBI) \l\
+        }"]
+
+        "investigation_contact" [shape=record, fontsize=14, label="{investigation_contact|\
+        investigation_id [FK] \l\
+        person_id [FK] \l\
+        role (V:OBI) \l\
+        }"]
+
+        "study_contact" [shape=record, fontsize=14, label="{study_contact|\
+        study_id [FK] \l\
+        person_id [FK] \l\
+        role (V:OBI) \l\
+        }"]
+
+        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
+        "investigation" -> "study" -> "assay"
+        "investigation" -> "publication"
+        "study" -> "publication"
+        "investigation_contact" -> { "investigation" "person" }
+        "study_contact" -> { "study" "person" }
+
+        { rank=same; "investigation"; "study"; "assay" }
+    }
+
+    subgraph cluster_1 {
+
+        label="file";
+        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
+
+        "file" [shape=record, fontsize=14, label="{file|\
+        id [PK] \l\
+        assay_id [FK] \l\
+        accession_number \l\
+        uri \l\
+        doi \l\
+        ark \l\
+        description \l\
+        source_filename \l\
+        size_in_bytes \l\
+        checksum_type (V) \l\
+        checksum \l\
+        file_format \l\
+        creation_date \l\
+        submission_date \l\
+        }"]
+    }
+
+    subgraph cluster_2 {
+
+        label="assay";
+
+        /* this could be a file type instead of assay type */
+        "imaging" [shape=record, fontsize=14, label="{imaging|\
+        assay_id [PK][FK] \l\
+        modality (V) \l\
+        equipment_model (V) \l\
+        intent (V) \l\
+        caption \l\
+        dimensionality \l\
+        voxel_x \l\
+        voxel_y \l\
+        voxel_z \l\
+        image_size_x \l\
+        image_size_y \l\
+        image_size_z \l\
+        }"]
+
+        "clinical" [shape=record, fontsize=14, label="{clinical|\
+        assay_id [PK][FK] \l\
+        OMIM_diagnosis (V:OMIM) \l\
+        OMIM_code (V:OMIM) \l\
+        ICD10_diagnosis (V:ICD10) \l\
+        ICD10_code (V:ICD10) \l\
+        molecular_cytogenetic_diagnosis (V) \l\
+        diagnostic_evidence_notes \l\
+        }"]
+
+        "replicate" [shape=record, fontsize=14, label="{replicate|\
+        assay_id [PK][FK] \l\
+        sample_composition \l\
+        sample_type \l\
+        molecule_type \l\
+        sample_purification \l\
+        markers \l\
+        isolation_protocol \l\
+        cell_count \l\
+        protocol \l\
+        pretreatment \l\
+        fragmentation_method \l\
+        reagent \l\
+        reagent_source \l\
+        reagent_catalog_number \l\
+        reagent_batch_number \l\
+        selection \l\
+        tracks_id [FK] \l\
+        library_id [FK] \l\
+        allignment_id [FK] \l\
+        }"]
+
+        "library" [shape=record, fontsize=14, label="{library|\
+        id [PK] \l\
+        library_type \l\
+        single_paired_end_sequencing \l\
+        library_adapters \l\
+        pcr_cycles \l\
+        library_yield \l\
+        size_selection \l\
+        platform\l\
+        }"]
+
+        "alignment" [shape=record, fontsize=14, label="{alignment|\
+        id [PK] \l\
+        aligner \l\
+        aligner_version \l\
+        aligner_flags \l\
+        reference_genome \l\
+        transcriptome_model \l\
+        sequence_trimming \l\
+        trimmed_seqs \l\
+        trimming_method \l\
+        duplicate_removal \l\
+        prealign_seq_removal \l\
+        }"]
+
+        /* Like imaging, this could possibly be an extension of the file? Or
+           maybe have a FK to the file? */
+        "tracks" [shape=record, fontsize=14, label="{tracks|\
+        id [PK] \l\
+        format \l\
+        software \l\
+        version \l\
+        settings \l\
+        }"]
+
+        { rank=same; "imaging" "clinical" "replicate" }
+        { rank=same; "library" "alignment" "tracks" }
+        "replicate" -> { "library" "alignment" "tracks" } [arrowtail=none, arrowhead=teedot, dir=both, label=""]
+    }
+
+    subgraph cluster_3 {
+
+        label="mouse";
+
+        /* If we need to support multiple phenotypes and anatomical sources
+           per sample, then those fields need to be split out into separate
+           tables to support the 1:N relationship. */
+        "mouse_sample" [shape=record, fontsize=14, label="{sample|\
+        id [PK] \l\
+        subject_id [FK] \l\
+        local_identifier\l\
+        specimen (V)\l\
+        phenotype (V)\l\
+        anatomy (V)\l\
+        stage (V)\l\
+        collection_date \l\
+        }"]
+
+        "mouse_subject" [shape=record, fontsize=14, label="{subject|\
+        id [PK] \l\
+        genotype (V)\l\
+        strain (V) \l\
+        gender (V) \l\
+        litter (V) \l\
+        origin (V) \l\
+        mutation (V) \l\
+        }"]
+
+        "mouse_assay_sample" [shape=record, fontsize=14, label="{assay_sample|\
+        assay_id [FK] \l\
+        sample_id [FK] \l\
+        }"]
+
+        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
+        "mouse_subject" -> "mouse_sample"
+        "mouse_assay_sample" -> "mouse_sample"
+    }
+
+    subgraph cluster_4 {
+
+        label="zebrafish";
+
+        /* if we need to support multiple phenotypes and anatomical sources
+           per sample, then those fields need to be split out into separate
+           tables to support the 1:N relationship. */
+        "zebrafish_sample" [shape=record, fontsize=14, label="{sample|\
+        id [PK] \l\
+        subject_id [FK] \l\
+        local_identifier \l\
+        specimen (V) \l\
+        phenotype (V) \l\
+        anatomy (V) \l\
+        stage (V) \l\
+        collection_date \l\
+        }"]
+
+        /* do 'litter' and 'strain' apply to zebrafish? */
+        "zebrafish_subject" [shape=record, fontsize=14, label="{subject|\
+        id [PK] \l\
+        genotype (V)\l\
+        strain (V) \l\
+        gender (V) \l\
+        litter (V) \l\
+        origin (V) \l\
+        mutation (V) \l\
+        }"]
+
+        "zebrafish_assay_sample" [shape=record, fontsize=14, label="{assay_sample|\
+        assay_id [FK] \l\
+        sample_id [FK] \l\
+        }"]
+
+        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
+        "zebrafish_subject" -> "zebrafish_sample"
+        "zebrafish_assay_sample" -> "zebrafish_sample"
+    }
+
+    subgraph cluster_5 {
+
+        label="human";
+
+        "human_sample" [shape=record, fontsize=14, label="{sample|\
+        id [PK] \l\
+        subject_id [FK] \l\
+        local_identifier \l\
+        specimen (V) \l\
+        phenotype (V) \l\
+        anatomy (V) \l\
+        embryonic_stage (V) \l\
+        age \l\
+        height \l\
+        weight \l\
+        head_circumference \l\
+        collection_date \l\
+        }"]
+
+        "human_subject" [shape=record, fontsize=14, label="{subject|\
+        id [PK] \l\
+        genotype \l\
+        strain \l\
+        gender \l\
+        origin \l\
+        mutation \l\
+        }"]
+
+        "human_assay_sample" [shape=record, fontsize=14, label="{assay_sample|\
+        assay_id [FK] \l\
+        sample_id [FK] \l\
+        }"]
+
+        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
+        "human_subject" -> "human_sample"
+        "human_assay_sample" -> "human_sample"
+    }
+
+    subgraph cluster_6 {
+
+        label="vocab";
+        
+        "vocabulary" [shape=record, fontsize=14, label="{vocabulary|\
+        id [PK] \l\
+        name \l\
+        description \l\
+        uri \l\
+        }"]
+
+        subgraph cluster_6_1 {
+
+            label="concept (meta-model)";
+
+            "concept" [shape=record, fontsize=14, label="{concept|\
+            id [PK] \l\
+            vocabulary_id [FK] \l\
+            superclass_id [FK] \l\
+            code \l\
+            term \l\
+            description \l\
+            uri \l\
+            valid_start_date \l\
+            valid_end_date \l\
+            invalid_reason (V) \l\
+            }"]
+
+            "synonym" [shape=record, fontsize=14, label="{synonym|\
+            id [PK] \l\
+            concept_id [FK] \l\
+            term \l\
+            }"]
+
+            edge[arrowtail=none, arrowhead=none, dir=both, label="parent"];
+            "concept" -> "concept"
+        }
+
+        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
+        "vocabulary" -> "concept" -> "synonym"
+    }
+
+    edge[arrowtail=none, arrowhead=none, dir=both, label="type of"];
+    "imaging" -> "assay"
+    "clinical" -> "assay"
+    "replicate" -> "assay"
+
+    /* May not need this anymore if we assume protocol is available by
+       URI and not necessarily under management of an object store
+    edge[arrowtail=none, arrowhead=none, dir=both, label="protocol"];
+    "study" -> "file"
+    */
+
+    edge[arrowtail=none, arrowhead=crow, dir=both, label="data"];
+    "assay" -> "file"
+
+    edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
+    "mouse_assay_sample" -> "assay"
+    "zebrafish_assay_sample" -> "assay"
+    "human_assay_sample" -> "assay"
+}
