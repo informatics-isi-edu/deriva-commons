@@ -318,48 +318,6 @@ digraph common_model_diagram {
         "human_assay_sample" -> "human_sample"
     }
 
-    subgraph cluster_6 {
-
-        label="vocab";
-        
-        "vocabulary" [shape=record, fontsize=14, label="{vocabulary|\
-        id [PK] \l\
-        name \l\
-        description \l\
-        uri \l\
-        }"]
-
-        subgraph cluster_6_1 {
-
-            label="concept (meta-model)";
-
-            "concept" [shape=record, fontsize=14, label="{concept|\
-            id [PK] \l\
-            vocabulary_id [FK] \l\
-            superclass_id [FK] \l\
-            code \l\
-            term \l\
-            description \l\
-            uri \l\
-            valid_start_date \l\
-            valid_end_date \l\
-            invalid_reason (V) \l\
-            }"]
-
-            "synonym" [shape=record, fontsize=14, label="{synonym|\
-            id [PK] \l\
-            concept_id [FK] \l\
-            term \l\
-            }"]
-
-            edge[arrowtail=none, arrowhead=none, dir=both, label="parent"];
-            "concept" -> "concept"
-        }
-
-        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
-        "vocabulary" -> "concept" -> "synonym"
-    }
-
     edge[arrowtail=none, arrowhead=none, dir=both, label="type of"];
     "imaging" -> "assay"
     "clinical" -> "assay"

@@ -1,0 +1,36 @@
+digraph vocab_metamodel_diagram {
+
+    ratio="fill";
+    //size="18,11!";
+    //margin=0;
+    node [style=rounded];
+
+    subgraph cluster_1 {
+
+        label="vocabulary (meta-model)";
+
+        "concept" [shape=record, fontsize=14, label="{concept|\
+            id [PK] \l\
+            superclass_id [FK] (parent, is_a, partitive) \l\
+            synonym_id [FK] (null if canonical concept) \l\
+            code (identifier from source vocabulary)\l\
+            name (unambiguous meaningful name)\l\
+            description (if available, a long description)\l\
+            uri (uri or iri to concept in external vocabulary)\l\
+            valid_start_date \l\
+            valid_end_date \l\
+            invalid_reason [FK] \l\
+        }"]
+
+        "invalid_reason" [shape=record, fontsize=14, label="{invalid_reason|\
+            reason [PK] (deleted, updated) \l\
+        }"]
+
+        edge[arrowtail=none, arrowhead=none, dir=both, label="parent"];
+        "concept" -> "concept"
+        edge[arrowtail=noney, arrowhead=none, dir=both, label="synonym"];
+        "concept" -> "concept"
+        edge[arrowtail=noney, arrowhead=none, dir=both, label="invalid_reason"];
+        "concept" -> "invalid_reason"
+    }
+}
