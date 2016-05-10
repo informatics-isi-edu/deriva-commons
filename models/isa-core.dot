@@ -1,0 +1,129 @@
+digraph isa_core_diagram {
+
+    ratio=fill;
+    node [shape=record style=rounded];
+    edge [arrowhead=none arrowtail=crow dir=both];
+
+    subgraph cluster_0 {
+
+        label="isa (schema)";
+
+        investigation [label="{investigation|\
+        id [PK: serial]\l\
+        accession_number [PK: text]\l\
+        title [text]\l\
+        description [text]\l\
+        submission_date [date]\l\
+        public_release_date [date]\l\
+        }"];
+
+        publication [label="{publication|\
+        id [PK: serial] \l\
+        investigation_id [FK] \l\
+        study_id [FK] \l\
+        pubmed_id [UNIQUE: text]\l\
+        doi [UNIQUE: text]\l\
+        title [text]\l\
+        status [FK] \l\
+        }"];
+
+        person [label="{person|\
+        id [PK: serial] \l\
+        orcid [UNIQUE: text]\l\
+        last_name [text]\l\
+        first_name [text]\l\
+        mid_initials [text]\l\
+        email [text]\l\
+        phone [text]\l\
+        fax [text]\l\
+        address [text]\l\
+        affiliation [FK]\l\
+        }"];
+
+        study [label="{study|\
+        id [PK: serial] \l\
+        investigation_id [FK] \l\
+        accession_number [PK: text] \l\
+        title [text]\l\
+        description [text]\l\
+        study_design_type [V:OBI] \l\
+        submission_date [date]\l\
+        public_release_date [date]\l\
+        local_identifier [text]\l\
+        protocol_type [V:OBI] \l\
+        protocol_file [FK]\l\
+        }"];
+
+        assay [label="{assay|\
+        id [PK: serial] \l\
+        study_id [FK] \l\
+        accession_number [PK: text]\l\
+        name [text]\l\
+        description [text]\l\
+        measurement_type [V:OBI] \l\
+        technology_type [V:OBI] \l\
+        technology_platform [V:OBI] \l\
+        }"];
+
+        investigation_contact [label="{investigation_contact|\
+        investigation_id [FK] \l\
+        person_id [FK] \l\
+        role [V:OBI] \l\
+        }"];
+
+        study_contact [label="{study_contact|\
+        study_id [FK] \l\
+        person_id [FK] \l\
+        role [V:OBI] \l\
+        }"];
+
+        affiliation [label="{affiliation|\
+        name [PK: text]\l\
+        }"];
+
+        publication_status [label="{publication_status|\
+        status [PK: text]\l\
+        }"];
+
+        assay -> study -> investigation;
+        publication -> { investigation study };
+        investigation_contact -> { investigation person };
+        study_contact -> { study person };
+        person -> affiliation;
+        publication -> publication_status;
+
+        { rank=same; investigation; study; assay }
+    }
+
+    subgraph cluster_1 {
+
+        label="file (schema)";
+
+        file [label="{file|\
+        id [PK: serial] \l\
+        assay_id [FK] \l\
+        accession_number [PK: text]\l\
+        uri [UNIQUE: text]\l\
+        doi [UNIQUE: text]\l\
+        ark [UNIQUE: text]\l\
+        description [text]\l\
+        source_filename [text]\l\
+        size_in_bytes [int]\l\
+        checksum_type [V:TBD] \l\
+        checksum [text?]\l\
+        file_format [V:TBD]\l\
+        creation_date [date]\l\
+        submission_date [date]\l\
+        }"];
+    }
+
+    file -> assay [label="data"];
+    study -> file [label="protocol"];
+
+    /* Begin Notes section
+     */
+    node [shape=note style=filled fillcolor=yellow];
+    edge [arrowhead=none];
+
+    note [label="'[V:xyz]' is short-hand for a FK\l\to a concept table for 'xyz'.\l\Many columns in this model\l\depend on the 'OBI' vocabulary."];
+}

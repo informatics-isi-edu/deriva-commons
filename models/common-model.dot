@@ -1,36 +1,38 @@
 digraph common_model_diagram {
 
     ratio="fill";
-    //size="18,11!";
-    //margin=0;
-    node [style=rounded];
+    node [shape=record style=rounded fontsize=14];
+    edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
+
+/*
+ undergoing a major revision
 
     subgraph cluster_0 {
 
         label="isa";
 
-        "investigation" [shape=record, fontsize=14, label="{investigation|\
-        id [PK]\l\
-        accession_number\l\
-        title \l\
-        description \l\
-        submission_date \l\
-        public_release_date \l\
+        "investigation" [label="{investigation|\
+        id [PK: serial]\l\
+        accession_number [PK: text]\l\
+        title [text]\l\
+        description [text]\l\
+        submission_date [date]\l\
+        public_release_date [date]\l\
         }"]
 
-        "publication" [shape=record, fontsize=14, label="{publication|\
-        id [PK] \l\
+        "publication" [label="{publication|\
+        id [PK: serial] \l\
         investigation_id [FK] \l\
         study_id [FK] \l\
-        pubmed_id \l\
-        doi \l\
+        pubmed_id [UNIQUE: text]\l\
+        doi [UNIQUE: text]\l\
         title \l\
-        status (V) \l\
+        status [V] \l\
         }"]
 
-        "person" [shape=record, fontsize=14, label="{person|\
+        "person" [label="{person|\
         id [PK] \l\
-        orcid \l\
+        orcid [UNIQUE]\l\
         last_name \l\
         first_name \l\
         mid_initials \l\
@@ -41,21 +43,21 @@ digraph common_model_diagram {
         affiliation \l\
         }"]
 
-        "study" [shape=record, fontsize=14, label="{study|\
-        id [PK] \l\
+        "study" [label="{study|\
+        id [PK: serial] \l\
         investigation_id [FK] \l\
-        accession_number \l\
+        accession_number [UNIQUE: text] \l\
         title \l\
         description \l\
-        study_design_type (V:OBI) \l\
-        protocol_type (V:OBI) \l\
+        study_design_type [V: OBI] \l\
+        protocol_type [V: OBI] \l\
         submission_date \l\
         public_release_date \l\
         local_identifier \l\
         protocol_uri \l\
         }"]
 
-        "assay" [shape=record, fontsize=14, label="{assay|\
+        "assay" [label="{assay|\
         id [PK] \l\
         study_id [FK] \l\
         accession_number \l\
@@ -66,24 +68,23 @@ digraph common_model_diagram {
         technology_platform (V:OBI) \l\
         }"]
 
-        "investigation_contact" [shape=record, fontsize=14, label="{investigation_contact|\
+        "investigation_contact" [label="{investigation_contact|\
         investigation_id [FK] \l\
         person_id [FK] \l\
         role (V:OBI) \l\
         }"]
 
-        "study_contact" [shape=record, fontsize=14, label="{study_contact|\
+        "study_contact" [label="{study_contact|\
         study_id [FK] \l\
         person_id [FK] \l\
         role (V:OBI) \l\
         }"]
 
-        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
         "investigation" -> "study" -> "assay"
         "investigation" -> "publication"
         "study" -> "publication"
-        "investigation_contact" -> { "investigation" "person" }
-        "study_contact" -> { "study" "person" }
+        { "investigation" "person" } -> "investigation_contact"
+        { "study" "person" } -> "study_contact"
 
         { rank=same; "investigation"; "study"; "assay" }
     }
@@ -91,9 +92,8 @@ digraph common_model_diagram {
     subgraph cluster_1 {
 
         label="file";
-        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
 
-        "file" [shape=record, fontsize=14, label="{file|\
+        "file" [label="{file|\
         id [PK] \l\
         assay_id [FK] \l\
         accession_number \l\
@@ -115,8 +115,8 @@ digraph common_model_diagram {
 
         label="assay";
 
-        /* this could be a file type instead of assay type */
-        "imaging" [shape=record, fontsize=14, label="{imaging|\
+        // this could be a file type instead of assay type
+        "imaging" [label="{imaging|\
         assay_id [PK][FK] \l\
         modality (V) \l\
         equipment_model (V) \l\
@@ -131,7 +131,7 @@ digraph common_model_diagram {
         image_size_z \l\
         }"]
 
-        "clinical" [shape=record, fontsize=14, label="{clinical|\
+        "clinical" [label="{clinical|\
         assay_id [PK][FK] \l\
         OMIM_diagnosis (V:OMIM) \l\
         OMIM_code (V:OMIM) \l\
@@ -141,7 +141,7 @@ digraph common_model_diagram {
         diagnostic_evidence_notes \l\
         }"]
 
-        "replicate" [shape=record, fontsize=14, label="{replicate|\
+        "replicate" [label="{replicate|\
         assay_id [PK][FK] \l\
         sample_composition \l\
         sample_type \l\
@@ -163,7 +163,7 @@ digraph common_model_diagram {
         allignment_id [FK] \l\
         }"]
 
-        "library" [shape=record, fontsize=14, label="{library|\
+        "library" [label="{library|\
         id [PK] \l\
         library_type \l\
         single_paired_end_sequencing \l\
@@ -174,7 +174,7 @@ digraph common_model_diagram {
         platform\l\
         }"]
 
-        "alignment" [shape=record, fontsize=14, label="{alignment|\
+        "alignment" [label="{alignment|\
         id [PK] \l\
         aligner \l\
         aligner_version \l\
@@ -188,9 +188,9 @@ digraph common_model_diagram {
         prealign_seq_removal \l\
         }"]
 
-        /* Like imaging, this could possibly be an extension of the file? Or
-           maybe have a FK to the file? */
-        "tracks" [shape=record, fontsize=14, label="{tracks|\
+        // Like imaging, this could possibly be an extension of the file? Or
+        // maybe have a FK to the file?
+        "tracks" [label="{tracks|\
         id [PK] \l\
         format \l\
         software \l\
@@ -207,10 +207,10 @@ digraph common_model_diagram {
 
         label="mouse";
 
-        /* If we need to support multiple phenotypes and anatomical sources
-           per sample, then those fields need to be split out into separate
-           tables to support the 1:N relationship. */
-        "mouse_sample" [shape=record, fontsize=14, label="{sample|\
+        // If we need to support multiple phenotypes and anatomical sources
+        // per sample, then those fields need to be split out into separate
+        // tables to support the 1:N relationship.
+        "mouse_sample" [label="{sample|\
         id [PK] \l\
         subject_id [FK] \l\
         local_identifier\l\
@@ -221,7 +221,7 @@ digraph common_model_diagram {
         collection_date \l\
         }"]
 
-        "mouse_subject" [shape=record, fontsize=14, label="{subject|\
+        "mouse_subject" [label="{subject|\
         id [PK] \l\
         genotype (V)\l\
         strain (V) \l\
@@ -231,12 +231,11 @@ digraph common_model_diagram {
         mutation (V) \l\
         }"]
 
-        "mouse_assay_sample" [shape=record, fontsize=14, label="{assay_sample|\
+        "mouse_assay_sample" [label="{assay_sample|\
         assay_id [FK] \l\
         sample_id [FK] \l\
         }"]
 
-        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
         "mouse_subject" -> "mouse_sample"
         "mouse_assay_sample" -> "mouse_sample"
     }
@@ -245,10 +244,10 @@ digraph common_model_diagram {
 
         label="zebrafish";
 
-        /* if we need to support multiple phenotypes and anatomical sources
-           per sample, then those fields need to be split out into separate
-           tables to support the 1:N relationship. */
-        "zebrafish_sample" [shape=record, fontsize=14, label="{sample|\
+        // if we need to support multiple phenotypes and anatomical sources
+        // per sample, then those fields need to be split out into separate
+        // tables to support the 1:N relationship.
+        "zebrafish_sample" [label="{sample|\
         id [PK] \l\
         subject_id [FK] \l\
         local_identifier \l\
@@ -259,8 +258,8 @@ digraph common_model_diagram {
         collection_date \l\
         }"]
 
-        /* do 'litter' and 'strain' apply to zebrafish? */
-        "zebrafish_subject" [shape=record, fontsize=14, label="{subject|\
+        // do 'litter' and 'strain' apply to zebrafish?
+        "zebrafish_subject" [label="{subject|\
         id [PK] \l\
         genotype (V)\l\
         strain (V) \l\
@@ -270,12 +269,11 @@ digraph common_model_diagram {
         mutation (V) \l\
         }"]
 
-        "zebrafish_assay_sample" [shape=record, fontsize=14, label="{assay_sample|\
+        "zebrafish_assay_sample" [label="{assay_sample|\
         assay_id [FK] \l\
         sample_id [FK] \l\
         }"]
 
-        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
         "zebrafish_subject" -> "zebrafish_sample"
         "zebrafish_assay_sample" -> "zebrafish_sample"
     }
@@ -284,7 +282,7 @@ digraph common_model_diagram {
 
         label="human";
 
-        "human_sample" [shape=record, fontsize=14, label="{sample|\
+        "human_sample" [label="{sample|\
         id [PK] \l\
         subject_id [FK] \l\
         local_identifier \l\
@@ -299,7 +297,7 @@ digraph common_model_diagram {
         collection_date \l\
         }"]
 
-        "human_subject" [shape=record, fontsize=14, label="{subject|\
+        "human_subject" [label="{subject|\
         id [PK] \l\
         genotype \l\
         strain \l\
@@ -308,12 +306,11 @@ digraph common_model_diagram {
         mutation \l\
         }"]
 
-        "human_assay_sample" [shape=record, fontsize=14, label="{assay_sample|\
+        "human_assay_sample" [label="{assay_sample|\
         assay_id [FK] \l\
         sample_id [FK] \l\
         }"]
 
-        edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
         "human_subject" -> "human_sample"
         "human_assay_sample" -> "human_sample"
     }
@@ -323,12 +320,6 @@ digraph common_model_diagram {
     "clinical" -> "assay"
     "replicate" -> "assay"
 
-    /* May not need this anymore if we assume protocol is available by
-       URI and not necessarily under management of an object store
-    edge[arrowtail=none, arrowhead=none, dir=both, label="protocol"];
-    "study" -> "file"
-    */
-
     edge[arrowtail=none, arrowhead=crow, dir=both, label="data"];
     "assay" -> "file"
 
@@ -336,4 +327,6 @@ digraph common_model_diagram {
     "mouse_assay_sample" -> "assay"
     "zebrafish_assay_sample" -> "assay"
     "human_assay_sample" -> "assay"
+
+*/
 }
