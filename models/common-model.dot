@@ -4,9 +4,6 @@ digraph common_model_diagram {
     node [shape=record style=rounded fontsize=14];
     edge[arrowtail=none, arrowhead=crow, dir=both, label=""];
 
-/*
- undergoing a major revision
-
     subgraph cluster_0 {
 
         label="isa";
@@ -328,5 +325,4 @@ digraph common_model_diagram {
     "zebrafish_assay_sample" -> "assay"
     "human_assay_sample" -> "assay"
 
-*/
 }
