@@ -159,7 +159,6 @@ digraph isa_core_diagram {
         id [PK serial] \l\
         study_id [FK] \l\
         sample_id [FK] \l\
-        //file_id [FK] \l\
         accession_number \l\
         sample_composition \l\
         sample_type \l\
@@ -230,107 +229,13 @@ digraph isa_core_diagram {
     "imaging" -> "study";
     "imaging" -> "sample";
 
-    subgraph cluster_file {
 
-        label="file";
-
-file_id [FK] \l\
-        accession_number [text] \l\
-        modality (V) \l\
-        equipment_model (V) \l\
-        intent (V) \l\
-        caption \l\
-        dimensionality \l\
-        voxel_x \l\
-        voxel_y \l\
-        voxel_z \l\
-        image_size_x \l\
-        image_size_y \l\
-        image_size_z \l\
-        }"];
-
-        "replicate" [label="{replicate|\
-        id [PK serial] \l\
-        study_id [FK] \l\
-        sample_id [FK] \l\
-        //file_id [FK] \l\
-        accession_number \l\
-        sample_composition \l\
-        sample_type \l\
-        molecule_type \l\
-        sample_purification \l\
-        markers \l\
-        isolation_protocol \l\
-        cell_count \l\
-        protocol \l\
-        pretreatment \l\
-        fragmentation_method \l\
-        reagent \l\
-        reagent_source \l\
-        reagent_catalog_number \l\
-        reagent_batch_number \l\
-        selection \l\
-        tracks_id [FK] \l\
-        library_id [FK] \l\
-        allignment_id [FK] \l\
-        }"]
-
-
-        "library" [label="{library|\
-        id [PK] \l\
-        library_type \l\
-        single_paired_end_sequencing \l\
-        library_adapters \l\
-        pcr_cycles \l\
-        library_yield \l\
-        size_selection \l\
-        platform\l\
-        }"]
-
-        "alignment" [label="{alignment|\
-        id [PK] \l\
-        aligner \l\
-        aligner_version \l\
-        aligner_flags \l\
-        reference_genome \l\
-        transcriptome_model \l\
-        sequence_trimming \l\
-        trimmed_seqs \l\
-        trimming_method \l\
-        duplicate_removal \l\
-        prealign_seq_removal \l\
-        }"]
-
-        // Like imaging, this could possibly be an extension of the file? Or
-        // maybe have a FK to the file?
-        "tracks" [label="{tracks|\
-        id [PK] \l\
-        format \l\
-        software \l\
-        version \l\
-        settings \l\
-        }"]
-
-        { rank=same; "library" "alignment" "tracks" }
-
-
-        "replicate" -> { "library" "alignment" "tracks" } [arrowtail=none, arrowhead=teedot, dir=both, label=""]
-
-    }
-
-    "sample" -> "study" ;
-    "replicate" -> "study";
-    "replicate" -> "sample";
-    "imaging" -> "study";
-    "imaging" -> "sample";
 
     subgraph cluster_file {
 
         label="file";
 
        
-
-
         replicate_file [label="{replicate_file|\
         replicate_id [FK int]  \l\
         file_id [FK int] \l\
@@ -340,7 +245,6 @@ file_id [FK] \l\
         file [label="{file|\
         id [PK: serial] \l\
         accession_number [UNIQUE: text]\l\
-        assay_id [FK] \l\
         uri [UNIQUE: text]\l\
         doi [UNIQUE: text]\l\
         ark [UNIQUE: text]\l\
