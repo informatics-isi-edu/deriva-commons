@@ -9,125 +9,125 @@ digraph isa_core_diagram {
 
         label="study";
 
-        person [label="{person|\
-        id [PK: serial] \l\
-        //orcid [UNIQUE: text]\l\
-        last_name [text]\l\
-        first_name [text]\l\
-        mid_initials [text]\l\
-        email [text]\l\
-        phone [text]\l\
-        fax [text]\l\
-        address [text]\l\
-        affiliation [FK]\l\
+        personnel [label="{personnel|\
+        id [PK]|\
+	project_id [FK]|\
+	full_name [text]|\
+        affiliation [text]|\
+        role [V]|\
+        email [text]|\
+	website [url]
         }"];
 
-
         project [label="{project|\
-        id [PK: serial] \l\
-        name [text]\l\
-        principal_investigator [FK]\l\
-        funding [text]\l\
+        id [PK: serial] |\
+        name [text]|\
+        abstract [text]|\
+        funding [text]
         }"];
 
         study [label="{study|\
-        id [PK: serial] \l\
-        accession_number [PK: text] \l\
-        title [text]\l\
-        description [text]\l\
-        project [FK]\l\
-        experiment_type [V]\l\
-        data_type [V] \l\
-        submission_date [date]\l\
-        public_release_date [date]\l\
-        local_identifier [text]\l\
+        id [PK: serial] |\
+        accession [PK: text] |\
+        project_id [FK]|\
+        description [text]|\
+        experiment_type [V]|\
+	data_type [V]|\
+        release_date [date]
         }"];
-
 
         publication [label="{publication|\
-        id [PK: serial] \l\
-        investigation_id [FK] \l\
-        study_id [FK] \l\
-        pubmed_id [UNIQUE: text]\l\
-        doi [UNIQUE: text]\l\
-        title [text]\l\
-        status [FK] \l\
+        id [PK: serial]|\
+        project_id [FK]|\
+        study_id [FK]|\
+        pubmed_id [UNIQUE: text]|\
+        doi [UNIQUE: text]|\
+	url [text]|\
+        title [text]|\
+	abstract [text]|\
+        status [V]
         }"];
 
-        project -> person ;
-        study -> project ;
-        publication -> study ;
+        personnel -> project;
+        study -> project;
+        publication -> study;
 
-}
+    }
 
     subgraph cluster_sample {
 
         label="sample";
 
-        "sample" [label="{sample|\
-        id [PK serial] \l\
-        study_id [FK] \l\
-        accession_number \l\
-        local_identifier\l\
-        species (V) \l\
-        gene (V)\l\
-        genotype (V)\l\
-        specimen (V)\l\
-        phenotype (V)\l\
-        anatomy (V)\l\
-        stage (V)\l\
-        strain (V) \l\
-        gender (V) \l\
-        litter (V) \l\
-        origin (V) \l\
-        mutation (V) \l\
-        collection_date \l\
-        clinical [FK] \l\
-        enhancer [FK] \l\
+        model [label="{model|\
+        id [PK: serial]|\
+        accession [PK: text]|\
+        study_id [FK]|\
+        species (V)|\
+        strain (V)|\
+        gender (V)|\
+        genotype (V)|\
+        mutation (V)|\
+        gene (V)
         }"];
 
-        "clinical" [label="{clinical|\
-        id [PK: serial] \l\
-        age \l\
-        height \l\
-        weight \l\
-        head_circumference \l\
-        OMIM_diagnosis (V:OMIM) \l\
-        OMIM_code (V:OMIM) \l\
-        ICD10_diagnosis (V:ICD10) \l\
-        ICD10_code (V:ICD10) \l\
-        molecular_cytogenetic_diagnosis (V) \l\
-        diagnostic_evidence_notes \l\
+        sample [label="{sample|\
+        id [PK serial]|\
+        accession [PK: text]|\
+        study_id [FK]|\
+        stage (V)|\
+        anatomy (V)|\
+        specimen (V)|\
+        gene (V)|\
+        phenotype (V)|\
+        litter (V)|\
+        collection_date|\
+        local_identifier|\
+        clinical [FK] |\
+        enhancer [FK]
+        }"];
+
+        clinical [label="{clinical|\
+        id [PK: serial]|\
+        age|\
+        height|\
+        weight|\
+        head_circumference|\
+        OMIM_diagnosis (V:OMIM)|\
+        OMIM_code (V:OMIM)|\
+        ICD10_diagnosis (V:ICD10)|\
+        ICD10_code (V:ICD10)|\
+        molecular_cytogenetic_diagnosis (V)|\
+        diagnostic_evidence_notes
         }"]; 
 
-
-        "enhancer" [label="{enhancer|\
-        id [PK serial] \l\
-        original_species_assembly [text] \l\
-        original_species_chromosome [text] \l\
-        original_species_start [int] \l\
-        original_species_end [int] \l\
-        visualization_assembly [text] \l\
-        visualization_assembly_chromosome [text] \l\
-        visualization_assembly_start [int] \l\
-        visualization_assembly_end [int] \l\
-        other_assembly [text] \l\
-        other_assembly_chromosome [text] \l\
-        other_assembly_start [int] \l\
-        other_assembly_end [int] \l\
-        tested_sequence [text] \l\
-        tested_sequence_flag [text] \l\
-        list_of_closest_genes [V] \l\
-        external_database_name [text] \l\
-        external_id [text] \l\
-        list_of_anatomical_structures [V] \l\
-        lab_internal_reference [text] \l\
+        enhancer [label="{enhancer|\
+        id [PK serial] |\
+        original_species_assembly [text] |\
+        original_species_chromosome [text] |\
+        original_species_start [int] |\
+        original_species_end [int] |\
+        visualization_assembly [text] |\
+        visualization_assembly_chromosome [text] |\
+        visualization_assembly_start [int] |\
+        visualization_assembly_end [int] |\
+        other_assembly [text] |\
+        other_assembly_chromosome [text] |\
+        other_assembly_start [int] |\
+        other_assembly_end [int] |\
+        tested_sequence [text] |\
+        tested_sequence_flag [text] |\
+        list_of_closest_genes [V] |\
+        external_database_name [text] |\
+        external_id [text] |\
+        list_of_anatomical_structures [V] |\
+        lab_internal_reference [text]
         }"]
 
-
-        "sample" ->  "clinical" [arrowtail=none, arrowhead=teedot, dir=both, label=""]
-        "sample" ->  "enhancer" [arrowtail=none, arrowhead=teedot, dir=both, label=""]
-
+	model -> study;
+	sample -> model;
+	sample -> study;
+        sample -> clinical [arrowtail=none, arrowhead=teedot, dir=both, label=""]
+        sample ->  enhancer [arrowtail=none, arrowhead=teedot, dir=both, label=""]
     }
 
 
@@ -135,144 +135,133 @@ digraph isa_core_diagram {
 
         label="assays";
 
-        // this could be a file type instead of assay type
-        "imaging" [label="{imaging|\
-        id [PK serial] \l\
-        study_id [FK] \l\
-        sample_id [FK] \l\
-        file_id [FK] \l\
-        accession_number [text] \l\
-        modality (V) \l\
-        equipment_model (V) \l\
-        intent (V) \l\
-        caption \l\
-        dimensionality \l\
-        voxel_x \l\
-        voxel_y \l\
-        voxel_z \l\
-        image_size_x \l\
-        image_size_y \l\
-        image_size_z \l\
+        image [label="{image|\
+        id [PK:serial]|\
+        accession [PK:text]|\
+        study_id [FK]|\
+        sample_id [FK]|\
+        file_id [FK]|\
+        caption [text]|\
+        intent (V)|\
+        modality (V)|\
+        equipment_model (V)|\
+        dimensionality|\
+        voxels [(x,y,z)]|\
+        image_size [(x,y,z)]
         }"];
 
-        "replicate" [label="{replicate|\
-        id [PK serial] \l\
-        study_id [FK] \l\
-        sample_id [FK] \l\
-        accession_number \l\
-        sample_composition \l\
-        sample_type \l\
-        molecule_type \l\
-        sample_purification \l\
-        markers \l\
-        isolation_protocol \l\
-        cell_count \l\
-        protocol \l\
-        pretreatment \l\
-        fragmentation_method \l\
-        reagent \l\
-        reagent_source \l\
-        reagent_catalog_number \l\
-        reagent_batch_number \l\
-        selection \l\
-        tracks_id [FK] \l\
-        library_id [FK] \l\
-        allignment_id [FK] \l\
-        }"]
-
-
-        "library" [label="{library|\
-        id [PK] \l\
-        library_type \l\
-        single_paired_end_sequencing \l\
-        library_adapters \l\
-        pcr_cycles \l\
-        library_yield \l\
-        size_selection \l\
-        platform\l\
-        }"]
-
-        "alignment" [label="{alignment|\
-        id [PK] \l\
-        aligner \l\
-        aligner_version \l\
-        aligner_flags \l\
-        reference_genome \l\
-        transcriptome_model \l\
-        sequence_trimming \l\
-        trimmed_seqs \l\
-        trimming_method \l\
-        duplicate_removal \l\
-        prealign_seq_removal \l\
-        }"]
-
-        // Like imaging, this could possibly be an extension of the file? Or
-        // maybe have a FK to the file?
-        "tracks" [label="{tracks|\
-        id [PK] \l\
-        format \l\
-        software \l\
-        version \l\
-        settings \l\
-        }"]
-
-        { rank=same; "library" "alignment" "tracks" }
-
-
-        "replicate" -> { "library" "alignment" "tracks" } [arrowtail=none, arrowhead=teedot, dir=both, label=""]
-
+	technical_replicate [label="{technical_replicate|\
+	id [PK:serial]|\
+        accession [PK:text]|\
+        study_id [FK]|\
+	replicate_protocol_id [FK]|\
+        sample_id [FK]|\
+	replicate_number [int]|\
+	UNIQUE (sample_id, replicate_number)
+	}"];
     }
 
-    "sample" -> "study" ;
-    "replicate" -> "study";
-    "replicate" -> "sample";
-    "imaging" -> "study";
-    "imaging" -> "sample";
+    image -> study;
+    image -> sample;
+    technical_replicate -> study;
+    technical_replicate -> sample;
+    technical_replicate -> replicate_protocol;
 
+    subgraph cluster_5 {
 
+        label="replicate protocol";
+
+        replicate_protocol [label="{replicate_protocol|\
+        id [PK serial] |\
+        study_id [FK] |\
+        sample_id [FK] |\
+        accession |\
+        sample_composition |\
+        sample_type |\
+        molecule_type |\
+        sample_purification |\
+        markers |\
+        isolation_protocol |\
+        cell_count |\
+        protocol |\
+        pretreatment |\
+        fragmentation_method |\
+        reagent |\
+        reagent_source |\
+        reagent_catalog_number |\
+        reagent_batch_number |\
+        selection |\
+        tracks_id [FK] |\
+        library_id [FK] |\
+        allignment_id [FK]
+        }"]
+
+        library [label="{library|\
+        id [PK] |\
+        library_type |\
+        single_paired_end_sequencing |\
+        library_adapters |\
+        pcr_cycles |\
+        library_yield |\
+        size_selection |\
+        platform
+        }"]
+
+        alignment [label="{alignment|\
+        id [PK] |\
+        aligner |\
+        aligner_version |\
+        aligner_flags |\
+        reference_genome |\
+        transcriptome_model |\
+        sequence_trimming |\
+        trimmed_seqs |\
+        trimming_method |\
+        duplicate_removal |\
+        prealign_seq_removal
+        }"]
+
+        { rank=same; "library" "alignment" }
+        replicate_protocol -> { "library" "alignment" } [arrowtail=none, arrowhead=teedot, dir=both, label=""]
+    }
+
+    replicate_protocol -> study;
 
     subgraph cluster_file {
 
         label="file";
-
        
         replicate_file [label="{replicate_file|\
-        replicate_id [FK int]  \l\
-        file_id [FK int] \l\
+        replicate_id [FK]|\
+        file_id [FK] 
         }"];
-
 
         file [label="{file|\
-        id [PK: serial] \l\
-        accession_number [UNIQUE: text]\l\
-        uri [UNIQUE: text]\l\
-        doi [UNIQUE: text]\l\
-        ark [UNIQUE: text]\l\
-        description [text]\l\
-        source_filename [text]\l\
-        size_in_bytes [int]\l\
-        checksum_type [V:TBD] \l\
-        checksum [text?]\l\
-        file_format [V:TBD]\l\
-        creation_date [date]\l\
-        submission_date [date]\l\
+        id [PK:serial]|\
+        accession [UNIQUE:text]|\
+        file_format [V:TBD]|\
+        description [text]|\
+        uri [UNIQUE:text]|\
+        doi [UNIQUE:text]|\
+        ark [UNIQUE:text]|\
+        source_filename [text]|\
+        size_in_bytes [int]|\
+        checksum_type [V:TBD]|\
+        checksum [text]|\
+        creation_date [date]|\
+        submission_date [date]
         }"];
 
-        "replicate_file" -> "file";
-        "replicate_file" -> "replicate";
-        "imaging" -> "file";
-
-        alignment -> file   [style=invis]
-        library -> file   [style=invis]
-        tracks -> file   [style=invis]
-
-}
+    }
+    replicate_file -> file;
+    replicate_file -> technical_replicate;
+    image -> file [arrowtail=none, arrowhead=teedot, dir=both, label=""];
 
     /* Begin Notes section
      */
     node [shape=note style=filled fillcolor=yellow];
     edge [arrowhead=none];
 
-    //note [label="'[V:xyz]' is short-hand for a FK\l\to a concept table for 'xyz'.\l\Many columns in this model\l\depend on the 'OBI' vocabulary."];
+    //note [label="'[V:xyz]' is short-hand for a FK|to a concept table for 'xyz'.|Many columns in this model|depend on the 'OBI' vocabulary."];
 }
 
