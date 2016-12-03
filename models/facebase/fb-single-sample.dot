@@ -56,7 +56,7 @@ digraph isa_core_diagram {
 
     subgraph cluster_sample {
 
-        label="sample";
+        label="biosample";
 
         model [label="{model|\
         id [PK: serial]|\
@@ -70,7 +70,7 @@ digraph isa_core_diagram {
         gene (V)
         }"];
 
-        sample [label="{sample|\
+        biosample [label="{biosample|\
         id [PK serial]|\
         accession [PK: text]|\
         study_id [FK]|\
@@ -124,10 +124,10 @@ digraph isa_core_diagram {
         }"]
 
 	model -> study;
-	sample -> model;
-	sample -> study;
-        sample -> clinical [arrowtail=none, arrowhead=teedot, dir=both, label=""]
-        sample ->  enhancer [arrowtail=none, arrowhead=teedot, dir=both, label=""]
+	biosample -> model;
+	biosample -> study;
+        biosample -> clinical [arrowtail=none, arrowhead=teedot, dir=both, label=""]
+        biosample ->  enhancer [arrowtail=none, arrowhead=teedot, dir=both, label=""]
     }
 
 
@@ -139,7 +139,7 @@ digraph isa_core_diagram {
         id [PK:serial]|\
         accession [PK:text]|\
         study_id [FK]|\
-        sample_id [FK]|\
+        biosample_id [FK]|\
         file_id [FK]|\
         caption [text]|\
         intent (V)|\
@@ -150,31 +150,31 @@ digraph isa_core_diagram {
         image_size [(x,y,z)]
         }"];
 
-	technical_replicate [label="{technical_replicate|\
+	bioassay [label="{bioassay|\
 	id [PK:serial]|\
         accession [PK:text]|\
         study_id [FK]|\
-	replicate_protocol_id [FK]|\
-        sample_id [FK]|\
+	assay_profile_id [FK]|\
+        biosample_id [FK]|\
 	replicate_number [int]|\
-	UNIQUE (sample_id, replicate_number)
+	UNIQUE (biosample_id, replicate_number)
 	}"];
     }
 
     image -> study;
-    image -> sample;
-    technical_replicate -> study;
-    technical_replicate -> sample;
-    technical_replicate -> replicate_protocol;
+    image -> biosample;
+    bioassay -> study;
+    bioassay -> biosample;
+    bioassay -> assay_profile;
 
     subgraph cluster_5 {
 
-        label="replicate protocol";
+        label="assay profile";
 
-        replicate_protocol [label="{replicate_protocol|\
+        assay_profile [label="{assay_profile|\
         id [PK serial] |\
         study_id [FK] |\
-        sample_id [FK] |\
+        biosample_id [FK] |\
         accession |\
         sample_composition |\
         sample_type |\
@@ -222,16 +222,16 @@ digraph isa_core_diagram {
         }"]
 
         { rank=same; "library" "alignment" }
-        replicate_protocol -> { "library" "alignment" } [arrowtail=none, arrowhead=teedot, dir=both, label=""]
+        assay_profile -> { "library" "alignment" } [arrowtail=none, arrowhead=teedot, dir=both, label=""]
     }
 
-    replicate_protocol -> study;
+    assay_profile -> study;
 
     subgraph cluster_file {
 
         label="file";
        
-        replicate_file [label="{replicate_file|\
+        bioassay_file [label="{bioassay_file|\
         replicate_id [FK]|\
         file_id [FK] 
         }"];
@@ -253,8 +253,8 @@ digraph isa_core_diagram {
         }"];
 
     }
-    replicate_file -> file;
-    replicate_file -> technical_replicate;
+    bioassay_file -> file;
+    bioassay_file -> bioassay;
     image -> file [arrowtail=none, arrowhead=teedot, dir=both, label=""];
 
     /* Begin Notes section
