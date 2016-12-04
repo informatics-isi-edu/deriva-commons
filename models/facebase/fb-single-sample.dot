@@ -1,16 +1,32 @@
 digraph isa_core_diagram {
 
     ratio=fill;
-    node [shape=record style=rounded];
-    edge [arrowhead=none arrowtail=crow dir=both];
+    node [shape=Mrecord];
+    edge [arrowhead=crow arrowtail=none dir=both label=""];
 
-
-    subgraph cluster_0 {
+    subgraph cluster_study {
 
         label="study";
 
+        project [label="{project|\
+        id [PK:serial] |\
+        name [text]|\
+        abstract [text]|\
+        funding [text]
+        }"];
+
+        study [label="{study|\
+        id [PK:serial] |\
+        accession [PK:text] |\
+        project_id [FK]|\
+        description [text]|\
+        experiment_type [V]|\
+	data_type [V]|\
+        release_date [date]
+        }"];
+
         personnel [label="{personnel|\
-        id [PK]|\
+        id [PK:serial]|\
 	project_id [FK]|\
 	full_name [text]|\
         affiliation [text]|\
@@ -19,75 +35,51 @@ digraph isa_core_diagram {
 	website [url]
         }"];
 
-        project [label="{project|\
-        id [PK: serial] |\
-        name [text]|\
-        abstract [text]|\
-        funding [text]
-        }"];
-
-        study [label="{study|\
-        id [PK: serial] |\
-        accession [PK: text] |\
-        project_id [FK]|\
-        description [text]|\
-        experiment_type [V]|\
-	data_type [V]|\
-        release_date [date]
-        }"];
-
         publication [label="{publication|\
-        id [PK: serial]|\
+        id [PK:serial]|\
         project_id [FK]|\
         study_id [FK]|\
-        pubmed_id [UNIQUE: text]|\
-        doi [UNIQUE: text]|\
+        pubmed_id [UNIQUE:text]|\
+        doi [UNIQUE:text]|\
 	url [text]|\
         title [text]|\
 	abstract [text]|\
         status [V]
         }"];
 
-        personnel -> project;
-        study -> project;
-        publication -> study;
-
+        project -> {study personnel}
+        study -> publication
+        {rank=same; project study}
     }
 
     subgraph cluster_sample {
 
-        label="biosample";
+        label="sample";
 
-        model [label="{model|\
-        id [PK: serial]|\
-        accession [PK: text]|\
+        sample [label="{sample|\
+        id [PK:serial]|\
+        accession [PK:text]|\
         study_id [FK]|\
-        species (V)|\
-        strain (V)|\
-        gender (V)|\
-        genotype (V)|\
-        mutation (V)|\
-        gene (V)
-        }"];
-
-        biosample [label="{biosample|\
-        id [PK serial]|\
-        accession [PK: text]|\
-        study_id [FK]|\
-        stage (V)|\
-        anatomy (V)|\
-        specimen (V)|\
-        gene (V)|\
-        phenotype (V)|\
-        litter (V)|\
+        replicate [int]|\
+        species [V]|\
+        strain [V]|\
+        gender [V]|\
+        genotype [V]|\
+        mutation [V]|\
+        gene [V]|\
+        age_stage [V]|\
+        anatomy [V]|\
+        specimen [V]|\
+        phenotype [V]|\
+        litter [V]|\
         collection_date|\
         local_identifier|\
-        clinical [FK] |\
-        enhancer [FK]
+        clinical_id [FK]|\
+        enhancer_id [FK]
         }"];
 
         clinical [label="{clinical|\
-        id [PK: serial]|\
+        id [PK:serial]|\
         age|\
         height|\
         weight|\
@@ -96,7 +88,7 @@ digraph isa_core_diagram {
         OMIM_code (V:OMIM)|\
         ICD10_diagnosis (V:ICD10)|\
         ICD10_code (V:ICD10)|\
-        molecular_cytogenetic_diagnosis (V)|\
+        molecular_cytogenetic_diagnosis [V]|\
         diagnostic_evidence_notes
         }"]; 
 
@@ -123,15 +115,10 @@ digraph isa_core_diagram {
         lab_internal_reference [text]
         }"]
 
-	model -> study;
-	biosample -> model;
-	biosample -> study;
-        biosample -> clinical [arrowtail=none, arrowhead=teedot, dir=both, label=""]
-        biosample ->  enhancer [arrowtail=none, arrowhead=teedot, dir=both, label=""]
+        sample -> {clinical enhancer} [arrowtail=none arrowhead=teedot];
     }
 
-
-    subgraph cluster_2 {
+    subgraph cluster_assays {
 
         label="assays";
 
@@ -139,46 +126,26 @@ digraph isa_core_diagram {
         id [PK:serial]|\
         accession [PK:text]|\
         study_id [FK]|\
-        biosample_id [FK]|\
+        sample_id [FK]|\
         file_id [FK]|\
         caption [text]|\
-        intent (V)|\
-        modality (V)|\
-        equipment_model (V)|\
+        intent [V]|\
+        modality [V]|\
+        equipment_model [V]|\
         dimensionality|\
         voxels [(x,y,z)]|\
         image_size [(x,y,z)]
         }"];
 
-	bioassay [label="{bioassay|\
+	assay [label="{assay|\
 	id [PK:serial]|\
         accession [PK:text]|\
         study_id [FK]|\
-	assay_profile_id [FK]|\
-        biosample_id [FK]|\
-	replicate_number [int]|\
-	UNIQUE (biosample_id, replicate_number)
-	}"];
-    }
-
-    image -> study;
-    image -> biosample;
-    bioassay -> study;
-    bioassay -> biosample;
-    bioassay -> assay_profile;
-
-    subgraph cluster_5 {
-
-        label="assay profile";
-
-        assay_profile [label="{assay_profile|\
-        id [PK serial] |\
-        study_id [FK] |\
-        biosample_id [FK] |\
-        accession |\
+        sample_id [FK]|\
+	replicate [int]|\
+        molecule_type |\
         sample_composition |\
         sample_type |\
-        molecule_type |\
         sample_purification |\
         markers |\
         isolation_protocol |\
@@ -191,7 +158,7 @@ digraph isa_core_diagram {
         reagent_catalog_number |\
         reagent_batch_number |\
         selection |\
-        tracks_id [FK] |\
+        track_id [FK] |\
         library_id [FK] |\
         allignment_id [FK]
         }"]
@@ -221,47 +188,35 @@ digraph isa_core_diagram {
         prealign_seq_removal
         }"]
 
-        { rank=same; "library" "alignment" }
-        assay_profile -> { "library" "alignment" } [arrowtail=none, arrowhead=teedot, dir=both, label=""]
-    }
-
-    assay_profile -> study;
-
-    subgraph cluster_file {
-
-        label="file";
-       
-        bioassay_file [label="{bioassay_file|\
-        replicate_id [FK]|\
-        file_id [FK] 
+        assay_file [label="{assay_file|\
+        assay_id [FK]|\
+        file_id [FK]
         }"];
+
+        assay -> { library alignment } [arrowtail=none arrowhead=teedot];
 
         file [label="{file|\
         id [PK:serial]|\
         accession [UNIQUE:text]|\
-        file_format [V:TBD]|\
+        file_format [V]|\
         description [text]|\
         uri [UNIQUE:text]|\
-        doi [UNIQUE:text]|\
         ark [UNIQUE:text]|\
         source_filename [text]|\
         size_in_bytes [int]|\
-        checksum_type [V:TBD]|\
+        checksum_type [V]|\
         checksum [text]|\
         creation_date [date]|\
         submission_date [date]
         }"];
 
+        assay -> assay_file;
+        assay_file -> file [arrowhead=none arrowtail=crow];
+        image -> file [arrowtail=none,arrowhead=teedot];
+        { rank=same; assay image }
     }
-    bioassay_file -> file;
-    bioassay_file -> bioassay;
-    image -> file [arrowtail=none, arrowhead=teedot, dir=both, label=""];
 
-    /* Begin Notes section
-     */
-    node [shape=note style=filled fillcolor=yellow];
-    edge [arrowhead=none];
-
-    //note [label="'[V:xyz]' is short-hand for a FK|to a concept table for 'xyz'.|Many columns in this model|depend on the 'OBI' vocabulary."];
+    study -> {sample assay image};
+    sample -> {assay image};
 }
 
