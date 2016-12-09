@@ -21,7 +21,7 @@ digraph isa_core_diagram {
         project_id [FK]|\
         description [text]|\
         experiment_type [V]|\
-	data_type [V]|\
+        study_design [text]|\
         release_date [date]
         }"];
 
@@ -69,6 +69,7 @@ digraph isa_core_diagram {
         gene [V]|\
         age_stage [V]|\
         anatomy [V]|\
+        origin [V:TBD]|\
         specimen [V]|\
         phenotype [V]|\
         litter [V]|\
@@ -170,14 +171,12 @@ digraph isa_core_diagram {
         reagent_source |\
         reagent_catalog_number |\
         reagent_batch_number |\
-        selection |\
-        track_id [FK] |\
-        library_id [FK] |\
-        allignment_id [FK]
+        selection
         }"]
 
         library [label="{library|\
         id [PK] |\
+        assay_id [FK] |\
         library_type |\
         single_paired_end_sequencing |\
         library_adapters |\
@@ -189,6 +188,7 @@ digraph isa_core_diagram {
 
         alignment [label="{alignment|\
         id [PK] |\
+        assay_id [FK] |\
         aligner |\
         aligner_version |\
         aligner_flags |\
@@ -206,8 +206,6 @@ digraph isa_core_diagram {
         file_id [FK]
         }"];
 
-        assay -> { library alignment } [arrowtail=none arrowhead=teedot];
-
         file [label="{file|\
         id [PK:serial]|\
         accession [UNIQUE:text]|\
@@ -223,7 +221,7 @@ digraph isa_core_diagram {
         submission_date [date]
         }"];
 
-        assay -> assay_file;
+        assay -> { library alignment assay_file };
         assay_file -> file [arrowhead=none arrowtail=crow];
         image -> file [arrowtail=none,arrowhead=teedot];
         volume -> file [arrowtail=none,arrowhead=teedot];
