@@ -127,14 +127,27 @@ digraph isa_core_diagram {
         accession [PK:text]|\
         study_id [FK]|\
         sample_id [FK]|\
+        thumbnail_uri [FK]|\
         file_id [FK]|\
         caption [text]|\
         intent [V]|\
         modality [V]|\
         equipment_model [V]|\
-        dimensionality|\
-        voxels [(x,y,z)]|\
-        image_size [(x,y,z)]
+        dimensions [(x,y)]
+        }"];
+
+        volume [label="{volume|\
+        id [PK:serial]|\
+        accession [PK:text]|\
+        study_id [FK]|\
+        sample_id [FK]|\
+        thumbnail_uri [FK]|\
+        file_id [FK]|\
+        caption [text]|\
+        intent [V]|\
+        modality [V]|\
+        equipment_model [V]|\
+        dimensions [(x,y,z)]
         }"];
 
 	assay [label="{assay|\
@@ -200,7 +213,7 @@ digraph isa_core_diagram {
         accession [UNIQUE:text]|\
         file_format [V]|\
         description [text]|\
-        uri [UNIQUE:text]|\
+        uri [PK:text]|\
         ark [UNIQUE:text]|\
         source_filename [text]|\
         size_in_bytes [int]|\
@@ -213,10 +226,11 @@ digraph isa_core_diagram {
         assay -> assay_file;
         assay_file -> file [arrowhead=none arrowtail=crow];
         image -> file [arrowtail=none,arrowhead=teedot];
-        { rank=same; assay image }
+        volume -> file [arrowtail=none,arrowhead=teedot];
+        { rank=same; assay image volume }
     }
 
-    study -> {sample assay image};
-    sample -> {assay image};
+    study -> {sample assay image volume};
+    sample -> {assay image volume};
 }
 
