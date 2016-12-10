@@ -228,6 +228,27 @@ digraph isa_core_diagram {
         { rank=same; assay image volume }
     }
 
+    subgraph cluster_vocab {
+
+        label="vocab";
+
+        gene_summary [label="{gene_summary|\
+        id [serial:PK]|\
+        species_id [int:FK]|\
+        gene_id [int:FK]|\
+        anatomy_id [int:FK]|\
+        age_id [int:FK]|\
+        contributed_by [int:FK]|\
+        summary [text]
+        }"];
+
+        gene [label="{gene|\
+        chado columns...
+        }"];
+
+        gene -> gene_summary;
+    }
+
     study -> {sample assay image volume};
     sample -> {assay image volume};
 }
