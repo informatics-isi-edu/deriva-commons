@@ -1,41 +1,29 @@
-digraph vocab_metamodel_diagram {
+digraph vocab_diagram {
 
     ratio="fill";
-    node [shape=record style=rounded fontsize=14];
+    node [shape=Mrecord];
 
-    subgraph cluster_1 {
+    subgraph vocab {
 
-        label="vocab";
-
-        concept [label="{concept|\
-        <pk> id [PK: serial] |\
-        <pid> parent_id [FK] (supertype relation) |\
-        <sid> synonym_id [FK] (null indicates canonical concept) |\
-        code [PK: text] (identifier from source vocabulary) |\
-        term [PK: text] (meaningful name of the concept) |\
-        description [text] (if available, description of the concept) |\
-        uri [uri] (uri or iri of the concept) |\
-        valid_start_date [date] |\
-        valid_end_date [date] |\
-        <ir> invalid_reason [FK] |\
-        }"];
-        concept -> concept [label="parent"];
-        concept -> concept [label="synonym"];
-        concept -> invalid_reason [label="invalid_reason"];
-
-        invalid_reason [label="{invalid_reason|\
-        <pk> reason [PK: text] (deleted, updated) |\
+        cvterm [label="{cvterm|\
+        <pk> cvterm_id [serial:PK]|\
+        dbxref [text:UNIQUE]|\
+        cvname [text:NOT NULL]|\
+        name [text:NOT NULL]|\
+        definition [text]|\
+        is_obsolete [boolean:NOT NULL]|\
+        is_relationshiptype [boolean:NOT NULL]|\
+        UNIQUE (cvname, name, is_obsolete)
         }"];
 
-        /* Begin Notes section
-        */
-        node [shape=note style=filled fillcolor=yellow];
-        edge [arrowhead=none];
-
-        note_con [label="One 'concept' table per vocabulary.\l\Must be annotated with\l\'tag:misd.isi.edu,2015:vocabulary'."];
-        note_con -> concept;
-
-        note_dom [label="This is a simple domain table."];
-        note_dom -> invalid_reason [arrowhead=none];
+        cvtermpath [label="{cvtermpath|\
+        <tid> type_id [int:NOT NULL] REFERENCES cvterm (cvterm_id)|\
+        <sid> subject_id [int:NOT NULL] REFERENCES cvterm (cvterm_id)|\
+        <oid> object_id [int:NOT NULL] REFERENCES cvterm (cvterm_id)|\
+        pathdistance [int:NOT NULL]|\
+        UNIQUE (type_id, subject_id, object_id)
+        }"];
+    
+        cvterm -> {cvtermpath:tid cvtermpath:sid cvtermpath:oid} [arrowhead=crow arrowtail=none]; 
     }
 }
