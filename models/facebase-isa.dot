@@ -230,7 +230,8 @@ digraph isa_core_diagram {
         }"];
 
         track_file [label="{track_file|\
-        id [PK:serial]|\
+        id [serial:PK]|\
+        assay [int:FK]|\
         filename [text]|\
         uri [PK:text]|\
         content_type [text]|\
