@@ -10,16 +10,23 @@ digraph isa_core_diagram {
 
         project [label="{project|\
         id [PK:serial] |\
+        funding [text]|\
+        description [text:HIDE]|\
+        url [text]|\
         name [text]|\
-        abstract [text]|\
-        funding [text]
+        abstract [markdown]
         }"];
 
         dataset [label="{dataset|\
-        id [PK:serial] |\
-        accession [PK:text] |\
-        project_id [FK]|\
+        id [PK:serial]|\
+        accession [PK:text]|\
+        pubmed_id [text]|\
+        title [text]|\
+        project [FK]|\
+        funding [text]|\
+        summary [text]|\
         description [markdown]|\
+        thumbnail [bigint]|\
         experiment_type [V]|\
         study_design [markdown]|\
         release_date [date]|\
@@ -27,15 +34,17 @@ digraph isa_core_diagram {
         }"];
 
         person [label="{person|\
-        id [PK:serial]|\
-        project_id [FK]|\
         name [text]|\
+        first_name [text:HIDE]|\
+        middle_name [text:HIDE]|\
+        last_name [text:HIDE]|\
+        email [text:HIDE]|\
+        degrees [text:HIDE]|\
         affiliation [text]|\
-        role [V]|\
-        email [text]|\
-        website [url]
+        website [text]
         }"];
 
+        /* NOT IMPLEMENTED YET
         publication [label="{publication|\
         id [PK:serial]|\
         project_id [FK]|\
@@ -47,9 +56,13 @@ digraph isa_core_diagram {
         abstract [text]|\
         status [V]
         }"];
-
-        project -> {dataset person}
         dataset -> publication
+        */
+
+        project -> dataset
+        project -> { project_member project_investigator} [arrowhead=none arrowtail=crow];
+        project_member -> person;
+        project_investigator -> person;
         {rank=same; project dataset}
     }
 
