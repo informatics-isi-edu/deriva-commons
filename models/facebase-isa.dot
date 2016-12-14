@@ -78,7 +78,6 @@ digraph isa_core_diagram {
         project_member -> person;
         project_investigator -> person;
         dataset -> file;
-        {rank=same; project dataset}
     }
 
     subgraph cluster_isa {
@@ -230,12 +229,27 @@ digraph isa_core_diagram {
         file [FK]
         }"];
 
-        assay -> { library alignment assay_file };
+        track_file [label="{track_file|\
+        id [PK:serial]|\
+        filename [text]|\
+        uri [PK:text]|\
+        content_type [text]|\
+        bytes [bigint]|\
+        description [text]|\
+        timestamp [timestamptz]|\
+        dataset [int:FK]|\
+        checksum_type [text]|\
+        checksum [text]
+        }"];
+
+        assay -> { library alignment assay_file track_file };
         assay_file -> file [arrowhead=none arrowtail=crow];
         image -> file [arrowtail=none,arrowhead=teedot];
         volume -> file [arrowtail=none,arrowhead=teedot];
         { rank=same; assay image volume }
     }
+
+    dataset -> track_file;
 
     subgraph cluster_vocab {
 
