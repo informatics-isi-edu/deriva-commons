@@ -4,9 +4,9 @@ digraph isa_core_diagram {
     node [shape=Mrecord];
     edge [arrowhead=crow arrowtail=none dir=both label=""];
 
-    subgraph cluster_study {
+    subgraph cluster_legacy {
 
-        label="study";
+        label="legacy";
 
         project [label="{project|\
         id [PK:serial] |\
@@ -15,41 +15,42 @@ digraph isa_core_diagram {
         funding [text]
         }"];
 
-        study [label="{study|\
+        dataset [label="{dataset|\
         id [PK:serial] |\
         accession [PK:text] |\
         project_id [FK]|\
-        description [text]|\
+        description [markdown]|\
         experiment_type [V]|\
-        study_design [text]|\
-        release_date [date]
+        study_design [markdown]|\
+        release_date [date]|\
+        status [FK]
         }"];
 
-        personnel [label="{personnel|\
+        person [label="{person|\
         id [PK:serial]|\
-	project_id [FK]|\
-	full_name [text]|\
+        project_id [FK]|\
+        name [text]|\
         affiliation [text]|\
         role [V]|\
         email [text]|\
-	website [url]
+        website [url]
         }"];
 
         publication [label="{publication|\
         id [PK:serial]|\
         project_id [FK]|\
-        study_id [FK]|\
+        dataset_id [FK]|\
         pubmed_id [UNIQUE:text]|\
         doi [UNIQUE:text]|\
-	url [text]|\
+        url [text]|\
         title [text]|\
-	abstract [text]|\
+        abstract [text]|\
         status [V]
         }"];
 
-        project -> {study personnel}
-        study -> publication
-        {rank=same; project study}
+        project -> {dataset person}
+        dataset -> publication
+        {rank=same; project dataset}
     }
 
     subgraph cluster_sample {
@@ -59,7 +60,7 @@ digraph isa_core_diagram {
         sample [label="{sample|\
         id [PK:serial]|\
         accession [PK:text]|\
-        study_id [FK]|\
+        dataset_id [FK]|\
         replicate [int]|\
         species [V]|\
         strain [V]|\
@@ -126,7 +127,7 @@ digraph isa_core_diagram {
         image [label="{image|\
         id [PK:serial]|\
         accession [PK:text]|\
-        study_id [FK]|\
+        dataset_id [FK]|\
         sample_id [FK]|\
         thumbnail_uri [FK]|\
         file_id [FK]|\
@@ -140,7 +141,7 @@ digraph isa_core_diagram {
         volume [label="{volume|\
         id [PK:serial]|\
         accession [PK:text]|\
-        study_id [FK]|\
+        dataset_id [FK]|\
         sample_id [FK]|\
         thumbnail_uri [FK]|\
         file_id [FK]|\
@@ -151,12 +152,12 @@ digraph isa_core_diagram {
         dimensions [(x,y,z)]
         }"];
 
-	assay [label="{assay|\
-	id [PK:serial]|\
+        assay [label="{assay|\
+        id [PK:serial]|\
         accession [PK:text]|\
-        study_id [FK]|\
+        dataset_id [FK]|\
         sample_id [FK]|\
-	replicate [int]|\
+        replicate [int]|\
         molecule_type |\
         sample_composition |\
         sample_type |\
@@ -249,7 +250,7 @@ digraph isa_core_diagram {
         gene -> gene_summary;
     }
 
-    study -> {sample assay image volume};
+    dataset -> {sample assay image volume};
     sample -> {assay image volume};
 }
 
