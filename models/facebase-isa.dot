@@ -53,9 +53,9 @@ digraph isa_core_diagram {
         {rank=same; project dataset}
     }
 
-    subgraph cluster_sample {
+    subgraph cluster_isa {
 
-        label="sample";
+        label="isa";
 
         sample [label="{sample|\
         id [PK:serial]|\
@@ -118,11 +118,6 @@ digraph isa_core_diagram {
         }"]
 
         sample -> {clinical enhancer} [arrowtail=none arrowhead=teedot];
-    }
-
-    subgraph cluster_assays {
-
-        label="assays";
 
         image [label="{image|\
         id [PK:serial]|\
@@ -231,7 +226,7 @@ digraph isa_core_diagram {
 
     subgraph cluster_vocab {
 
-        label="vocab";
+        label="vocabulary";
 
         gene_summary [label="{gene_summary|\
         id [serial:PK]|\
