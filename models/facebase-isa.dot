@@ -245,10 +245,9 @@ digraph isa_core_diagram {
         id [serial:PK]|\
         species [int:FK]|\
         gene [int:FK]|\
-        anatomy [int:FK]|\
-        age [int:FK]|\
-        contributed_by [int:FK]|\
-        summary [text]
+        project [int:FK]|\
+        summary [markdown]|\
+        UNIQUE (species, gene)
         }"];
 
         gene [label="{gene|\
