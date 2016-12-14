@@ -47,8 +47,8 @@ digraph isa_core_diagram {
         /* NOT IMPLEMENTED YET
         publication [label="{publication|\
         id [PK:serial]|\
-        project_id [FK]|\
-        dataset_id [FK]|\
+        project [FK]|\
+        dataset [FK]|\
         pubmed_id [UNIQUE:text]|\
         doi [UNIQUE:text]|\
         url [text]|\
@@ -59,10 +59,25 @@ digraph isa_core_diagram {
         dataset -> publication
         */
 
+        file [label="{file|\
+        id [PK:serial]|\
+        filename [text]|\
+        uri [PK:text]|\
+        content_type [text]|\
+        bytes [bigint]|\
+        description [text]|\
+        timestamp [timestamptz]|\
+        dataset [int:FK]|\
+        checksum_type [text]|\
+        checksum [text]|\
+        ark [text]
+        }"];
+
         project -> dataset
         project -> { project_member project_investigator} [arrowhead=none arrowtail=crow];
         project_member -> person;
         project_investigator -> person;
+        dataset -> file;
         {rank=same; project dataset}
     }
 
@@ -73,7 +88,7 @@ digraph isa_core_diagram {
         sample [label="{sample|\
         id [PK:serial]|\
         accession [PK:text]|\
-        dataset_id [FK]|\
+        dataset [FK]|\
         replicate [int]|\
         species [V]|\
         strain [V]|\
@@ -89,8 +104,8 @@ digraph isa_core_diagram {
         litter [V]|\
         collection_date|\
         local_identifier|\
-        clinical_id [FK]|\
-        enhancer_id [FK]
+        clinical [FK]|\
+        enhancer [FK]
         }"];
 
         clinical [label="{clinical|\
@@ -135,10 +150,10 @@ digraph isa_core_diagram {
         image [label="{image|\
         id [PK:serial]|\
         accession [PK:text]|\
-        dataset_id [FK]|\
-        sample_id [FK]|\
+        dataset [FK]|\
+        sample [FK]|\
         thumbnail_uri [FK]|\
-        file_id [FK]|\
+        file [FK]|\
         caption [text]|\
         intent [V]|\
         modality [V]|\
@@ -149,10 +164,10 @@ digraph isa_core_diagram {
         volume [label="{volume|\
         id [PK:serial]|\
         accession [PK:text]|\
-        dataset_id [FK]|\
-        sample_id [FK]|\
+        dataset [FK]|\
+        sample [FK]|\
         thumbnail_uri [FK]|\
-        file_id [FK]|\
+        file [FK]|\
         caption [text]|\
         intent [V]|\
         modality [V]|\
@@ -163,8 +178,8 @@ digraph isa_core_diagram {
         assay [label="{assay|\
         id [PK:serial]|\
         accession [PK:text]|\
-        dataset_id [FK]|\
-        sample_id [FK]|\
+        dataset [FK]|\
+        sample [FK]|\
         replicate [int]|\
         molecule_type |\
         sample_composition |\
@@ -185,7 +200,7 @@ digraph isa_core_diagram {
 
         library [label="{library|\
         id [PK] |\
-        assay_id [FK] |\
+        assay [FK] |\
         library_type |\
         single_paired_end_sequencing |\
         library_adapters |\
@@ -197,7 +212,7 @@ digraph isa_core_diagram {
 
         alignment [label="{alignment|\
         id [PK] |\
-        assay_id [FK] |\
+        assay [FK] |\
         aligner |\
         aligner_version |\
         aligner_flags |\
@@ -211,23 +226,8 @@ digraph isa_core_diagram {
         }"]
 
         assay_file [label="{assay_file|\
-        assay_id [FK]|\
-        file_id [FK]
-        }"];
-
-        file [label="{file|\
-        id [PK:serial]|\
-        accession [UNIQUE:text]|\
-        file_format [V]|\
-        description [text]|\
-        uri [PK:text]|\
-        ark [UNIQUE:text]|\
-        source_filename [text]|\
-        size_in_bytes [int]|\
-        checksum_type [V]|\
-        checksum [text]|\
-        creation_date [date]|\
-        submission_date [date]
+        assay [FK]|\
+        file [FK]
         }"];
 
         assay -> { library alignment assay_file };
@@ -243,10 +243,10 @@ digraph isa_core_diagram {
 
         gene_summary [label="{gene_summary|\
         id [serial:PK]|\
-        species_id [int:FK]|\
-        gene_id [int:FK]|\
-        anatomy_id [int:FK]|\
-        age_id [int:FK]|\
+        species [int:FK]|\
+        gene [int:FK]|\
+        anatomy [int:FK]|\
+        age [int:FK]|\
         contributed_by [int:FK]|\
         summary [text]
         }"];
