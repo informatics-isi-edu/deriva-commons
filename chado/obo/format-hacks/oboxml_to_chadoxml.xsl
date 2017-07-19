@@ -172,37 +172,50 @@
   </xsl:template>
 
   <xsl:template match="term">
-    <cvterm id="{id}">
-      <dbxref_id>
-        <xsl:apply-templates select="id" mode="dbxref"/>
-      </dbxref_id>
-
-      <!-- we must munge the name for obsoletes -->
-      <xsl:choose>
-        <xsl:when test="is_obsolete">
-          <is_obsolete>1</is_obsolete>
-          <name>
-            <xsl:value-of select="name"/>
-            <xsl:text> (obsolete </xsl:text>
-            <xsl:value-of select="id"/>
-            <xsl:text>)</xsl:text>
-          </name>
-        </xsl:when>
-        <xsl:otherwise>
-          <name>
-            <xsl:value-of select="name"/>
-          </name>
-        </xsl:otherwise>
-      </xsl:choose>
-
-      <xsl:apply-templates select="namespace"/>
-
-      <xsl:apply-templates select="def"/>
-      <xsl:apply-templates select="comment"/>
-      <xsl:apply-templates select="synonym"/>
-      <xsl:apply-templates select="alt_id"/>
-      <xsl:apply-templates select="xref_analog"/>
-    </cvterm>
+    <xsl:choose>
+      <xsl:when test="name">
+        <cvterm id="{id}">
+          <dbxref_id>
+            <xsl:apply-templates select="id" mode="dbxref"/>
+          </dbxref_id>
+    
+          <!-- we must munge the name for obsoletes -->
+          <xsl:choose>
+            <xsl:when test="is_obsolete">
+              <is_obsolete>1</is_obsolete>
+              <name>
+                <xsl:value-of select="name"/>
+                <xsl:text> (obsolete </xsl:text>
+                <xsl:value-of select="id"/>
+                <xsl:text>)</xsl:text>
+              </name>
+            </xsl:when>
+            <xsl:otherwise>
+              <name>
+                <xsl:value-of select="name"/>
+              </name>
+            </xsl:otherwise>
+          </xsl:choose>
+          <xsl:choose>  
+            <xsl:when test="namespace">
+              <xsl:apply-templates select="namespace"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:comment>Source term had no namespace, assigning "none".</xsl:comment>
+              <cv_id>cv__none</cv_id>
+            </xsl:otherwise>
+          </xsl:choose>	    
+          <xsl:apply-templates select="def"/>
+          <xsl:apply-templates select="comment"/>
+          <xsl:apply-templates select="synonym"/>
+          <xsl:apply-templates select="alt_id"/>
+          <xsl:apply-templates select="xref_analog"/>
+        </cvterm>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:comment>Source term had no name, skipping.</xsl:comment>
+      </xsl:otherwise>
+    </xsl:choose>      
   </xsl:template>
 
   <!-- in oboxml, a typedef element is used for relations and
@@ -241,7 +254,7 @@
       <xsl:if test="is_obsolete">
         <is_obsolete>1</is_obsolete>
       </xsl:if>
-      <xsl:apply-templates select="is_symmetric|is_cyclic|is_anti_symmetric|is_reflexive|is_transitive"/>
+      <xsl:apply-templates select="is_symmetric|is_cyclic|is_anti_symmetric|is_reflexive|is_transitive|dc-contributor"/>
 
       <is_relationshiptype>1</is_relationshiptype>
       <xsl:if test="def">
@@ -273,7 +286,7 @@
     </cvterm>
   </xsl:template>
 
-  <xsl:template match="is_symmetric|is_cyclic|is_anti_symmetric|is_reflexive|is_transitive">
+  <xsl:template match="is_symmetric|is_cyclic|is_anti_symmetric|is_reflexive|is_transitive|dc-contributor">
     <cvtermprop>
       <type_id>
         <cvterm op="force">
@@ -314,13 +327,21 @@
       
       <!-- not present in this document -->
       <xsl:otherwise>
+        <xsl:comment>Placeholder cvterm for a term not in this document</xsl:comment>
         <cvterm>
-          <xsl:apply-templates select="." mode="dbxref"/>
+          <xsl:apply-templates select="." mode="dbxref_and_name"/>
         </cvterm>
       </xsl:otherwise>
 
     </xsl:choose>
 
+  </xsl:template>
+
+  <!-- turn an external OBO ID into a Chado dbxref, name, and db -->
+  <xsl:template match="*" mode="dbxref_and_name">
+    <xsl:apply-templates select="." mode="dbxref"/>
+    <cv_id>anonymous_cv</cv_id>
+    <name>__dbxref_<xsl:value-of select="."/></name>
   </xsl:template>
 
   <!-- turn an OBO ID into a Chado dbxref -->
@@ -370,15 +391,17 @@
 
   <!-- TODO: implied links -->
   <xsl:template match="is_a">
-    <cvterm_relationship>
-      <type_id>builtin__is_a</type_id>
-      <subject_id>
-        <xsl:apply-templates select="../id" mode="cvterm_id"/>
-      </subject_id>
-      <object_id>
-        <xsl:apply-templates select="." mode="cvterm_id"/>
-      </object_id>
-    </cvterm_relationship>
+    <xsl:if test="../name">
+      <cvterm_relationship>
+        <type_id>builtin__is_a</type_id>
+        <subject_id>
+          <xsl:apply-templates select="../id" mode="cvterm_id"/>
+        </subject_id>
+        <object_id>
+          <xsl:apply-templates select="." mode="cvterm_id"/>
+        </object_id>
+      </cvterm_relationship>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="relationship">
@@ -398,7 +421,7 @@
   <!-- for instances: slot-values and relationships between instances -->
   <xsl:template match="property_value">
     <xsl:choose>
-      <xsl:when test="datatype">
+      <xsl:when test="('datatype' or 'dc-contributor')">
         <!-- slots -->
         <cvtermprop>
           <cvterm_id>
