@@ -1,0 +1,19 @@
+*** DBStag.pm.orig	2017-07-11 17:14:28.284223031 -0700
+--- DBStag.pm	2017-07-19 16:07:09.383297320 -0700
+***************
+*** 3271,3277 ****
+  
+      $distinct = $distinct ? '' : ' DISTINCT';
+      my $sql =
+!       sprintf("SELECT%s %s FROM %s%s%s",
+                $distinct,
+                join(', ', @$select),
+                join(', ', @$table),
+--- 3271,3277 ----
+  
+      $distinct = $distinct ? '' : ' DISTINCT';
+      my $sql =
+!       sprintf("SELECT%s %s FROM %s%s%s%s",
+                $distinct,
+                join(', ', @$select),
+                join(', ', @$table),
