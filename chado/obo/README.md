@@ -49,11 +49,11 @@ make prepdb
 ```
 
 In theory you can use `make ontologies` to load the relationship ontology, but in practice that doesn't work. Someone has created a version of the relationship ontology that does work, so you'll need to do this instead:
-
+```
 curl -O https://gist.githubusercontent.com/scottcain/10e255c991a41bcf0187/raw/7faba8c6f26766f5a686eb681f5cb2f48e49b78a/ro.obo
 go2fmt.pl -p obo_text -w xml ro.obo | xsltproc $DC/chado/obo/format-hacks/ oboxml_to_chadoxml - > ro.xml
 stag-storenode.pl -d 'dbi:Pg:dbname=chado' --user=yourname ro.xml
-
+```
 (*Todo: see if the standard ro.obo file works now with the various changes; also check whether the --user argument is necessary*)
 
 Finally, load your chadoxml file. This takes about an hour for uberon.
