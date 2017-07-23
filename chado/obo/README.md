@@ -43,11 +43,20 @@ stag-storenode.pl -d 'dbi:Pg:dbname=chado' --user=yourname ro.xml
 
 (*Todo: see if the standard ro.obo file works now with the various changes; also check whether the --user argument is necessary*)
 
-Finally, load your chadoxml file. This takes about an hour for uberon.
+Then load your chadoxml file. This takes about an hour for uberon.
 
 ```
 stag-storenode.pl -d 'dbi:Pg:dbname=chado' --user myname myfile.chadoxml
 ```
+
+Step 4: generate the cvtermpath table:
+
+```
+gmod_make_cvtermpath.pl -D mydb -c uberon >& path.out
+```
+
+This generates very verbose output and took about 60 hours to run. Some database tuning would probably help, as would rewriting that script as pure SQL.
+
 
 *TODO: installation instructions for chado, gmod, dbstag*
 
