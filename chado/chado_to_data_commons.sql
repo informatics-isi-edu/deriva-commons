@@ -60,7 +60,7 @@ join :chado.cvterm c on c.cvterm_id = s.cvterm_id
 join :chado.cvterm cst on cst.cvterm_id = s.type_id;
 
 
-insert into :dc.cvterm_dbxref (primary_dbxref, alternate_dbxref, is_for_definition)
+insert into :dc.cvterm_dbxref (cvterm, alternate_dbxref, is_for_definition)
 select
   :dc.chado_dbxref_id_to_dbxref(c.dbxref_id),
   :dc.chado_dbxref_id_to_dbxref(d.dbxref_id),

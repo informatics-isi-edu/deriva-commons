@@ -27,7 +27,7 @@ create table :dc.dbxref (
 create table :dc.cvterm (
   dbxref text primary key references :dc.dbxref(name) deferrable,
   dbxref_unversioned text not null,
-  cv text not null,
+  cv text not null references :dc.cv(name) deferrable,
   name text not null,
   definition text,
   is_obsolete boolean not null,
@@ -53,7 +53,7 @@ create table :dc.cvtermsynonym (
 
 create table :dc.cvterm_dbxref (
   cvterm_dbxref_id bigserial primary key,
-  primary_dbxref text not null references :dc.cvterm(dbxref) deferrable,
+  cvterm text not null references :dc.cvterm(dbxref) deferrable,
   alternate_dbxref text not null references :dc.dbxref(name) deferrable,
   is_for_definition boolean,
   unique(primary_dbxref, alternate_dbxref)
