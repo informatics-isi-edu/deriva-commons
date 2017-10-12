@@ -9,12 +9,10 @@ create or replace function data_commons.create_relationship_paths(cvterm_relid b
 declare is_a text = 'OBO_REL:is_a:';
 declare is_transitive boolean;
 begin
-   select p.value = '1' into is_transitive
+   select t.is_transitive into is_transitive
      from data_commons.cvterm_relationship r
-     join cvtermprop p on p.cvterm_dbxref = r.type_dbxref
-     join cvterm t on t.dbxref = p.type_dbxref
-     where r.cvterm_relationship_id = cvterm_relid
-     and t.name = 'is_transitive';
+     join data_commons.relationship_types t on t.cvterm_dbxref = r.type_dbxref
+     where r.cvterm_relationship_id = cvterm_relid;
 
    insert into data_commons.cvtermpath (type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance)
       select type_dbxref, subject_dbxref, object_dbxref, cv, 1
@@ -35,9 +33,6 @@ begin
         insert into data_commons.cvtermpath (type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance) 
                select type_dbxref, subject_dbxref, object_dbxref, cv, min(pathdistance) from path
                group by type_dbxref, subject_dbxref, object_dbxref, cv
-  	  union
-               select type_dbxref, subject_dbxref, object_dbxref, cv, min(pathdistance) from path
-               group by type_dbxref, subject_dbxref, object_dbxref, cv	  
                on conflict (type_dbxref, subject_dbxref, object_dbxref) do update set pathdistance = least(cvtermpath.pathdistance, EXCLUDED.pathdistance);
   
      with recursive
@@ -54,16 +49,13 @@ begin
         insert into data_commons.cvtermpath (type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance) 
                select type_dbxref, subject_dbxref, object_dbxref, cv, min(pathdistance) from path
                group by type_dbxref, subject_dbxref, object_dbxref, cv
-  	  union
-               select type_dbxref, subject_dbxref, object_dbxref, cv, min(pathdistance) from path
-               group by type_dbxref, subject_dbxref, object_dbxref, cv	  
                on conflict (type_dbxref, subject_dbxref, object_dbxref) do update set pathdistance = least(cvtermpath.pathdistance, EXCLUDED.pathdistance);
   end if;
   return true;
 end
 $$ language plpgsql;
 
-create function data_commons.cvtermpath_add() returns trigger as $$
+create or replace function data_commons.cvtermpath_add() returns trigger as $$
 begin
    perform data_commons.create_relationship_paths(NEW.cvterm_relationship_id, 100);
    return NEW;
@@ -79,8 +71,15 @@ create or replace function data_commons.cvterm_add() returns trigger as $$
 begin
    insert into data_commons.cvtermpath(type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance)
       select t.cvterm_dbxref, NEW.dbxref, NEW.dbxref, NEW.cv, 0
-      from data_commons.cvtermprop t where t.type_dbxref = 'internal:is_reflexive:' and t.value = '1'
+      from data_commons.relationship_types t where t.is_reflexive
       on conflict(type_dbxref, subject_dbxref, object_dbxref) do update set pathdistance = 0;
+   if NEW.is_relationshiptype then
+      insert into data_commons.relationship_types(cvterm_dbxref, is_reflexive, is_transitive)
+         select
+	   NEW.dbxref,
+	   exists (select 1 from data_commons.cvtermprop where cvterm_dbxref = NEW.dbxref and type_dbxref = 'internal:is_reflexive:' and value = '1'),
+	   exists (select 1 from data_commons.cvtermprop where cvterm_dbxref = NEW.dbxref and type_dbxref = 'internal:is_transitive:' and value = '1');
+   end if;	   
    return NEW;
 end
 $$ language plpgsql;
@@ -108,6 +107,12 @@ begin
       select NEW.cvterm_dbxref, c.dbxref, c.dbxref, c.cv, 0
       from data_commons.cvterm c where NEW.type_dbxref = 'internal:is_reflexive:' and NEW.value = '1'
       on conflict(type_dbxref, subject_dbxref, object_dbxref) do update set pathdistance = 0;
+   if NEW.type_dbxref = 'internal:is_reflexive:' then
+      update data_commons.relationship_types set is_reflexive = (NEW.value = '1') where cvterm_dbxref = NEW.cvterm_dbxref;
+   end if;
+   if NEW.type_dbxref = 'internal:is_transitive:' then
+      update data_commons.relationship_types set is_transitive = (NEW.value = '1') where cvterm_dbxref = NEW.cvterm_dbxref;
+   end if;
    return NEW;
 end
 $$ language plpgsql;
@@ -119,7 +124,7 @@ for each row execute procedure data_commons.cvtermprop_add();
 
 create or replace function data_commons.relationship_set_cv() returns trigger as $$
 begin
-  NEW.cv = coalesce(NEW.cv, (select cv from cvterm where dbxref = NEW.subject_dbxref));
+  NEW.cv = coalesce(NEW.cv, (select cv from data_commons.cvterm where dbxref = NEW.subject_dbxref));
   return NEW;
 end
 $$ language plpgsql;

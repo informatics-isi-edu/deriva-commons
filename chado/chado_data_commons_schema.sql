@@ -90,5 +90,11 @@ create table data_commons.cvtermpath (
 create index on data_commons.cvtermpath(subject_dbxref, type_dbxref);
 create index on data_commons.cvtermpath(object_dbxref, type_dbxref);
 
+create table data_commons.relationship_types (
+  cvterm_dbxref text primary key references data_commons.cvterm(dbxref) on delete cascade deferrable,
+  is_reflexive boolean not null,
+  is_transitive boolean not null
+);  
+
 
 commit;

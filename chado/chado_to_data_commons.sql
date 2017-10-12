@@ -19,6 +19,7 @@ insert into :dc.dbxref (db, accession, version, description)
     x.description
 from :chado.db d join :chado.dbxref x on x.db_id = d.db_id
 on conflict(name) do update set accession=EXCLUDED.accession, version=EXCLUDED.version, description=EXCLUDED.description;;
+analyze :dc.dbxref;
 
 insert into :dc.cvterm (
   dbxref,
@@ -48,6 +49,7 @@ join :chado.cv c on c.cv_id = t.cv_id
 on conflict(dbxref) do update
    set cv=EXCLUDED.cv, name=EXCLUDED.name, definition=EXCLUDED.definition, is_obsolete=EXCLUDED.is_obsolete, is_relationshiptype=EXCLUDED.is_relationshiptype,
        synonyms=EXCLUDED.synonyms, alternate_dbxrefs=EXCLUDED.alternate_dbxrefs;
+analyze :dc.cvterm;
 
 insert into :dc.cvtermsynonym (dbxref, synonym, synonym_type)
 select
@@ -80,6 +82,7 @@ insert into :dc.cvtermprop(cvterm_dbxref, type_dbxref, value, rank)
 from :chado.cvtermprop p
 join :chado.cvterm c on c.cvterm_id = p.cvterm_id
 join :chado.cvterm t on t.cvterm_id = p.type_id;
+analyze :dc.cvtermprop;
 
 insert into :dc.cvterm_relationship (type_dbxref, subject_dbxref, object_dbxref)
   select
