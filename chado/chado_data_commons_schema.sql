@@ -1,33 +1,31 @@
-\set dc data_commons
-
 begin;
-create schema :dc;
+create schema data_commons;
 
-create table :dc.db (
+create table data_commons.db (
   name text primary key,
   description text,
   urlprefix text,
   url text
   );
 
-create table :dc.cv (
+create table data_commons.cv (
   name text primary key,
   definition text
 );
 
-create table :dc.dbxref (
+create table data_commons.dbxref (
   name text primary key,
-  db text not null references :dc.db(name) deferrable,
+  db text not null references data_commons.db(name) deferrable,
   accession text not null,
   version text not null default '',
   description text,
   unique(db, accession, version)
 );
 
-create table :dc.cvterm (
-  dbxref text primary key references :dc.dbxref(name) deferrable,
+create table data_commons.cvterm (
+  dbxref text primary key references data_commons.dbxref(name) deferrable,
   dbxref_unversioned text not null,
-  cv text not null references :dc.cv(name) deferrable,
+  cv text not null references data_commons.cv(name) deferrable,
   name text not null,
   definition text,
   is_obsolete boolean not null,
@@ -38,34 +36,59 @@ create table :dc.cvterm (
   check(dbxref like dbxref_unversioned || ':%')
 );
 
-create index on :dc.cvterm(dbxref_unversioned);
+create index on data_commons.cvterm(name);
+create index on data_commons.cvterm(dbxref_unversioned);
 -- Ugh. These next indexes are used in searches of the form '{term}' <@ synonyms but not 'term' = any(synonyms)
-create index on :dc.cvterm using gin(synonyms);
-create index on :dc.cvterm using gin(alternate_dbxrefs);
+create index on data_commons.cvterm using gin(synonyms);
+create index on data_commons.cvterm using gin(alternate_dbxrefs);
 
-create table :dc.cvtermsynonym (
+create table data_commons.cvtermsynonym (
   cvtermsynonym_id bigserial primary key,
-  dbxref text not null references :dc.cvterm(dbxref) deferrable,
+  dbxref text not null references data_commons.cvterm(dbxref) deferrable,
   synonym text not null,
   synonym_type text,
   unique (dbxref, synonym)
 );
 
-create table :dc.cvterm_dbxref (
+create table data_commons.cvterm_dbxref (
   cvterm_dbxref_id bigserial primary key,
-  cvterm text not null references :dc.cvterm(dbxref) deferrable,
-  alternate_dbxref text not null references :dc.dbxref(name) deferrable,
+  cvterm text not null references data_commons.cvterm(dbxref) deferrable,
+  alternate_dbxref text not null references data_commons.dbxref(name) deferrable,
   is_for_definition boolean,
-  unique(primary_dbxref, alternate_dbxref)
+  unique(cvterm, alternate_dbxref)
 );
 
-create table :dc.cvtermpath (
+create table data_commons.cvterm_relationship (
+  cvterm_relationship_id bigserial primary key,
+  type_dbxref text not null references data_commons.cvterm(dbxref) deferrable,
+  subject_dbxref text not null references data_commons.cvterm(dbxref) deferrable,
+  object_dbxref text not null references data_commons.cvterm(dbxref) deferrable,
+  cv text not null references data_commons.cv(name),
+  unique (type_dbxref, subject_dbxref, object_dbxref)
+);  
+
+create table data_commons.cvtermprop (
+  cvtermprop_id bigserial primary key,
+  cvterm_dbxref text not null references data_commons.cvterm(dbxref) deferrable,
+  type_dbxref text not null references data_commons.cvterm(dbxref) deferrable,
+  value text not null,
+  rank integer not null,
+  unique(cvterm_dbxref, type_dbxref, value, rank)
+);
+create index on data_commons.cvtermprop(cvterm_dbxref);
+create index on data_commons.cvtermprop(type_dbxref);
+
+create table data_commons.cvtermpath (
   cvtermpath_id bigserial primary key,
-  type_dbxref text not null references :dc.cvterm(dbxref) deferrable,
-  subject_dbxref text not null references :dc.cvterm(dbxref) deferrable,
-  object_dbxref text not null references :dc.cvterm(dbxref) deferrable,
+  type_dbxref text not null references data_commons.cvterm(dbxref) deferrable,
+  subject_dbxref text not null references data_commons.cvterm(dbxref) deferrable,
+  object_dbxref text not null references data_commons.cvterm(dbxref) deferrable,
+  cv text not null references data_commons.cv(name) deferrable,
   pathdistance integer not null,
   unique(type_dbxref, subject_dbxref, object_dbxref)
-);  
+);
+create index on data_commons.cvtermpath(subject_dbxref, type_dbxref);
+create index on data_commons.cvtermpath(object_dbxref, type_dbxref);
+
 
 commit;
