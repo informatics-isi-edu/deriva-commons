@@ -67,12 +67,38 @@ create trigger relationship_insert_trigger
 after insert on data_commons.cvterm_relationship
 for each row execute procedure data_commons.cvtermpath_add();
 
+create sequence if not exists data_commons.local_dbxref_seq;
+
+create or replace function data_commons.generate_dbxref(db text) returns text as $$
+declare
+  accession_id text;
+begin
+  insert into data_commons.db(name, description) values (db, 'local terms') on conflict do nothing;
+  select nextval('data_commons.local_dbxref_seq')::text into accession_id;
+  insert into data_commons.dbxref(db, accession) values (db, accession_id);
+  return db || ':' || accession_id || ':';
+end
+$$language plpgsql;
+
+create or replace function data_commons.cvterm_generate_dbxref() returns trigger as $$
+declare
+  db text = TG_ARGV[0];
+begin
+  if NEW.dbxref is null then
+     NEW.dbxref = data_commons.generate_dbxref(db);
+  end if;
+  NEW.dbxref_unversioned = (select d.db || ':' || d.accession from data_commons.dbxref d where d.name = NEW.dbxref);
+  return NEW;
+end
+$$language plpgsql;
+
 create or replace function data_commons.cvterm_add() returns trigger as $$
 begin
    insert into data_commons.cvtermpath(type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance)
       select t.cvterm_dbxref, NEW.dbxref, NEW.dbxref, NEW.cv, 0
       from data_commons.relationship_types t where t.is_reflexive
       on conflict(type_dbxref, subject_dbxref, object_dbxref) do update set pathdistance = 0;
+   
    if NEW.is_relationshiptype then
       insert into data_commons.relationship_types(cvterm_dbxref, is_reflexive, is_transitive)
          select
@@ -87,7 +113,7 @@ $$ language plpgsql;
 drop trigger if exists cvterm_insert_trigger on data_commons.cvterm;
 create trigger cvterm_insert_trigger
 after insert on data_commons.cvterm
-for each row execute procedure data_commons.cvterm_add();
+for each row execute procedure data_commons.cvterm_add('laura');
 
 create or replace function data_commons.dbxref_set_name() returns trigger as $$
 begin
@@ -121,6 +147,12 @@ drop trigger if exists cvtermprop_insert_trigger on data_commons.cvtermprop;
 create trigger cvtermprop_insert_trigger
 before insert on data_commons.cvtermprop
 for each row execute procedure data_commons.cvtermprop_add();
+
+
+drop trigger if exists cvterm_generate_dbxref on data_commons.cvterm;
+create trigger cvterm_generate_dbxref
+before insert on data_commons.cvterm
+for each row execute procedure data_commons.cvterm_generate_dbxref('laura');
 
 create or replace function data_commons.relationship_set_cv() returns trigger as $$
 begin
