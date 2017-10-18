@@ -163,4 +163,52 @@ drop trigger if exists relationship_cv_trigger on data_commons.cvterm_relationsh
 create trigger relationship_cv_trigger
 before insert on data_commons.cvterm_relationship
 for each row execute procedure data_commons.relationship_set_cv();
+
+create or replace function data_commons.update_synonym_array() returns trigger as $$
+begin
+   update data_commons.cvterm c set synonyms =
+      (select array_agg(synonym) from data_commons.cvtermsynonym s where s.dbxref = NEW.dbxref)
+      where c.dbxref = NEW.dbxref;
+   return NEW;
+end
+$$ language plpgsql;;
+
+drop trigger if exists synonym_push_trigger on data_commons.cvtermsynonym;
+create trigger synonym_push_trigger after insert on data_commons.cvtermsynonym for each row execute procedure data_commons.update_synonym_array();
+
+create or replace function data_commons.update_dbxref_array() returns trigger as $$
+begin
+   update data_commons.cvterm c set alternate_dbxrefs =
+      (select array_agg(alternate_dbxref) from data_commons.cvterm_dbxref d where d.cvterm = NEW.cvterm)
+      where c.dbxref = NEW.cvterm;
+   return NEW;
+end
+$$ language plpgsql;;
+
+drop trigger if exists cvterm_dbxref_push_trigger on data_commons.cvterm_dbxref;
+create trigger cvterm_dbxref_push_trigger after insert on data_commons.cvterm_dbxref for each row execute procedure data_commons.update_dbxref_array();
+
+create or replace function data_commons.push_cvterm_updates() returns trigger as $$
+declare
+   term_schema text;
+   term_table text;
+begin
+   for term_schema, term_table in
+       select d.term_schema, d.term_table from data_commons.domain_registry d
+   loop
+       begin
+           execute format('update %I.%I set cv = $1, name = $2, definition = $3, is_obsolete = $4, is_relationshiptype = $5, synonyms = $6, alternate_dbxrefs = $7 where dbxref = $8',
+	   term_schema, term_table)
+	   using NEW.cv, NEW.name, NEW.definition, NEW.is_obsolete, NEW.is_relationshiptype, NEW.synonyns, NEW.alternate_dbxrefs, NEW.dbxref;
+       exception when others then
+           continue;
+       end;
+   end loop;
+   return NEW;
+end
+$$ language plpgsql;
+
+drop trigger if exists cvterm_push_updates_trigger on data_commons.cvterm;
+create trigger cvterm_push_updates_trigger  after update on data_commons.cvterm for each row execute procedure data_commons.push_cvterm_updates();
+
 commit;

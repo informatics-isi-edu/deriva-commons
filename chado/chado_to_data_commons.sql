@@ -34,9 +34,7 @@ insert into :dc.cvterm (
   name,
   definition,
   is_obsolete,
-  is_relationshiptype,
-  synonyms,
-  alternate_dbxrefs
+  is_relationshiptype
 )
 select
   :dc.chado_dbxref_id_to_dbxref(t.dbxref_id),
@@ -45,9 +43,7 @@ select
   t.name,
   t.definition,
   t.is_obsolete::boolean,
-  t.is_relationshiptype::boolean,
-  (select array_agg(synonym) from :chado.cvtermsynonym s where s.cvterm_id = t.cvterm_id),
-  (select array_agg(:dc.chado_dbxref_id_to_dbxref(cx.dbxref_id)) from :chado.cvterm_dbxref cx where cx.cvterm_id = t.cvterm_id)
+  t.is_relationshiptype::boolean
 from :chado.cvterm t
 join :chado.dbxref x on x.dbxref_id = t.dbxref_id
 join :chado.db d on d.db_id = x.db_id
