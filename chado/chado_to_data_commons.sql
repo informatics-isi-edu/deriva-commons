@@ -2,6 +2,12 @@
 \set chado public
 
 begin;
+create or replace function data_commons.chado_dbxref_id_to_dbxref(dbxref_id bigint) returns text as $$
+  select d.name || ':' || x.accession || ':' || x.version
+    from public.dbxref x join public.db d on d.db_id = x.db_id
+    where x.dbxref_id = $1;
+$$ language sql;
+
 
 insert into :dc.db(name, description, urlprefix, url)
   select name, description, urlprefix, url from :chado.db
@@ -60,7 +66,7 @@ from :chado.cvtermsynonym s
 join :chado.cvterm c on c.cvterm_id = s.cvterm_id
 join :chado.cvterm cst on cst.cvterm_id = s.type_id
 on conflict (dbxref, synonym) do update set synonym_type = EXCLUDED.synonym_type;
-
+analyze :dc.cvtermsynonym;
 
 insert into :dc.cvterm_dbxref (cvterm, alternate_dbxref, is_for_definition)
 select
@@ -72,6 +78,7 @@ join :chado.cvterm c on c.cvterm_id = cd.cvterm_id
 join :chado.dbxref d on d.dbxref_id = cd.dbxref_id
 on conflict(cvterm, alternate_dbxref) do update set is_for_definition = EXCLUDED.is_for_definition
 ;
+analyze :dc.cvterm_dbxref;
 
 insert into :dc.cvtermprop(cvterm_dbxref, type_dbxref, value, rank)
   select
@@ -84,16 +91,16 @@ join :chado.cvterm c on c.cvterm_id = p.cvterm_id
 join :chado.cvterm t on t.cvterm_id = p.type_id;
 analyze :dc.cvtermprop;
 
-insert into :dc.cvterm_relationship (type_dbxref, subject_dbxref, object_dbxref)
-  select
-  :dc.chado_dbxref_id_to_dbxref(t.dbxref_id),
-  :dc.chado_dbxref_id_to_dbxref(s.dbxref_id),
-  :dc.chado_dbxref_id_to_dbxref(o.dbxref_id)
-from :chado.cvterm_relationship r
-join :chado.cvterm t on t.cvterm_id = r.type_id
-join :chado.cvterm s on s.cvterm_id = r.subject_id
-join :chado.cvterm o on o.cvterm_id = r.object_id
-on conflict(type_dbxref, subject_dbxref, object_dbxref) do update set cv = EXCLUDED.cv;
+-- insert into :dc.cvterm_relationship (type_dbxref, subject_dbxref, object_dbxref)
+--   select
+--   :dc.chado_dbxref_id_to_dbxref(t.dbxref_id),
+--   :dc.chado_dbxref_id_to_dbxref(s.dbxref_id),
+--   :dc.chado_dbxref_id_to_dbxref(o.dbxref_id)
+-- from :chado.cvterm_relationship r
+-- join :chado.cvterm t on t.cvterm_id = r.type_id
+-- join :chado.cvterm s on s.cvterm_id = r.subject_id
+-- join :chado.cvterm o on o.cvterm_id = r.object_id
+-- on conflict(type_dbxref, subject_dbxref, object_dbxref) do update set cv = EXCLUDED.cv;
 
 commit;
 

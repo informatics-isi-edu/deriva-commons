@@ -103,6 +103,8 @@
             <xsl:text>dbxref__</xsl:text>
             <xsl:value-of select="."/>
           </dbxref_id>
+          <cv_id>anonymous_cv</cv_id>
+          <name>__dbxref_<xsl:value-of select="."/></name>	  
         </cvterm>
       </xsl:for-each>
 

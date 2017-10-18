@@ -1,3 +1,9 @@
+create or replace function data_commons.register_domain_table(term_schema name, term_table name, rel_type_schema name, rel_type_table name, path_schema name, path_table name) returns boolean  as $$
+  insert into data_commons.domain_registry(term_schema, term_table, rel_type_schema, rel_type_table, path_schema, path_table)
+     values (term_schema, term_table, rel_type_schema, rel_type_table, path_schema, path_table);
+  select true;
+$$ language sql;
+
 create or replace function data_commons.populate_domain_cvterm() returns trigger as $$
 declare
    dbxref_unversioned text;
@@ -24,6 +30,25 @@ begin
 end
 $$ language plpgsql;
 
+create or replace function data_commons.push_path_table_entries(type_schema name, type_table name, term_schema name, term_table name, path_schema name, path_table name, dbxref text) returns boolean as $$
+begin
+   execute format ('insert into %I.%I(cvtermpath_id, type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance)
+       select p.cvtermpath_id, p.type_dbxref, p.subject_dbxref, p.object_dbxref, p.cv, p.pathdistance from data_commons.cvtermpath p
+       where %L in (type_dbxref, subject_dbxref, object_dbxref)
+       and exists (select 1 from %I.%I t where t.cvterm_dbxref = p.type_dbxref)
+       and exists (select 1 from %I.%I s where s.dbxref = p.subject_dbxref)
+       and exists (select 1 from %I.%I o where o.dbxref = p.object_dbxref)
+       on conflict (type_dbxref, subject_dbxref, object_dbxref) do update set cv=EXCLUDED.cv, pathdistance=EXCLUDED.pathdistance',
+       path_schema, path_table,
+       dbxref,
+       type_schema, type_table,
+       term_schema, term_table,
+       term_schema, term_table);
+   return true;
+end
+$$ language plpgsql;
+
+
 create or replace function data_commons.populate_domain_tables_from_cvterm() returns trigger as $$
 declare
    rel_type_schema name;
@@ -43,18 +68,28 @@ begin
 	 rel_type_schema, rel_type_table, NEW.dbxref);
    end if;
 
-   execute format ('insert into %I.%I(cvtermpath_id, type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance)
-       select p.cvtermpath_id, p.type_dbxref, p.subject_dbxref, p.object_dbxref, p.cv, p.pathdistance from data_commons.cvtermpath p
-       where %L in (type_dbxref, subject_dbxref, object_dbxref)
-       and exists (select 1 from %I.%I t where t.cvterm_dbxref = p.type_dbxref)
-       and exists (select 1 from %I.%I s where s.dbxref = p.subject_dbxref)
-       and exists (select 1 from %I.%I o where o.dbxref = p.object_dbxref)
-       on conflict (type_dbxref, subject_dbxref, object_dbxref) do update set cv=EXCLUDED.cv, pathdistance=EXCLUDED.pathdistance',
-       path_schema, path_table,
-       NEW.dbxref,
-       rel_type_schema, rel_type_table,
-       TG_TABLE_SCHEMA, TG_TABLE_NAME,
-       TG_TABLE_SCHEMA, TG_TABLE_NAME);
+   perform data_commons.push_path_table_entries(rel_type_schema, rel_type_table, TG_TABLE_SCHEMA, TG_TABLE_NAME, path_schema, path_table, NEW.dbxref);
+   return NEW;
+end
+$$ language plpgsql;
+
+create or replace function data_commons.update_domain_paths_from_relationship_type() returns trigger as $$
+declare
+   term_schema text;
+   term_table text;
+   path_schema text;
+   path_table text;
+begin
+   for term_schema, term_table, path_schema, path_table in
+       select d.term_schema, d.term_table, d.path_schema, d.path_table from data_commons.domain_registry d
+         where d.rel_type_schema = TG_TABLE_SCHEMA and d.rel_type_table = TG_TABLE_NAME
+   loop
+       begin
+           perform data_commons.push_path_table_entries(TG_TABLE_SCHEMA, TG_TABLE_NAME, term_schema, term_table, path_schema, path_table, NEW.dbxref);
+       exception when others then
+           continue;
+       end;
+   end loop;
    return NEW;
 end
 $$ language plpgsql;
@@ -98,6 +133,10 @@ begin
      is_transitive boolean not null)',
      rel_type_schema, rel_type_table);
 
+   execute format('drop trigger if exists %I on %I.%I', rel_type_table || '_push_trigger', rel_type_schema, rel_type_table);
+   execute format('create trigger %I after insert on %I.%I for each row execute procedure data_commons.update_domain_paths_from_relationship_type()',
+     rel_type_table || '_push_trigger', rel_type_schema, rel_type_table);
+
    execute format ('create table %I.%I (
                     cvtermpath_id bigint primary key,
                     type_dbxref text not null references %I.%I(cvterm_dbxref),
@@ -113,6 +152,7 @@ begin
 		    schema_name, cvterm_name);
    execute format ('create index on %I.%I(subject_dbxref, type_dbxref)', schema_name, path_name);
    execute format ('create index on %I.%I(object_dbxref, type_dbxref)', schema_name, path_name);
+   perform data_commons.register_domain_table(schema_name, cvterm_name, rel_type_schema, rel_type_table, schema_name, path_name);
    return true;
 end
 

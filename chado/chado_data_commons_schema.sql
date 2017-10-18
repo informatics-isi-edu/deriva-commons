@@ -1,6 +1,18 @@
 begin;
 create schema data_commons;
 
+create table if not exists data_commons.domain_registry(
+   id serial primary key,
+   term_schema text not null,
+   term_table text not null,
+   rel_type_schema text not null,
+   rel_type_table text not null,
+   path_schema text not null,
+   path_table text not null,
+   unique(term_schema, term_table)
+);   
+
+
 create table data_commons.db (
   name text primary key,
   description text,
@@ -29,7 +41,7 @@ create table data_commons.cvterm (
   name text not null,
   definition text,
   is_obsolete boolean default false not null,
-  is_relationshiptype default false boolean not null,
+  is_relationshiptype boolean default false not null,
   synonyms text[],
   alternate_dbxrefs text[],
   unique(cv, name, is_obsolete),
@@ -57,6 +69,9 @@ create table data_commons.cvterm_dbxref (
   is_for_definition boolean,
   unique(cvterm, alternate_dbxref)
 );
+
+create index on data_commons.cvterm_dbxref(cvterm);
+create index on data_commons.cvterm_dbxref(alternate_dbxref);
 
 create table data_commons.cvterm_relationship (
   cvterm_relationship_id bigserial primary key,

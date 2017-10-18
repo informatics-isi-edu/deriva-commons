@@ -1,9 +1,4 @@
 begin;
-create or replace function data_commons.chado_dbxref_id_to_dbxref(dbxref_id bigint) returns text as $$
-  select d.name || ':' || x.accession || ':' || x.version
-    from public.dbxref x join public.db d on d.db_id = x.db_id
-    where x.dbxref_id = $1;
-$$ language sql;
 
 create or replace function data_commons.create_relationship_paths(cvterm_relid bigint, max_distance bigint) returns boolean as $$
 declare is_a text = 'OBO_REL:is_a:';
