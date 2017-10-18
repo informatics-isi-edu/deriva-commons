@@ -1,12 +1,15 @@
-if [ $# != 1 ]; then
-    echo "Usage: $0 db"
+if [ $# != 2 ]; then
+    echo "Usage: $0 chado-db db"
+    echo "where 'chado-db' is the name of a chado 'db' (a row to add to the 'db' table, used to indicate locally-added terms)"
+    echo "and 'db' is a postgres database"
     exit 1
 fi
 
+chado_db=$1; shift
 db=$1
 
 psql -f chado_data_commons_schema.sql $db
-psql -f functions_and_triggers.sql $db
+psql -f functions_and_triggers.sql -v my_db="'$db'" $db
 psql -f domain_table_functions.sql $db
 psql -f chado_to_data_commons.sql $db
 max=`psql -t -c "select max(cvterm_relationship_id) from cvterm_relationship" $db`

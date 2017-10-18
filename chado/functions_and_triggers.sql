@@ -105,10 +105,13 @@ begin
 end
 $$ language plpgsql;
 
+insert into data_commons.db(name, description) values (:my_db, 'locally-generated terms')
+on conflict do nothing;
+
 drop trigger if exists cvterm_insert_trigger on data_commons.cvterm;
 create trigger cvterm_insert_trigger
 after insert on data_commons.cvterm
-for each row execute procedure data_commons.cvterm_add('laura');
+for each row execute procedure data_commons.cvterm_add(:my_db);
 
 create or replace function data_commons.dbxref_set_name() returns trigger as $$
 begin
@@ -147,7 +150,7 @@ for each row execute procedure data_commons.cvtermprop_add();
 drop trigger if exists cvterm_generate_dbxref on data_commons.cvterm;
 create trigger cvterm_generate_dbxref
 before insert on data_commons.cvterm
-for each row execute procedure data_commons.cvterm_generate_dbxref('laura');
+for each row execute procedure data_commons.cvterm_generate_dbxref(:my_db);
 
 create or replace function data_commons.relationship_set_cv() returns trigger as $$
 begin

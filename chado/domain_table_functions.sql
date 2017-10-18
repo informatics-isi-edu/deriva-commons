@@ -4,6 +4,11 @@ create or replace function data_commons.register_domain_table(term_schema name, 
   select true;
 $$ language sql;
 
+create or replace function data_commons.deregister_domain_table(term_schema name, term_table name) returns boolean as $$
+  delete from data_commons.domain_registry where term_schema = term_schema and term_table = term_table;
+  select true;
+$$ language sql;
+
 create or replace function data_commons.populate_domain_cvterm() returns trigger as $$
 declare
    dbxref_unversioned text;
@@ -62,9 +67,7 @@ begin
    select regexp_replace(TG_TABLE_NAME, '_terms$', '_paths') into path_table;
 
    if NEW.is_relationshiptype then
-      execute format('insert into %I.%I(cvterm_dbxref, is_reflexive, is_transitive)
-         select cvterm_dbxref, is_reflexive, is_transitive from data_commons.relationship_types where cvterm_dbxref = %L
-         on conflict(cvterm_dbxref) do update set is_reflexive = EXCLUDED.is_reflexive, is_transitive = EXCLUDED.is_transitive',
+      execute format('insert into %I.%I(cvterm_dbxref) values (%L)',
 	 rel_type_schema, rel_type_table, NEW.dbxref);
    end if;
 
@@ -90,6 +93,13 @@ begin
            continue;
        end;
    end loop;
+   return NEW;
+end
+$$ language plpgsql;
+
+create or replace function data_commons.update_relationshiptype_properties() returns trigger as $$
+begin
+   select is_reflexive, is_transitive into NEW.is_reflexive, NEW.is_transitive from data_commons.relationship_types where cvterm_dbxref = NEW.cvterm_dbxref;
    return NEW;
 end
 $$ language plpgsql;
@@ -133,6 +143,10 @@ begin
      is_transitive boolean not null)',
      rel_type_schema, rel_type_table);
 
+   execute format('drop trigger if exists relationship_properties_trigger on %I.%I', rel_type_schema, rel_type_table);
+   execute format('create trigger relationship_properties_trigger before insert on %I.%I for each row execute procedure data_commons.update_relationshiptype_properties()',
+                   rel_type_schema, rel_type_table);   
+
    execute format('drop trigger if exists %I on %I.%I', rel_type_table || '_push_trigger', rel_type_schema, rel_type_table);
    execute format('create trigger %I after insert on %I.%I for each row execute procedure data_commons.update_domain_paths_from_relationship_type()',
      rel_type_table || '_push_trigger', rel_type_schema, rel_type_table);
@@ -155,9 +169,6 @@ begin
    perform data_commons.register_domain_table(schema_name, cvterm_name, rel_type_schema, rel_type_table, schema_name, path_name);
    return true;
 end
-
-
-
 $$ language plpgsql;
 
 create or replace function data_commons.make_domain_tables(schema_name name, base_name name) returns boolean as $$
