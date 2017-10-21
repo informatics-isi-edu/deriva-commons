@@ -108,6 +108,16 @@ $$ language plpgsql;
 insert into data_commons.db(name, description) values (:my_db, 'locally-generated terms')
 on conflict do nothing;
 
+create or replace function create_dbxref_index(db text) returns boolean as $$
+begin
+   execute format('create index if not exists %I on data_commons.dbxref(accession) where db = %L', 'dbxref_accession_' || db || '_idx', db);
+   return true;
+end
+$$ language plpgsql;
+
+select create_dbxref_index(:my_db);
+analyze data_commons.dbxref;
+
 drop trigger if exists cvterm_insert_trigger on data_commons.cvterm;
 create trigger cvterm_insert_trigger
 after insert on data_commons.cvterm
