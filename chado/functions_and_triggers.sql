@@ -1,12 +1,10 @@
 begin;
 
 create or replace function data_commons.create_relationship_paths(cvterm_relid bigint, max_distance bigint) returns boolean as $$
+declare is_a text = 'OBO_REL:is_a:';
 declare is_transitive boolean;
-declare is_a text;
-declare my_rel text;
-
 begin
-   select t.is_transitive, r.type_dbxref into is_transitive, my_rel
+   select t.is_transitive into is_transitive
      from data_commons.cvterm_relationship r
      join data_commons.relationship_types t on t.cvterm_dbxref = r.type_dbxref
      where r.cvterm_relationship_id = cvterm_relid;
@@ -15,22 +13,17 @@ begin
       select type_dbxref, subject_dbxref, object_dbxref, cv, 1
       from data_commons.cvterm_relationship where cvterm_relationship_id = cvterm_relid
       on conflict (type_dbxref, subject_dbxref, object_dbxref) do update set pathdistance = least(cvtermpath.pathdistance, EXCLUDED.pathdistance);
- 
    if is_transitive then
-     select dbxref into is_a from data_commons.cvterm where name = 'is_a' and cv = 'relationship' and is_relationshiptype;
-     
      with recursive
         path(type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance) as (
           select p.type_dbxref, p.subject_dbxref, p.object_dbxref, p.cv, p.pathdistance
             from data_commons.cvtermpath p
-	    join data_commons.relationship_types rt on rt.cvterm_dbxref = p.type_dbxref and rt.is_transitive
-            join data_commons.cvterm_relationship r on r.subject_dbxref = p.object_dbxref
-               and (my_rel = is_a or r.type_dbxref in (p.type_dbxref, is_a))
+  	  join data_commons.cvterm_relationship r on r.type_dbxref = p.type_dbxref and r.subject_dbxref = p.object_dbxref
   	  where r.cvterm_relationship_id = cvterm_relid
           union 
            select p.type_dbxref, p.subject_dbxref, r.object_dbxref, p.cv, p.pathdistance+1
              from path p
-             join data_commons.cvterm_relationship r on r.subject_dbxref = p.object_dbxref and r.type_dbxref in (p.type_dbxref, is_a)
+             join data_commons.cvterm_relationship r on r.subject_dbxref = p.object_dbxref and r.type_dbxref = p.type_dbxref
              where p.pathdistance < max_distance)
         insert into data_commons.cvtermpath (type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance) 
                select type_dbxref, subject_dbxref, object_dbxref, cv, min(pathdistance) from path
@@ -41,21 +34,18 @@ begin
         path(type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance) as (
           select p.type_dbxref, p.subject_dbxref, p.object_dbxref, p.cv, p.pathdistance
             from data_commons.cvtermpath p
-	    join data_commons.relationship_types rt on rt.cvterm_dbxref = p.type_dbxref and rt.is_transitive	    
-            join data_commons.cvterm_relationship r on r.object_dbxref = p.subject_dbxref
-               and (my_rel = is_a or r.type_dbxref in (p.type_dbxref, is_a))
+  	  join data_commons.cvterm_relationship r on r.type_dbxref = p.type_dbxref and r.object_dbxref = p.subject_dbxref
   	  where r.cvterm_relationship_id = cvterm_relid
           union
            select p.type_dbxref, r.subject_dbxref, p.object_dbxref, p.cv, p.pathdistance+1
              from path p
-             join data_commons.cvterm_relationship r on r.object_dbxref = p.subject_dbxref and r.type_dbxref in (p.type_dbxref, is_a)
+             join data_commons.cvterm_relationship r on r.object_dbxref = p.subject_dbxref and r.type_dbxref = p.type_dbxref	
              where p.pathdistance < max_distance)
         insert into data_commons.cvtermpath (type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance) 
                select type_dbxref, subject_dbxref, object_dbxref, cv, min(pathdistance) from path
                group by type_dbxref, subject_dbxref, object_dbxref, cv
                on conflict (type_dbxref, subject_dbxref, object_dbxref) do update set pathdistance = least(cvtermpath.pathdistance, EXCLUDED.pathdistance);
   end if;
-  
   return true;
 end
 $$ language plpgsql;
@@ -257,5 +247,6 @@ insert into data_commons.cvtermprop(cvterm_dbxref, type_dbxref, value, rank)
   join data_commons.dbxref d on d.db = 'internal' and d.accession in ('is_reflexive', 'is_transitive')
   where c.name = 'is_a' and c.is_relationshiptype and c.cv = 'relationship'
 on conflict do nothing;
+
 
 commit;
