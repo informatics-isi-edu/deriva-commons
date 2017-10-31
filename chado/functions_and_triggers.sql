@@ -3,14 +3,11 @@ begin;
 create or replace function data_commons.create_relationship_paths(cvterm_relid bigint, max_distance bigint) returns boolean as $$
 declare is_a text = 'OBO_REL:is_a:';
 declare is_transitive boolean;
-declare is_bulk_upload boolean = False;
 begin
    select t.is_transitive into is_transitive
      from data_commons.cvterm_relationship r
      join data_commons.relationship_types t on t.cvterm_dbxref = r.type_dbxref
      where r.cvterm_relationship_id = cvterm_relid;
-
-   select is_bulk_upload()
 
    insert into data_commons.cvtermpath (type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance)
       select type_dbxref, subject_dbxref, object_dbxref, cv, 1
