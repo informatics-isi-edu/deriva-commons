@@ -3,11 +3,14 @@ begin;
 create or replace function data_commons.create_relationship_paths(cvterm_relid bigint, max_distance bigint) returns boolean as $$
 declare is_a text = 'OBO_REL:is_a:';
 declare is_transitive boolean;
+declare is_bulk_upload boolean = False;
 begin
    select t.is_transitive into is_transitive
      from data_commons.cvterm_relationship r
      join data_commons.relationship_types t on t.cvterm_dbxref = r.type_dbxref
      where r.cvterm_relationship_id = cvterm_relid;
+
+   select is_bulk_upload()
 
    insert into data_commons.cvtermpath (type_dbxref, subject_dbxref, object_dbxref, cv, pathdistance)
       select type_dbxref, subject_dbxref, object_dbxref, cv, 1
@@ -46,6 +49,7 @@ begin
                group by type_dbxref, subject_dbxref, object_dbxref, cv
                on conflict (type_dbxref, subject_dbxref, object_dbxref) do update set pathdistance = least(cvtermpath.pathdistance, EXCLUDED.pathdistance);
   end if;
+  perform public.try_ermrest_data_change_event('data_commons', 'cvtermpath');
   return true;
 end
 $$ language plpgsql;
@@ -147,6 +151,8 @@ begin
    if NEW.type_dbxref = 'internal:is_transitive:' then
       update data_commons.relationship_types set is_transitive = (NEW.value = '1') where cvterm_dbxref = NEW.cvterm_dbxref;
    end if;
+   perform public.try_ermrest_data_change_event('data_commons', 'cvtermpath');
+   perform public.try_ermrest_data_change_event('data_commons', 'relationship_types');   
    return NEW;
 end
 $$ language plpgsql;
@@ -179,6 +185,7 @@ begin
    update data_commons.cvterm c set synonyms =
       (select array_agg(synonym) from data_commons.cvtermsynonym s where s.dbxref = NEW.dbxref)
       where c.dbxref = NEW.dbxref;
+   perform public.try_ermrest_data_change_event('data_commons', 'cvterm');      
    return NEW;
 end
 $$ language plpgsql;;
@@ -191,6 +198,7 @@ begin
    update data_commons.cvterm c set alternate_dbxrefs =
       (select array_agg(alternate_dbxref) from data_commons.cvterm_dbxref d where d.cvterm = NEW.cvterm)
       where c.dbxref = NEW.cvterm;
+   perform public.try_ermrest_data_change_event('data_commons', 'cvterm');
    return NEW;
 end
 $$ language plpgsql;;
@@ -212,6 +220,7 @@ begin
 	   using NEW.cv, NEW.name, NEW.definition, NEW.is_obsolete, NEW.is_relationshiptype, NEW.synonyns, NEW.alternate_dbxrefs, NEW.dbxref;
        exception when others then
            continue;
+       perform public.try_ermrest_data_change_event(term_schema, term_table);	   
        end;
    end loop;
    return NEW;

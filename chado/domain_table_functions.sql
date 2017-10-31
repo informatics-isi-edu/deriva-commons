@@ -49,6 +49,7 @@ begin
        type_schema, type_table,
        term_schema, term_table,
        term_schema, term_table);
+   perform public.try_ermrest_data_change_event(path_schema, path_table);
    return true;
 end
 $$ language plpgsql;
