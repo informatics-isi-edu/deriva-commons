@@ -38,7 +38,7 @@ The `sql` files will load the tables that contain the terms and predicates of th
 
 Copy the `sql` files from the `"$top_directory"/sql` directory into the top directory of the `facebase` server (`$facebase_directory`).
 
-## Export the `data-commons` schema from the the `ontology` server
+## Export the `data-commons` schema from the `ontology` server
 
 As `root` run:
 
