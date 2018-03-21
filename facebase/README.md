@@ -38,7 +38,7 @@ The `sql` files will load the tables that contain the terms and predicates of th
 
 Copy the `sql` files from the `"$top_directory"/sql` directory into the top directory of the `facebase` server (`$facebase_directory`).
 
-## Export the `data-commons` from the on the `ontology` server
+## Export the `data-commons` schema from the the `ontology` server
 
 As `root` run:
 
@@ -90,7 +90,7 @@ The script will:
 
 - drop the `vocabulary` tables that don't have `Referenced by` tables.
 - create the `data_commons` schema imported from the `ontology` server.
-- create database functions used for making the domain tables.
+- create the database functions used for making the domain tables.
 - add the `ermrest` system columns to the `data_commons.*` tables.
 - create `temp.*` tables that contain the `facebase` and `uberon` terms.
 - expand the `data_commons.*` tables with the terms from the `OCDM` ontology.
@@ -116,15 +116,15 @@ $facebase_directory/update_annotations.py $server $credentials $catalog
 
 The script will:
 
-- set annotations for the `data_commons.*` tables.
-- set annotations for the columns of the `data_commons.*` tables.
-- set annotations for the Foreign Keys of the `data_commons.*` tables.
-- set annotations for the `ermrest` system columns of the domain vocabulary tables.
-- set annotations for the domain vocabulary tables.
-- set annotations for the columns of the domain vocabulary tables.
-- set annotations for the Foreign Keys of the domain vocabulary tables.
-- set annotations for the `Referenced by:` tables of the domain vocabulary tables.
-- set annotations for the schema of the domain vocabulary tables.
+- set the annotations for the `data_commons.*` tables.
+- set the annotations for the columns of the `data_commons.*` tables.
+- set the annotations for the Foreign Keys of the `data_commons.*` tables.
+- set the annotations for the `ermrest` system columns of the domain vocabulary tables.
+- set the annotations for the domain vocabulary tables.
+- set the annotations for the columns of the domain vocabulary tables.
+- set the annotations for the Foreign Keys of the domain vocabulary tables.
+- set the annotations for the `Referenced by:` tables of the domain vocabulary tables.
+- set the annotations for the schema of the domain vocabulary tables.
 
 
 
