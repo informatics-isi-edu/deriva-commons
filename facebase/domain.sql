@@ -58,19 +58,27 @@ BEGIN
 END 
 $$ language plpgsql;
 
+SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'age_stage');
+SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'anatomic_source');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'anatomy');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'chemical_entities');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'cvnames');
+SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'data_type');
+SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'enhancer');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'file_format');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'gender');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'gene');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'gene_summary');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'genotype');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'histone_modification');
+SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'human_age');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'image_creation_device');
+SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'instrument');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'mapping_assembly');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'molecule_type');
+SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'mouse_genetic_background');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'mutation');
+SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'organism');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'origin');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'output_type');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'paired_end_or_single_read');
@@ -85,7 +93,6 @@ SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'strain');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'strandedness');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'target_of_assay');
 SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'theiler_stage');
-SELECT data_commons.make_facebase_domain_tables('Vocabulary', 'data_type');
 
 
 CREATE OR REPLACE FUNCTION data_commons.load_facebase_domain_tables(schema_name name, base_name name) RETURNS BOOLEAN AS $$
@@ -100,19 +107,27 @@ BEGIN
 END 
 $$ language plpgsql;
 
+SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'age_stage');
+SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'anatomic_source');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'anatomy');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'chemical_entities');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'cvnames');
+SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'data_type');
+SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'enhancer');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'file_format');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'gender');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'gene');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'gene_summary');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'genotype');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'histone_modification');
+SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'human_age');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'image_creation_device');
+SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'instrument');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'mapping_assembly');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'molecule_type');
+SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'mouse_genetic_background');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'mutation');
+SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'organism');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'origin');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'output_type');
 SELECT data_commons.load_facebase_domain_tables('Vocabulary', 'paired_end_or_single_read');

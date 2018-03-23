@@ -2,6 +2,13 @@
 
 BEGIN;
 
+DROP TRIGGER IF EXISTS cvterm_generate_dbxref ON data_commons.cvterm;
+DROP TRIGGER IF EXISTS cvterm_insert_trigger ON data_commons.cvterm;
+
+CREATE TRIGGER cvterm_generate_dbxref BEFORE INSERT ON data_commons.cvterm FOR EACH ROW EXECUTE PROCEDURE data_commons.cvterm_generate_dbxref('facebase');
+CREATE TRIGGER cvterm_insert_trigger AFTER INSERT ON data_commons.cvterm FOR EACH ROW EXECUTE PROCEDURE data_commons.cvterm_add('facebase');
+
+
 INSERT INTO data_commons.cv (name, definition) VALUES('ocdm', 'Ontology of Craniofacial Development and Malformation');
 INSERT INTO data_commons.cv (name, definition) VALUES('facebase', 'Resource for Craniofacial Researchers');
 
