@@ -62,7 +62,30 @@ mkdir -p <facebase_directory>
 
 We will refer it as `$facebase_directory`. 
 
+We will use also the following references:
+
+- `$server`: the server on which the `FaceBase` database resides on (for example `dev.facebase.org`). 
+- `$credentials`: the location of the credentials file.
+- `$catalog`: the catalog number for the `FaceBase` database.
+
 From the github `data-commons/facebase` directory, copy into the `$facebase_directory` directory, the following files:
+
+```
+vocabulary.py
+vocabulary.sh
+
+```
+
+In addition, the `$facebase_directory` directory will also have the sql files copied from the `ontology` server.
+
+
+Run:
+
+```
+$facebase_directory/vocabulary.py $server $credentials $catalog $facebase_directory
+```
+
+The script will generate the following files:
 
 ```
 00_common_functions.sql
@@ -73,12 +96,8 @@ domain.sql
 local_ocdm.sql
 uberon.sql
 vocabulary_references.sql
-vocabulary.sh
 
 ```
-
-In addition, the `$facebase_directory` directory will also have the sql files copied from the `ontology` server.
-
 
 Run:
 
@@ -101,12 +120,6 @@ The script will:
 - drop the `old` vocabulary tables.
 
 ## Set the annotations of the vocabulary tables
-
-We will use the following references:
-
-- `$server`: the server on which the `FaceBase` database resides on (for example `dev.facebase.org`). 
-- `$credentials`: the location of the credentials file.
-- `$catalog`: the catalog number for the `FaceBase` database.
 
 Run:
 
