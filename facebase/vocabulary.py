@@ -33,9 +33,9 @@ BEGIN
     IF NEW.paired IS NULL THEN
        NEW.paired = CASE WHEN NEW.filename ilike '%_R1.fastq.gz' OR NEW.filename ilike '%_1.fastq.gz' OR
                               NEW.filename ilike '%_R2.fastq.gz' OR NEW.filename ilike '%_2.fastq.gz' THEN
-                     (SELECT dbxref FROM "Vocabulary".paired_end_or_single_read WHERE term='Paired-end')
+                     (SELECT dbxref FROM "vocab".paired_end_or_single_read WHERE term='Paired-end')
                     ELSE
-                     (SELECT dbxref FROM "Vocabulary".paired_end_or_single_read WHERE term='Single-end')
+                     (SELECT dbxref FROM "vocab".paired_end_or_single_read WHERE term='Single-end')
                     END;
     END IF;
 
@@ -93,8 +93,8 @@ ALTER TABLE temp.facebase OWNER TO ermrest;
     """
 
     domain_functions = """
-DROP SCHEMA IF EXISTS "Vocabulary";
-CREATE SCHEMA "Vocabulary" AUTHORIZATION ermrest;
+DROP SCHEMA IF EXISTS "vocab";
+CREATE SCHEMA "vocab" AUTHORIZATION ermrest;
 
 CREATE OR REPLACE FUNCTION data_commons.make_facebase_domain_tables(schema_name name, base_name name) RETURNS BOOLEAN AS $$
 DECLARE
@@ -181,7 +181,7 @@ BEGIN
         schema_name, table_name, column_name, vocabulary_dbxref, vocabulary_schema, vocabulary_table, column_name, vocabulary_id);
     
     execute format('ALTER TABLE %I.%I 
-        ADD CONSTRAINT %I_%I_fkey FOREIGN KEY (%I) REFERENCES "Vocabulary".%I(dbxref)',
+        ADD CONSTRAINT %I_%I_fkey FOREIGN KEY (%I) REFERENCES "vocab".%I(dbxref)',
         schema_name, table_name, table_name, column_name, column_name, cvterm_name);
         
     RETURN TRUE;
@@ -198,7 +198,7 @@ BEGIN
         schema_name, table_name, table_name, column_name);
     
     execute format('ALTER TABLE %I.%I 
-        ADD CONSTRAINT %I_%I_fkey FOREIGN KEY (%I) REFERENCES "Vocabulary".%I(dbxref)',
+        ADD CONSTRAINT %I_%I_fkey FOREIGN KEY (%I) REFERENCES "vocab".%I(dbxref)',
         schema_name, table_name, table_name, column_name, column_name, cvterm_name);
         
     RETURN TRUE;
@@ -607,20 +607,16 @@ COMMIT;
                   ]
     
     """
-    The vocabulary tables from the "Vocabulary" schema.
+    The vocabulary tables from the "vocab" schema.
     """
     domain_tables = [
-                     'age_stage',
-                     'anatomic_source',
                      'anatomy',
-                     'chemical_entities',
-                     'cvnames',
                      'data_type',
                      'enhancer',
+                     'experiment_type',
                      'file_format',
                      'gender',
                      'gene',
-                     'gene_summary',
                      'genotype',
                      'histone_modification',
                      'human_age',
@@ -636,15 +632,12 @@ COMMIT;
                      'paired_end_or_single_read',
                      'phenotype',
                      'rnaseq_selection',
-                     'sample_type',
-                     'sequencing_data_direction',
                      'species',
                      'specimen',
                      'stage',
                      'strain',
                      'strandedness',
-                     'target_of_assay',
-                     'theiler_stage'
+                     'target_of_assay'
                      ]
         
     
@@ -661,7 +654,7 @@ COMMIT;
                           }
 
     """
-    The dictionary with the "Referenced by:" tables of the "Vocabulary" schema.
+    The dictionary with the "Referenced by:" tables of the "vocab" schema.
     """
     domain_references = {}
     
@@ -683,12 +676,12 @@ COMMIT;
     vocabulary_term_name = {'vocabulary': {}, 'isa': {}}
     
     """
-    The list of the generated tables in the "Vocabulary" schema.
+    The list of the generated tables in the "vocab" schema.
     """    
     vocabulary_domains = []
     
     """
-    The list of the generated tables in the "Vocabulary" schema.
+    The list of the generated tables in the "vocab" schema.
     """    
     temporary_tables = {'vocabulary': [], 'isa': []}
     
@@ -771,7 +764,7 @@ COMMIT;
         Exclude from the result the tables from the domain tables
         """
         for table in domain_tables:
-            domain_references[table] = get_refereced_by(goal, 'Vocabulary', '%s_terms' % table, 'Vocabulary')
+            domain_references[table] = get_refereced_by(goal, 'vocab', '%s_terms' % table, 'vocab')
 
         #print_domain_references()
                 
@@ -805,7 +798,7 @@ COMMIT;
                 schema_name = foreign_key['schema_name']
                 table_name = foreign_key['table_name']
                 column_name = foreign_key['column_name']
-                queries.append('SELECT DISTINCT T1.name FROM  "Vocabulary"."%s_terms" T1 JOIN "%s"."%s" T2 ON T1.dbxref = T2.%s' % (table, schema_name, table_name, column_name))
+                queries.append('SELECT DISTINCT T1.name FROM  "vocab"."%s_terms" T1 JOIN "%s"."%s" T2 ON T1.dbxref = T2.%s' % (table, schema_name, table_name, column_name))
             out.write('\nUNION\n'.join(queries))
             out.write('\n;\n\n')
             out.write('ALTER TABLE "temp_vocabularies"."%s_terms_used" OWNER TO ermrest;\n' % table)
@@ -975,7 +968,7 @@ COMMIT;
                     elif column_definition.name == 'name':
                         column_name = 'name'
                 if column_name == None:
-                    print 'Vocabulary term name not found for "%s"."%s"' % (schema, table_name)
+                    print 'vocab term name not found for "%s"."%s"' % (schema, table_name)
                 else:
                     vocabulary_term_name[schema][table_name] = column_name
         
@@ -1194,7 +1187,7 @@ COMMIT;
 
     def get_domain_table(schema, table):
         """
-        Get the "Vocabulary" table.
+        Get the "vocab" table.
         """
         for domain in union_vocabularies.keys():
             tables = union_vocabularies[domain].get(schema, None)
@@ -1205,7 +1198,7 @@ COMMIT;
     
     def get_vocabulary_domains():
         """
-        Generate the "Vocabulary" domain tables.
+        Generate the "vocab" domain tables.
         """
         for table in union_vocabularies.keys():
             vocabulary_domains.append(table)
@@ -1242,11 +1235,11 @@ COMMIT;
         out.write('%s\n' % domain_functions)
         out.write('\n')
         for domain in vocabulary_domains:
-            out.write('SELECT data_commons.make_facebase_domain_tables(\'Vocabulary\', \'%s\');\n' % domain)
+            out.write('SELECT data_commons.make_facebase_domain_tables(\'vocab\', \'%s\');\n' % domain)
         
         out.write('\n')
         for domain in vocabulary_domains:
-            out.write('SELECT data_commons.load_facebase_domain_tables(\'Vocabulary\', \'%s\');\n' % domain)
+            out.write('SELECT data_commons.load_facebase_domain_tables(\'vocab\', \'%s\');\n' % domain)
         
         out.write('\n')
         out.write('\nSELECT _ermrest.model_change_event();\n')
@@ -1334,7 +1327,7 @@ COMMIT;
             if table not in vocabulary_orphans['vocabulary']:
                 domain = get_domain_table('vocabulary', table)
                 term = vocabulary_term_name['vocabulary'][table]
-                out.write('SELECT data_commons.make_facebase_terms_references(\'vocabulary\', \'%s\', \'%s\', \'Vocabulary\', \'%s\');\n' % (table, term, domain))
+                out.write('SELECT data_commons.make_facebase_terms_references(\'vocabulary\', \'%s\', \'%s\', \'vocab\', \'%s\');\n' % (table, term, domain))
         
         out.write('\n')
         
@@ -1342,7 +1335,7 @@ COMMIT;
             if table not in vocabulary_orphans['isa']:
                 domain = get_domain_table('isa', table)
                 term = vocabulary_term_name['isa'][table]
-                out.write('SELECT data_commons.make_facebase_terms_references(\'isa\', \'%s\', \'%s\', \'Vocabulary\', \'%s\');\n' % (table, term, domain))
+                out.write('SELECT data_commons.make_facebase_terms_references(\'isa\', \'%s\', \'%s\', \'vocab\', \'%s\');\n' % (table, term, domain))
         
         out.write('\n')
         
@@ -1498,13 +1491,13 @@ COMMIT;
         out.write('\n')
         for table in temporary_tables['vocabulary']:
             original_name = get_domain_table('vocabulary', table['original_name'])
-            out.write('INSERT INTO mappable.cvterms (term, schema_name, table_name, cv) SELECT T1.name AS term, \'vocabulary\' AS schema_name, \'%s\' AS table_name, T2.cv AS cv FROM temp.%s T1 JOIN "Vocabulary".%s_terms T2 ON T1.name = T2.name ON CONFLICT DO NOTHING;\n' % (original_name, table['name'], original_name))
+            out.write('INSERT INTO mappable.cvterms (term, schema_name, table_name, cv) SELECT T1.name AS term, \'vocabulary\' AS schema_name, \'%s\' AS table_name, T2.cv AS cv FROM temp.%s T1 JOIN "vocab".%s_terms T2 ON T1.name = T2.name ON CONFLICT DO NOTHING;\n' % (original_name, table['name'], original_name))
             
         out.write('\n')
         
         for table in temporary_tables['isa']:
             original_name = get_domain_table('isa', table['original_name'])
-            out.write('INSERT INTO mappable.cvterms (term, schema_name, table_name, cv) SELECT T1.name AS term, \'isa\' AS schema_name, \'%s\' AS table_name, T2.cv AS cv FROM temp.%s T1 JOIN "Vocabulary".%s_terms T2 ON T1.name = T2.name ON CONFLICT DO NOTHING;\n' % (original_name, table['name'], original_name))
+            out.write('INSERT INTO mappable.cvterms (term, schema_name, table_name, cv) SELECT T1.name AS term, \'isa\' AS schema_name, \'%s\' AS table_name, T2.cv AS cv FROM temp.%s T1 JOIN "vocab".%s_terms T2 ON T1.name = T2.name ON CONFLICT DO NOTHING;\n' % (original_name, table['name'], original_name))
             
         out.write('\n')
         out.write('TRUNCATE _ermrest.data_version;\n')
