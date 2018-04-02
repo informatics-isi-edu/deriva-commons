@@ -11,17 +11,13 @@ from httplib import CONFLICT
 def main(servername, credentialsfilename, catalog, target):
 
     domain_tables = [
-                     'age_stage',
-                     'anatomic_source',
                      'anatomy',
-                     'chemical_entities',
-                     'cvnames',
                      'data_type',
                      'enhancer',
+                     'experiment_type',
                      'file_format',
                      'gender',
                      'gene',
-                     'gene_summary',
                      'genotype',
                      'histone_modification',
                      'human_age',
@@ -37,15 +33,12 @@ def main(servername, credentialsfilename, catalog, target):
                      'paired_end_or_single_read',
                      'phenotype',
                      'rnaseq_selection',
-                     'sample_type',
-                     'sequencing_data_direction',
                      'species',
                      'specimen',
                      'stage',
                      'strain',
                      'strandedness',
-                     'target_of_assay',
-                     'theiler_stage'
+                     'target_of_assay'
                      ]
         
     def get_refereced_by(goal, schema_name, table_name, exclude_schema=None):
@@ -210,9 +203,9 @@ def main(servername, credentialsfilename, catalog, target):
         
         for table in domain_tables:
             goal.table(
-                'Vocabulary', '%s_paths' % table
+                'vocab', '%s_paths' % table
             ).foreign_keys[
-                ('Vocabulary', '%s_paths_type_dbxref_fkey1' % table)
+                ('vocab', '%s_paths_type_dbxref_fkey1' % table)
             ].foreign_key.update({
                 "to_name": "Type",
                 "from_name": "Relationship paths with this term as type",
@@ -228,9 +221,9 @@ def main(servername, credentialsfilename, catalog, target):
         counter = 0
         
         for table in domain_tables:
-            counter = counter + set_ermrest_system_column_annotations(goal, 'Vocabulary', '%s_paths' % table)
-            counter = counter + set_ermrest_system_column_annotations(goal,'Vocabulary', '%s_relationship_types' % table)
-            counter = counter + set_ermrest_system_column_annotations(goal,'Vocabulary', '%s_terms' % table)
+            counter = counter + set_ermrest_system_column_annotations(goal, 'vocab', '%s_paths' % table)
+            counter = counter + set_ermrest_system_column_annotations(goal,'vocab', '%s_relationship_types' % table)
+            counter = counter + set_ermrest_system_column_annotations(goal,'vocab', '%s_terms' % table)
             
         print 'Setting %d annotations for the system columns of the vocabulary tables...' % counter
         
@@ -242,13 +235,13 @@ def main(servername, credentialsfilename, catalog, target):
         
         for table in domain_tables:
             goal.table(
-                'Vocabulary', '%s_terms' % table
+                'vocab', '%s_terms' % table
             ).table_display.update({
               "row_name": {"row_markdown_pattern": "{{name}}"}                      
             })
             
             goal.table(
-                'Vocabulary', '%s_terms' % table
+                'vocab', '%s_terms' % table
             ).visible_columns.update({
               "filter": {"and": [{"source": "name"}, 
                                  {"source": "dbxref"}, 
@@ -259,12 +252,12 @@ def main(servername, credentialsfilename, catalog, target):
                                  ]
                          }, 
                 "entry": [ 
-                      ["Vocabulary", "%s_terms_dbxref_fkey" % table], 
+                      ["vocab", "%s_terms_dbxref_fkey" % table], 
                       ],                      
                 "*": ["name", 
                       "dbxref", 
                       "definition", 
-                      ["Vocabulary", "%s_terms_cv_fkey" % table], 
+                      ["vocab", "%s_terms_cv_fkey" % table], 
                       "is_obsolete", 
                       "is_relationshiptype", 
                       "synonyms", 
@@ -272,19 +265,19 @@ def main(servername, credentialsfilename, catalog, target):
             })
             
             goal.table(
-                'Vocabulary', '%s_paths' % table
+                'vocab', '%s_paths' % table
             ).visible_columns.update({
-                "*": [["Vocabulary", "%s_paths_subject_dbxref_fkey" % table], 
-                      ["Vocabulary", "%s_paths_type_dbxref_fkey" % table], 
-                      ["Vocabulary", "%s_paths_object_dbxref_fkey" % table], 
+                "*": [["vocab", "%s_paths_subject_dbxref_fkey" % table], 
+                      ["vocab", "%s_paths_type_dbxref_fkey" % table], 
+                      ["vocab", "%s_paths_object_dbxref_fkey" % table], 
                       "pathdistance"
                       ]               
             })
             
             goal.table(
-                'Vocabulary', '%s_relationship_types' % table
+                'vocab', '%s_relationship_types' % table
             ).visible_columns.update({  
-                "*": [["Vocabulary", 
+                "*": [["vocab", 
                        "%s_relationship_types_cvterm_dbxref_fkey" % table], 
                        "is_reflexive", 
                        "is_transitive"
@@ -304,47 +297,47 @@ def main(servername, credentialsfilename, catalog, target):
         
         for table in domain_tables:
             goal.column(
-                'Vocabulary', '%s_terms' % table, 'dbxref'
+                'vocab', '%s_terms' % table, 'dbxref'
                 ).column_display.update({
                   "*": {"markdown_pattern": "[{{dbxref}}](/data/record/#%d/data_commons:cvterm/dbxref={{#encode}}{{dbxref}}{{/encode}})" % catalog_number}               
             })
                     
-            goal.column('Vocabulary', '%s_terms' % table, 'dbxref').display.update({'name': 'Code'})
-            goal.column('Vocabulary', '%s_terms' % table, 'cv').display.update({'name': 'Controlled Vocabulary'})
-            goal.column('Vocabulary', '%s_terms' % table, 'alternate_dbxrefs').display.update({'name': 'Alternate Codes'})
-            goal.column('Vocabulary', '%s_paths' % table, 'type_dbxref').display.update({'name': 'Type'})
-            goal.column('Vocabulary', '%s_paths' % table, 'subject_dbxref').display.update({'name': 'Subject'})
-            goal.column('Vocabulary', '%s_paths' % table, 'object_dbxref').display.update({'name': 'Object'})
-            goal.column('Vocabulary', '%s_relationship_types' % table, 'cvterm_dbxref').display.update({'name': 'Relationship'})
+            goal.column('vocab', '%s_terms' % table, 'dbxref').display.update({'name': 'Code'})
+            goal.column('vocab', '%s_terms' % table, 'cv').display.update({'name': 'Controlled Vocabulary'})
+            goal.column('vocab', '%s_terms' % table, 'alternate_dbxrefs').display.update({'name': 'Alternate Codes'})
+            goal.column('vocab', '%s_paths' % table, 'type_dbxref').display.update({'name': 'Type'})
+            goal.column('vocab', '%s_paths' % table, 'subject_dbxref').display.update({'name': 'Subject'})
+            goal.column('vocab', '%s_paths' % table, 'object_dbxref').display.update({'name': 'Object'})
+            goal.column('vocab', '%s_relationship_types' % table, 'cvterm_dbxref').display.update({'name': 'Relationship'})
             
-            if goal.column('Vocabulary', '%s_relationship_types' % table, 'is_reflexive').generated != True:
-                goal.column('Vocabulary', '%s_relationship_types' % table, 'is_reflexive').generated = True
-            if goal.column('Vocabulary', '%s_relationship_types' % table, 'is_transitive').generated != True:
-                goal.column('Vocabulary', '%s_relationship_types' % table, 'is_transitive').generated = True
+            if goal.column('vocab', '%s_relationship_types' % table, 'is_reflexive').generated != True:
+                goal.column('vocab', '%s_relationship_types' % table, 'is_reflexive').generated = True
+            if goal.column('vocab', '%s_relationship_types' % table, 'is_transitive').generated != True:
+                goal.column('vocab', '%s_relationship_types' % table, 'is_transitive').generated = True
         
-            if goal.column('Vocabulary', '%s_terms' % table, 'cv').generated != True:
-                goal.column('Vocabulary', '%s_terms' % table, 'cv').generated = True
+            if goal.column('vocab', '%s_terms' % table, 'cv').generated != True:
+                goal.column('vocab', '%s_terms' % table, 'cv').generated = True
         
-            if goal.column('Vocabulary', '%s_terms' % table, 'dbxref_unversioned').generated != True:
-                goal.column('Vocabulary', '%s_terms' % table, 'dbxref_unversioned').generated = True
+            if goal.column('vocab', '%s_terms' % table, 'dbxref_unversioned').generated != True:
+                goal.column('vocab', '%s_terms' % table, 'dbxref_unversioned').generated = True
         
-            if goal.column('Vocabulary', '%s_terms' % table, 'name').generated != True:
-                goal.column('Vocabulary', '%s_terms' % table, 'name').generated = True
+            if goal.column('vocab', '%s_terms' % table, 'name').generated != True:
+                goal.column('vocab', '%s_terms' % table, 'name').generated = True
         
-            if goal.column('Vocabulary', '%s_terms' % table, 'definition').generated != True:
-                goal.column('Vocabulary', '%s_terms' % table, 'definition').generated = True
+            if goal.column('vocab', '%s_terms' % table, 'definition').generated != True:
+                goal.column('vocab', '%s_terms' % table, 'definition').generated = True
         
-            if goal.column('Vocabulary', '%s_terms' % table, 'is_obsolete').generated != True:
-                goal.column('Vocabulary', '%s_terms' % table, 'is_obsolete').generated = True
+            if goal.column('vocab', '%s_terms' % table, 'is_obsolete').generated != True:
+                goal.column('vocab', '%s_terms' % table, 'is_obsolete').generated = True
         
-            if goal.column('Vocabulary', '%s_terms' % table, 'is_relationshiptype').generated != True:
-                goal.column('Vocabulary', '%s_terms' % table, 'is_relationshiptype').generated = True
+            if goal.column('vocab', '%s_terms' % table, 'is_relationshiptype').generated != True:
+                goal.column('vocab', '%s_terms' % table, 'is_relationshiptype').generated = True
         
-            if goal.column('Vocabulary', '%s_terms' % table, 'synonyms').generated != True:
-                goal.column('Vocabulary', '%s_terms' % table, 'synonyms').generated = True
+            if goal.column('vocab', '%s_terms' % table, 'synonyms').generated != True:
+                goal.column('vocab', '%s_terms' % table, 'synonyms').generated = True
         
-            if goal.column('Vocabulary', '%s_terms' % table, 'alternate_dbxrefs').generated != True:
-                goal.column('Vocabulary', '%s_terms' % table, 'alternate_dbxrefs').generated = True
+            if goal.column('vocab', '%s_terms' % table, 'alternate_dbxrefs').generated != True:
+                goal.column('vocab', '%s_terms' % table, 'alternate_dbxrefs').generated = True
         
             counter = counter + 18
             
@@ -352,32 +345,32 @@ def main(servername, credentialsfilename, catalog, target):
         
     def set_vocabulary_foreign_key_annotations(goal):
         """
-        Set the annotations for the Foreign Keys of the Vocabulary schema
+        Set the annotations for the Foreign Keys of the vocab schema
         """
         counter = 0
         
         for table in domain_tables:
             goal.table(
-                'Vocabulary', '%s_paths' % table
+                'vocab', '%s_paths' % table
             ).foreign_keys[
-                ('Vocabulary', '%s_paths_type_dbxref_fkey' % table)
+                ('vocab', '%s_paths_type_dbxref_fkey' % table)
             ].foreign_key.update({
                 "from_name": "Relationship paths with this term as type",
             })
         
             goal.table(
-                'Vocabulary', '%s_paths' % table
+                'vocab', '%s_paths' % table
             ).foreign_keys[
-                ('Vocabulary', '%s_paths_subject_dbxref_fkey' % table)
+                ('vocab', '%s_paths_subject_dbxref_fkey' % table)
             ].foreign_key.update({
                 "from_name": "Relationship paths with this term as subject",
                 "to_name": "Subject",
             })
         
             goal.table(
-                'Vocabulary', '%s_paths' % table
+                'vocab', '%s_paths' % table
             ).foreign_keys[
-                ('Vocabulary', '%s_paths_object_dbxref_fkey' % table)
+                ('vocab', '%s_paths_object_dbxref_fkey' % table)
             ].foreign_key.update({
                 "from_name": "Relationship paths with this term as object",
                 "to_name": "Object",
@@ -385,16 +378,16 @@ def main(servername, credentialsfilename, catalog, target):
         
             counter = counter + 3
             
-        print 'Setting %d annotations for the Foreign Keys of the Vocabulary schema...' % counter
+        print 'Setting %d annotations for the Foreign Keys of the vocab schema...' % counter
         
     def set_vocabulary_references_annotations(goal):
         """
-        Set the annotations for the "Referenced by:" tables of the Vocabulary schema
+        Set the annotations for the "Referenced by:" tables of the vocab schema
         """
         counter = 0
         
         for table in domain_tables:
-            references = get_refereced_by(goal, 'Vocabulary', '%s_terms' % table)
+            references = get_refereced_by(goal, 'vocab', '%s_terms' % table)
             for reference in references:
                 foreign_key = reference['foreign_key']
                 goal.table(
@@ -406,7 +399,7 @@ def main(servername, credentialsfilename, catalog, target):
                 })
                 counter = counter + 1
                 
-        print 'Setting %d annotations for the "Referenced by:" tables of the Vocabulary schema...' % counter
+        print 'Setting %d annotations for the "Referenced by:" tables of the vocab schema...' % counter
         
                 
     def apply(catalog, goal):
@@ -443,19 +436,19 @@ def main(servername, credentialsfilename, catalog, target):
         
         def getReferencesBy():
             """
-            Get the tables ReferencesBy by the Vocabulary.*_terms tables excluding those from the Vocabulary schema
+            Get the tables ReferencesBy by the vocab.*_terms tables excluding those from the vocab schema
             """
         
             ret = []
             goal = catalog.get_catalog_model()
             for table in domain_tables:
-                references = get_refereced_by(goal, 'Vocabulary', '%s_terms' % table, exclude_schema='Vocabulary')
+                references = get_refereced_by(goal, 'vocab', '%s_terms' % table, exclude_schema='vocab')
                 ret.extend(references)
             return ret
         
         def getVisibleColumns(references):
             """
-            Get the visible columns of the tables ReferencesBy by the Vocabulary.*_terms tables excluding those from the Vocabulary schema
+            Get the visible columns of the tables ReferencesBy by the vocab.*_terms tables excluding those from the vocab schema
             """
             ret = {}
             goal = catalog.get_catalog_model()
@@ -509,7 +502,7 @@ def main(servername, credentialsfilename, catalog, target):
                 goal.table(schema, table).visible_columns.update(visible_columns['new'])
                 counter = counter + 1
                 
-        print 'Setting %d annotations for the visible columns of the "Referenced by:" tables of the Vocabulary schema...' % counter
+        print 'Setting %d annotations for the visible columns of the "Referenced by:" tables of the vocab schema...' % counter
         apply(catalog, goal)
         
     def set_pseudo_columns_table_display():
@@ -529,13 +522,13 @@ def main(servername, credentialsfilename, catalog, target):
         
         def getDoubleReferences():
             """
-            Get the tables ReferencesBy by the Vocabulary.*_terms tables excluding those from the Vocabulary schema
+            Get the tables ReferencesBy by the vocab.*_terms tables excluding those from the vocab schema
             """
         
             ret = {}
             goal = catalog.get_catalog_model()
             for table in domain_tables:
-                references = get_refereced_by(goal, 'Vocabulary', '%s_terms' % table, exclude_schema='Vocabulary')
+                references = get_refereced_by(goal, 'vocab', '%s_terms' % table, exclude_schema='vocab')
                 for reference in references:
                     schema_name = reference['foreign_key']['schema_name']
                     table_name = reference['foreign_key']['table_name']
@@ -710,7 +703,7 @@ def main(servername, credentialsfilename, catalog, target):
                
         """
         for table in vocabulary_domain:
-            references = get_refereced_by(goal, 'Vocabulary', table)
+            references = get_refereced_by(goal, 'vocab', table)
             for reference in references:
                 schema_name = reference['foreign_key']['schema_name']
                 table_name = reference['foreign_key']['table_name']
@@ -753,7 +746,7 @@ def main(servername, credentialsfilename, catalog, target):
         
     
     """
-    Set the Vocabulary annotations
+    Set the vocab annotations
     """
     
     if target in ['all', 'vocabulary_system_columns_annotations']:
@@ -789,10 +782,10 @@ def main(servername, credentialsfilename, catalog, target):
     if target in ['all', 'vocabulary_schema_annotation']:
         # get current model configuration from live DB
         goal = catalog.get_catalog_model()
-        goal.schemas['Vocabulary'].display.update({
+        goal.schemas['vocab'].display.update({
            "name_style": {"underline_space": True, "title_case": True}
         })
-        print 'Setting 1 annotation for the Vocabulary schema...'
+        print 'Setting 1 annotation for the vocab schema...'
         apply(catalog, goal)
         
     #if target in ['all', 'table_visible_columns']:
