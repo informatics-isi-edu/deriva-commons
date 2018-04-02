@@ -8,6 +8,24 @@ from deriva.core.ermrest_model import builtin_types, Table, Column, Key, Foreign
 
 def main(servername, credentialsfilename, catalog, output, target):
     
+    data_commons_ontologies = ['uberon', 'anatomical_structure', 'uberon/phenoscape-anatomy']
+    
+    ocdm_sub_ontologies = [
+                           'aeo',
+                           'cet',
+                           'chm3o',
+                           'chmmo',
+                           'chmo',
+                           'cho',
+                           'chzmo',
+                           'cmmo',
+                           'cmo',
+                           'cpo',
+                           'czmo',
+                           'czo',
+                           'ocdm'
+                           ]
+    
     set_pair_end = """
 CREATE OR REPLACE FUNCTION isa.set_pair_end() RETURNS TRIGGER AS $$
 DECLARE
@@ -146,9 +164,9 @@ $$ language plpgsql;
     """
     
     references_functions = """
-CREATE OR REPLACE FUNCTION data_commons.make_facebase_references(schema_name name, table_name name, column_name name, vocabulary_schema name, vocabulary_table name, vocabulary_id name, vocabulary_dbxref name) RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION data_commons.make_facebase_references(schema_name name, table_name name, column_name name, vocabulary_schema name, vocabulary_table name, vocabulary_id name, vocabulary_dbxref name, vocabulary_domain name) RETURNS BOOLEAN AS $$
 DECLARE
-   cvterm_name name = vocabulary_table || '_terms';
+   cvterm_name name = vocabulary_domain || '_terms';
    term text;
 BEGIN
     execute format('ALTER TABLE %I.%I 
@@ -398,7 +416,7 @@ COMMIT;
 
     """
     
-    data_commons_ocdm = """
+    data_commons_ocdm_prefix = """
 -- begin transaction
 
 BEGIN;
@@ -409,12 +427,10 @@ DROP TRIGGER IF EXISTS cvterm_insert_trigger ON data_commons.cvterm;
 CREATE TRIGGER cvterm_generate_dbxref BEFORE INSERT ON data_commons.cvterm FOR EACH ROW EXECUTE PROCEDURE data_commons.cvterm_generate_dbxref('facebase');
 CREATE TRIGGER cvterm_insert_trigger AFTER INSERT ON data_commons.cvterm FOR EACH ROW EXECUTE PROCEDURE data_commons.cvterm_add('facebase');
 
-
-INSERT INTO data_commons.cv (name, definition) VALUES('ocdm', 'Ontology of Craniofacial Development and Malformation');
-INSERT INTO data_commons.cv (name, definition) VALUES('facebase', 'Resource for Craniofacial Researchers');
-
-INSERT INTO data_commons.db (name, urlprefix, description) VALUES('OCDM', 'http://purl.org/sig/ont/ocdm', 'Ontology of Craniofacial Development and Malformation');
-INSERT INTO data_commons.db (name, urlprefix, description) VALUES('FaceBase', 'https://www.facebase.org/', 'Resource for Craniofacial Researchers');
+    """
+    
+    data_commons_ocdm_suffix = """
+-- commit transaction
 
 INSERT INTO data_commons.cvterm (cv, name) SELECT cv, name FROM temp.owl_terms;
 INSERT INTO temp.ocdm (cv, name) SELECT cv, name FROM temp.owl_terms WHERE name NOT IN (SELECT name FROM temp.uberon) AND name IN (SELECT name FROM temp.terms);
@@ -428,7 +444,7 @@ SELECT _ermrest.model_change_event();
 COMMIT;
 
     """
-    local_ocdm = """
+    local_ocdm_prefix = """
 -- begin transaction
 
 BEGIN;
@@ -436,7 +452,10 @@ BEGIN;
 
 INSERT INTO temp.facebase (name) SELECT DISTINCT name FROM temp.terms WHERE name NOT IN (SELECT name FROM data_commons.cvterm);
 
-INSERT INTO data_commons.cvterm (cv, name) SELECT cv, name FROM temp.facebase;
+    """
+    
+    local_ocdm_suffix = """
+INSERT INTO data_commons.cvterm (cv, name) SELECT cv, name FROM temp.facebase ON CONFLICT DO NOTHING;
 
 UPDATE temp.terms T1 SET cv = (SELECT cv FROM temp.facebase T2 WHERE T1.name = T2.name) WHERE name IN (SELECT name FROM temp.facebase);
 
@@ -501,7 +520,6 @@ COMMIT;
     mapped_terms = {
                      'Adult': 'adult',
                      'Auditory Capsule': 'Auditory capsule',
-                     'Chi': 'Chin',
                      'Cleft palate': 'oropharyngeal choana',
                      'Female': 'female organism',
                      'Human': 'human',
@@ -533,7 +551,6 @@ COMMIT;
                      'file_format',
                      'gender',
                      'gene',
-                     'gene_summary',
                      'genotype',
                      'histone_modification',
                      'icd10_code',
@@ -638,9 +655,8 @@ COMMIT;
                           'gene': {'vocabulary': ['gene'], 'isa': ['mouse_gene']},
                           'genotype': {'vocabulary': ['genotype'], 'isa': ['mouse_genotype', 'zebrafish_genotype']},
                           'mutation': {'vocabulary': ['mutation'], 'isa': ['mouse_mutation', 'zebrafish_mutation']},
-                          'theiler_stage': {'vocabulary': ['theiler_stage'], 'isa': ['mouse_theiler_stage']},
-                          'age_stage': {'isa': ['human_age_stage', 'mouse_age_stage', 'zebrafish_age_stage']},
-                          'anatomic_source': {'isa': ['human_anatomic_source', 'mouse_anatomic_source', 'zebrafish_anatomic_source']},
+                          'stage': {'vocabulary': ['stage', 'theiler_stage'], 'isa': ['human_age_stage', 'mouse_age_stage', 'mouse_theiler_stage', 'zebrafish_age_stage']},
+                          'anatomy': {'vocabulary': ['anatomy'], 'isa': ['human_anatomic_source', 'mouse_anatomic_source', 'zebrafish_anatomic_source']},
                           'enhancer': {'isa': ['human_enhancer', 'mouse_enhancer']}
                           }
 
@@ -658,7 +674,7 @@ COMMIT;
     """
     The dictionary that contains the vocabulary tables that have no "Referenced by:".
     """
-    vocabulary_orphans = {'vocabulary': [], 'isa': []}
+    vocabulary_orphans = {'vocabulary': ['gene_summary'], 'isa': []}
     
     """
     The dictionary that contains the column name used as a term in the vocabulary tables.
@@ -1133,7 +1149,11 @@ COMMIT;
         out.write('SELECT DISTINCT name,cv FROM data_commons.cvterm WHERE name IN (SELECT name FROM temp.terms);\n')
         out.write('ALTER TABLE temp.uberon OWNER TO ermrest;\n')
         out.write('\n')
-        out.write('UPDATE temp.terms T1 SET cv = (SELECT cv FROM temp.uberon T2 WHERE T1.name = T2.name LIMIT 1) WHERE name IN (SELECT name FROM temp.uberon);\n')
+        data_commons_ontologies_enclosed = []
+        for ontology in data_commons_ontologies:
+            data_commons_ontologies_enclosed.append('\'%s\'' % ontology)
+        out.write('UPDATE temp.terms T1 SET cv = (SELECT cv FROM temp.uberon T2 WHERE T2.cv IN (%s) AND T1.name = T2.name LIMIT 1) WHERE name IN (SELECT name FROM temp.uberon);\n' % ','.join(data_commons_ontologies_enclosed))
+        out.write('UPDATE temp.terms T1 SET cv = (SELECT cv FROM temp.uberon T2 WHERE T1.name = T2.name LIMIT 1) WHERE cv is NULL AND name IN (SELECT name FROM temp.uberon);\n')
         out.write('\n')
         
         for table in ['owl_terms', 'owl_predicates', 'ocdm', 'facebase', 'terms', 'uberon']:
@@ -1330,6 +1350,7 @@ COMMIT;
             if table not in vocabulary_orphans['vocabulary']:
                 references = vocabulary_relations['vocabulary'][table].get('references', None)
                 term = vocabulary_term_name['vocabulary'][table]
+                domain = get_domain_table('vocabulary', table)
                 if references != None:
                     out.write('\n-- vocabulary.%s\n' % table)
                     for reference in references:
@@ -1341,7 +1362,7 @@ COMMIT;
                         if schema_name != 'vocabulary':
                             fk_column = get_term_reference(goal, '%s' % schema_name, '%s' % table_name, '%s' % constraint)
                             if fk_column == 'id':
-                                out.write('SELECT data_commons.make_facebase_references(\'%s\', \'%s\', \'%s\', \'vocabulary\', \'%s\', \'id\', \'%s\');\n' % (schema_name, table_name, column_name, table, term))                
+                                out.write('SELECT data_commons.make_facebase_references(\'%s\', \'%s\', \'%s\', \'vocabulary\', \'%s\', \'id\', \'%s\', \'%s\');\n' % (schema_name, table_name, column_name, table, term, domain))                
         out.write('\n')
         
         for table in isa_tables:
@@ -1362,7 +1383,7 @@ COMMIT;
                             if fk_column == term:
                                 out.write('SELECT data_commons.make_dataset_references(\'%s\', \'%s\', \'%s\', \'%s\');\n' % (schema_name, table_name, column_name, domain))
                             else:
-                                out.write('SELECT data_commons.make_facebase_references(\'%s\', \'%s\', \'%s\', \'isa\', \'%s\', \'%s\', \'%s\');\n' % (schema_name, table_name, column_name, table, fk_column, term))                
+                                out.write('SELECT data_commons.make_facebase_references(\'%s\', \'%s\', \'%s\', \'isa\', \'%s\', \'%s\', \'%s\', \'%s\');\n' % (schema_name, table_name, column_name, table, fk_column, term, domain))                
                                 
                 
         out.write('\n')
@@ -1421,7 +1442,22 @@ COMMIT;
         Generate the vocabulary data_commons_ocdm.sql script.
         """
         out = file('%s/data_commons_ocdm.sql' % output, 'w')
-        out.write('%s\n' % data_commons_ocdm)
+        out.write('%s\n' % data_commons_ocdm_prefix)
+        out.write('\n')
+        
+        for cv in ocdm_sub_ontologies:
+            out.write('INSERT INTO data_commons.cv (name, definition) VALUES(\'ocdm_%s\', \'Ontology of Craniofacial Development and Malformation\');\n' % cv)
+            out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'ocdm_%s\', \'http://purl.org/sig/ont/ocdm\', \'Ontology of Craniofacial Development and Malformation\');\n' % cv.upper())
+            
+        out.write('\n')
+        
+        for cv in vocabulary_domains:
+            out.write('INSERT INTO data_commons.cv (name, definition) VALUES(\'facebase_%s\', \'Resource for Craniofacial Researchers\');\n' % cv)
+            out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'facebase_%s\', \'https://www.facebase.org/\', \'Resource for Craniofacial Researchers\');\n' % cv.upper())
+            
+        out.write('\n')
+        
+        out.write('%s\n' % data_commons_ocdm_suffix)
         out.close()
         
     def make_local_ocdm_script():
@@ -1429,30 +1465,46 @@ COMMIT;
         Generate the vocabulary local_ocdm.sql script.
         """
         out = file('%s/local_ocdm.sql' % output, 'w')
-        out.write('%s\n' % local_ocdm)
+        out.write('%s\n' % local_ocdm_prefix)
+        out.write('\n')
+        
+        for table in temporary_tables['vocabulary']:
+            original_name = get_domain_table('vocabulary', table['original_name'])
+            out.write('UPDATE temp.facebase SET cv = \'facebase_%s\' WHERE name IN (SELECT name FROM temp.%s);\n' % (original_name, table['name']))
+        
+        out.write('\n')
+        
+        for table in temporary_tables['isa']:
+            original_name = get_domain_table('isa', table['original_name'])
+            out.write('UPDATE temp.facebase SET cv = \'facebase_%s\' WHERE name IN (SELECT name FROM temp.%s);\n' % (original_name, table['name']))
+        
+        out.write('\n')
+        out.write('%s\n' % local_ocdm_suffix)
         out.close()
         
     def make_facebase_terms_script():
         """
-        Generate the table showing the FaceBase terms not present in the ontologies 
+        Generate the table showing the FaceBase terms 
         together with the table they are coming from.
         """
-        out = file('%s/unmappable_terms.sql' % output, 'w')
+        out = file('%s/facebase_terms.sql' % output, 'w')
         out.write('BEGIN;\n')
         out.write('\n')
-        out.write('DROP SCHEMA IF EXISTS unmappable CASCADE;\n')
-        out.write('CREATE SCHEMA unmappable AUTHORIZATION ermrest;\n')
+        out.write('DROP SCHEMA IF EXISTS mappable CASCADE;\n')
+        out.write('CREATE SCHEMA mappable AUTHORIZATION ermrest;\n')
         out.write('\n')
-        out.write('CREATE TABLE unmappable.terms (term text, schema_name text, table_name text, PRIMARY KEY (term, schema_name, table_name));\n')
-        out.write('ALTER TABLE unmappable.terms OWNER TO ermrest;\n')
+        out.write('CREATE TABLE mappable.cvterms (term text, schema_name text, table_name text, cv text, PRIMARY KEY (term, cv));\n')
+        out.write('ALTER TABLE mappable.cvterms OWNER TO ermrest;\n')
         out.write('\n')
         for table in temporary_tables['vocabulary']:
-            out.write('INSERT INTO unmappable.terms (term, schema_name, table_name) SELECT name AS term, \'vocabulary\' AS schema_name, \'%s\' AS table_name FROM temp.%s WHERE name IN (SELECT name FROM data_commons.cvterm WHERE cv = \'facebase\');\n' % (table['original_name'], table['name']))
+            original_name = get_domain_table('vocabulary', table['original_name'])
+            out.write('INSERT INTO mappable.cvterms (term, schema_name, table_name, cv) SELECT T1.name AS term, \'vocabulary\' AS schema_name, \'%s\' AS table_name, T2.cv AS cv FROM temp.%s T1 JOIN "Vocabulary".%s_terms T2 ON T1.name = T2.name ON CONFLICT DO NOTHING;\n' % (original_name, table['name'], original_name))
             
         out.write('\n')
         
         for table in temporary_tables['isa']:
-            out.write('INSERT INTO unmappable.terms (term, schema_name, table_name) SELECT name AS term, \'isa\' AS schema_name, \'%s\' AS table_name FROM temp.%s WHERE name IN (SELECT name FROM data_commons.cvterm WHERE cv = \'facebase\');\n' % (table['original_name'], table['name']))
+            original_name = get_domain_table('isa', table['original_name'])
+            out.write('INSERT INTO mappable.cvterms (term, schema_name, table_name, cv) SELECT T1.name AS term, \'isa\' AS schema_name, \'%s\' AS table_name, T2.cv AS cv FROM temp.%s T1 JOIN "Vocabulary".%s_terms T2 ON T1.name = T2.name ON CONFLICT DO NOTHING;\n' % (original_name, table['name'], original_name))
             
         out.write('\n')
         out.write('TRUNCATE _ermrest.data_version;\n')

@@ -109,7 +109,7 @@ def insert_results(out, qres, literal):
             p = getShortName(p).replace("'", "''")
             o = getShortName(o).replace("'", "''")
             if isLiteral(o):
-                out.write("INSERT INTO temp.owl_terms(cv, name) VALUES('%s', '%s') ON CONFLICT DO NOTHING;\n" % ('ocdm', o))
+                out.write("INSERT INTO temp.owl_terms(cv, name) VALUES('%s', '%s') ON CONFLICT DO NOTHING;\n" % ('ocdm_%s' % cv, o))
                 out.write("INSERT INTO temp.owl_predicates(predicate) VALUES('%s') ON CONFLICT DO NOTHING;\n" % (p))
         except:
             print 'write error'
