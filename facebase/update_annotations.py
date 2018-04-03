@@ -265,6 +265,12 @@ def main(servername, credentialsfilename, catalog, target):
             })
             
             goal.table(
+                'vocab', '%s_terms' % table
+            ).visible_foreign_keys.update({
+                "*": []
+            })
+            
+            goal.table(
                 'vocab', '%s_paths' % table
             ).visible_columns.update({
                 "*": [["vocab", "%s_paths_subject_dbxref_fkey" % table], 
@@ -284,7 +290,7 @@ def main(servername, credentialsfilename, catalog, target):
                       ]                                    
             })
             
-            counter = counter + 4
+            counter = counter + 5
             
         print 'Setting %d annotations for the vocabulary tables...' % counter
         
