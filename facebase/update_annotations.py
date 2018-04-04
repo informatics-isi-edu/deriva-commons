@@ -41,6 +41,16 @@ def main(servername, credentialsfilename, catalog, target):
                      'target_of_assay'
                      ]
         
+    dataset_tables = [
+                     'dataset_anatomy',
+                     'dataset_enhancer',
+                     'dataset_gender',
+                     'dataset_gene',
+                     'dataset_genotype',
+                     'dataset_mutation',
+                     'dataset_stage'
+                     ]
+        
     def get_refereced_by(goal, schema_name, table_name, exclude_schema=None):
         """
         Get the "Referenced by:" tables for the given schema:table.
@@ -406,6 +416,187 @@ def main(servername, credentialsfilename, catalog, target):
                 counter = counter + 1
                 
         print 'Setting %d annotations for the "Referenced by:" tables of the vocab schema...' % counter
+        
+                
+    def set_dataset_association_annotations(goal):
+        """
+        Set the annotations for the dataset association tables
+        """
+        counter = 0
+        
+        for table in dataset_tables:
+            column = table[len('dataset_'):]
+            value = '%s%s' % (column[0].upper(), column[1:])
+            goal.table('isa', table).display.update({'name': '%s' % value})
+            counter = counter + set_ermrest_system_column_annotations(goal, 'isa', table)
+            goal.table(
+                'isa', table
+            ).foreign_keys[
+                ('isa', '%s_%s_fkey' % (table, column))
+            ].foreign_key.update({
+                "to_name": "%s" % column
+            })
+        
+            counter = counter + 2
+                
+        print 'Setting %d annotations for the dataset association tables...' % counter
+        
+                
+    def set_dataset_table_annotations(goal):
+        """
+        Set the annotations for the dataset table
+        """
+        counter = 0
+        
+        goal.table('isa', 'dataset').visible_columns.update({
+        "filter": {
+                   "and": [
+                           {"source": [{"inbound": ["isa", "dataset_organism_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_organism_organism_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Organism"}, 
+                           {"source": [{"inbound": ["isa", "dataset_experiment_type_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_experiment_type_experiment_type_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Experiment Type"}, 
+                           {"source": [{"inbound": ["isa", "dataset_data_type_data_type_fkey"]}, {"outbound": ["isa", "dataset_data_type_dataset_id_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Data Type"}, 
+                           {"source": [{"inbound": ["isa", "dataset_gene_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_gene_gene_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Gene"}, 
+                           {"source": [{"inbound": ["isa", "dataset_stage_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_stage_stage_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Stage"}, 
+                           {"source": [{"inbound": ["isa", "dataset_anatomy_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_anatomy_anatomy_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Anatomy"},
+                           {"source": [{"inbound": ["isa", "dataset_genotype_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_genotype_genotype_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Genotype"},
+                           {"source": [{"inbound": ["isa", "dataset_phenotype_dataset_fkey"]}, {"outbound": ["isa", "dataset_phenotype_phenotype_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Chromosome"},
+                           {"source": [{"inbound": ["isa", "dataset_chromosome_dataset_id_fkey"]}, "chromosome"], "entity": True, "open": False,"markdown_name": "Chromosome"},
+                           {"source": [{"inbound": ["isa", "publication_dataset_fkey"]}, "pmid"], "entity": True, "open": False,"markdown_name": "Pubmed ID"},
+                           {"source": [{"outbound": ["isa", "dataset_project_fkey"]},{"inbound": ["isa", "project_investigator_project_id_fkey"]} ,"username"], "entity": True, "open": False,"markdown_name": "Project Investigator"},
+                           {"source": "accession", "entity": False, "open": False},
+                           {"source": [{"outbound": ["isa", "dataset_project_fkey"]}, "id"], "entity": True, "open": False,"markdown_name": "Project"},
+                           {"source": "release_date", "entity": False, "open": False},
+                           {"source": [{"outbound": ["isa", "dataset_status_fkey"]}, "name"], "entity": True, "open": False}
+                           ]
+                   },
+        "compact": [["isa","accession_unique"],"title",["isa","dataset_project_fkey"],"status","release_date"],
+        "entry": ["accession","title",["isa","dataset_project_fkey"],"description","study_design","release_date",["isa","dataset_status_fkey"], "show_in_jbrowse"],
+        "detailed": ["accession","description","study_design",["isa","dataset_project_fkey"],["isa","dataset_status_fkey"],"funding","release_date","show_in_jbrowse",
+                     ["isa","publication_dataset_fkey"],
+                     ["isa","dataset_experiment_type_dataset_id_fkey"],
+                     ["isa","dataset_data_type_dataset_id_fkey"],
+                     ["isa","dataset_phenotype_dataset_fkey"],
+                     ["isa","dataset_organism_dataset_id_fkey"],
+                     ["isa","dataset_gene_dataset_id_fkey"],
+                     ["isa","dataset_stage_dataset_id_fkey"],
+                     ["isa","dataset_anatomy_dataset_id_fkey"],
+                     ["isa","dataset_mutation_dataset_id_fkey"],
+                     ["isa","dataset_enhancer_dataset_id_fkey"],
+                     ["isa","dataset_mouse_genetic_background_dataset_id_fkey"],
+                     ["isa","dataset_gender_dataset_id_fkey"],
+                     ["isa","dataset_genotype_dataset_id_fkey"],
+                     ["isa","dataset_instrument_dataset_id_fkey"],
+                     ["isa","dataset_geo_dataset_id_fkey"],
+                     ["isa","dataset_chromosome_dataset_id_fkey"]
+              ]
+        })       
+                                                                          
+        goal.table('isa', 'biosample').visible_columns.update({
+        "filter": {
+                   "and": [
+                          {"source": [{"outbound": ["isa", "biosample_species_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Species"},
+                          {"source": [{"outbound": ["isa", "biosample_stage_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Stage"},
+                          {"source": [{"outbound": ["isa", "biosample_anatomy_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Anatomy"},
+                          {"source": [{"outbound": ["isa", "biosample_phenotype_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Phenotype"},
+                          {"source": [{"outbound": ["isa", "biosample_gene_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Gene"},
+                          {"source": [{"outbound": ["isa", "biosample_genotype_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Genotype"},
+                          {"source": [{"outbound": ["isa", "biosample_strain_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Strain"},
+                          {"source": "local_identifier", "entity": True, "open": False,"markdown_name": "Local Identifier"}
+                          ]
+                   },
+        "detailed": [["isa","biosample_pkey"],
+                     ["isa","biosample_dataset_fkey"],
+                     "local_identifier","summary",
+                     ["isa","biosample_species_fkey"],
+                     ["isa","biosample_specimen_fkey"],
+                     ["isa","biosample_gene_fkey"],
+                     ["isa","biosample_genotype_fkey"],
+                     ["isa","biosample_strain_fkey"],
+                     ["isa","biosample_mutation_fkey"],
+                     ["isa","biosample_stage_fkey"],
+                     ["isa","biosample_anatomy_fkey"],
+                     ["isa","biosample_origin_fkey"],
+                     ["isa","biosample_phenotype_fkey"],
+                     ["isa","biosample_gender_fkey"],
+                     "litter",
+                     "collection_date"
+                     ],      
+        "compact": [["isa","biosample_pkey"],
+                    ["isa","biosample_species_fkey"],
+                    ["isa","biosample_genotype_fkey"],
+                    ["isa","biosample_strain_fkey"],
+                    ["isa","biosample_stage_fkey"],
+                    ["isa","biosample_anatomy_fkey"],
+                    ["isa","biosample_origin_fkey"],
+                    ["isa","biosample_phenotype_fkey"],
+                    "local_identifier"],       
+        "entry": ["RID",
+                  ["isa","biosample_dataset_fkey"],
+                  "local_identifier",
+                  ["isa","biosample_species_fkey"],
+                  ["isa","biosample_specimen_fkey"],
+                  ["isa","biosample_gene_fkey"],
+                  ["isa","biosample_genotype_fkey"],
+                  ["isa","biosample_strain_fkey"],
+                  ["isa","biosample_mutation_fkey"],
+                  ["isa","biosample_stage_fkey"],
+                  ["isa","biosample_anatomy_fkey"],
+                  ["isa","biosample_origin_fkey"],
+                  ["isa","biosample_phenotype_fkey"],
+                  ["isa","biosample_gender_fkey"],
+                  "litter",
+                  "collection_date"]                                                                                                                
+        })  
+                                
+        goal.table('isa', 'experiment').visible_columns.update({
+        "filter": {
+                   "and": [
+                          {"source": [{"outbound": ["isa", "experiment_experiment_type_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Experiment Type"},
+                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_species_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Species"},
+                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_stage_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Age"},
+                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_anatomy_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Anatomy"},
+                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_genotype_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Genotype"}
+                          ]
+                   },
+        "detailed": [["isa","experiment_pkey"],
+                     ["isa","experiment_dataset_fkey"],
+                     "local_identifier",
+                     ["isa","experiment_experiment_type_fkey"],
+                     "biosample_summary",
+                     ["isa","experiment_molecule_type_fkey"],
+                     ["isa","experiment_strandedness_fkey"],
+                     ["isa","experiment_rnaseq_selection_fkey"],
+                     ["isa","experiment_target_of_assay_fkey"],
+                     ["isa","experiment_chromatin_modifier_fkey"],
+                     ["isa","experiment_transcription_factor_fkey"],
+                     ["isa","experiment_histone_modification_fkey"],
+                     ["isa","experiment_control_assay_fkey"],
+                     ["isa","experiment_protocol_fkey"]
+                     ],
+        "compact": [["isa","experiment_pkey"],
+                    ["isa","experiment_dataset_fkey"],
+                    ["isa","experiment_experiment_type_fkey"],
+                    "biosample_summary",
+                    ["isa","experiment_protocol_fkey"],
+                    "local_identifier"],
+        "entry": ["RID",
+                  ["isa","experiment_dataset_fkey"],
+                  "local_identifier",
+                  "biosample_summary",
+                  ["isa","experiment_experiment_type_fkey"],
+                  ["isa","experiment_molecule_type_fkey"],
+                  ["isa","experiment_strandedness_fkey"],
+                  ["isa","experiment_rnaseq_selection_fkey"],
+                  ["isa","experiment_target_of_assay_fkey"],
+                  ["isa","experiment_chromatin_modifier_fkey"],
+                  ["isa","experiment_transcription_factor_fkey"],
+                  ["isa","experiment_histone_modification_fkey"],
+                  ["isa","experiment_control_assay_fkey"],
+                  ["isa","experiment_protocol_fkey"]]
+        })  
+                                
+        counter = counter + 3
+                
+        print 'Setting %d annotations for the dataset table...' % counter
         
                 
     def apply(catalog, goal):
@@ -783,6 +974,18 @@ def main(servername, credentialsfilename, catalog, target):
         # get current model configuration from live DB
         goal = catalog.get_catalog_model()
         set_vocabulary_references_annotations(goal);
+        apply(catalog, goal)
+        
+    if target in ['all', 'association_annotations']:
+        # get current model configuration from live DB
+        goal = catalog.get_catalog_model()
+        set_dataset_association_annotations(goal);
+        apply(catalog, goal)
+        
+    if target in ['all', 'dataset_table_annotations']:
+        # get current model configuration from live DB
+        goal = catalog.get_catalog_model()
+        set_dataset_table_annotations(goal);
         apply(catalog, goal)
         
     if target in ['all', 'vocabulary_schema_annotation']:

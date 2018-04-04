@@ -92,6 +92,49 @@ CREATE TABLE temp.facebase(name text, cv text DEFAULT 'facebase', PRIMARY KEY (n
 ALTER TABLE temp.facebase OWNER TO ermrest;
     """
 
+    dataset_functions = """
+CREATE OR REPLACE FUNCTION data_commons.make_dataset_tables(schema_name name, table_name name, column_name name) RETURNS BOOLEAN AS $$
+DECLARE
+BEGIN
+    execute format('CREATE TABLE %I.%I (
+        dataset_id bigint NOT NULL,
+        %I text NOT NULL,
+        "RID" public.ermrest_rid DEFAULT nextval(''_ermrest.rid_seq''::regclass) NOT NULL,
+        "RCB" public.ermrest_rcb,
+        "RMB" public.ermrest_rmb,
+        "RCT" public.ermrest_rct DEFAULT now() NOT NULL,
+        "RMT" public.ermrest_rmt DEFAULT now() NOT NULL
+        )',
+        schema_name, table_name, column_name);
+        
+    execute format('ALTER TABLE ONLY %I.%I FORCE ROW LEVEL SECURITY', schema_name, table_name);
+    execute format('ALTER TABLE ONLY %I.%I OWNER TO ermrest', schema_name, table_name);
+    execute format('COMMENT ON COLUMN %I.%I."RID" IS ''System-generated unique row ID.''', schema_name, table_name);
+    execute format('COMMENT ON COLUMN %I.%I."RCB" IS ''System-generated row created by user provenance.''', schema_name, table_name);
+    execute format('COMMENT ON COLUMN %I.%I."RMB" IS ''System-generated row modified by user provenance.''', schema_name, table_name);
+    execute format('COMMENT ON COLUMN %I.%I."RCT" IS ''System-generated row creation timestamp.''', schema_name, table_name);
+    execute format('COMMENT ON COLUMN %I.%I."RMT" IS ''System-generated row modification timestamp''', schema_name, table_name);
+    execute format('ALTER TABLE ONLY %I.%I
+        ADD CONSTRAINT "%I_RID_key" UNIQUE ("RID")', schema_name, table_name, table_name);
+    execute format('ALTER TABLE ONLY %I.%I
+        ADD CONSTRAINT %I_pkey PRIMARY KEY (dataset_id, %I)', schema_name, table_name, table_name, column_name);
+    execute format('CREATE INDEX %I__pgtrgm_idx ON %I.%I USING gin ((((COALESCE((dataset_id)::text, ''''::text) || '' ''::text) || COALESCE(%I, ''''::text))) public.gin_trgm_ops)', table_name, schema_name, table_name, column_name);
+    execute format('CREATE INDEX %I__tsvector_idx ON %I.%I USING gin (to_tsvector(''english''::regconfig, ((COALESCE((dataset_id)::text, ''''::text) || '' ''::text) || COALESCE(%I, ''''::text))))', table_name, schema_name, table_name, column_name);
+    execute format('CREATE INDEX %I_dataset_id_idx ON %I.%I USING btree (dataset_id)', table_name, schema_name, table_name);
+    execute format('CREATE INDEX %I_dataset_id_pgtrgm_idx ON %I.%I USING gin (((dataset_id)::text) public.gin_trgm_ops)', table_name, schema_name, table_name);
+    execute format('CREATE INDEX %I_%I_idx ON %I.%I USING btree (%I)', table_name, column_name, schema_name, table_name, column_name);
+    execute format('CREATE INDEX %I_%I_pgtrgm_idx ON %I.%I USING gin (%I public.gin_trgm_ops)', table_name, column_name, schema_name, table_name, column_name);
+    execute format('CREATE TRIGGER ermrest_syscols BEFORE INSERT OR UPDATE ON %I.%I FOR EACH ROW EXECUTE PROCEDURE _ermrest.maintain_row()', schema_name, table_name);
+    execute format('ALTER TABLE ONLY %I.%I
+        ADD CONSTRAINT %I_dataset_id_fkey FOREIGN KEY (dataset_id) REFERENCES isa.dataset(id) ON UPDATE CASCADE ON DELETE CASCADE', schema_name, table_name, table_name);
+    execute format('ALTER TABLE ONLY %I.%I
+        ADD CONSTRAINT %I_%I_fkey FOREIGN KEY (%I) REFERENCES vocab.%I_terms(dbxref)', schema_name, table_name, table_name, column_name, column_name, column_name);
+        
+    RETURN TRUE;
+END 
+$$ language plpgsql;
+    """
+    
     domain_functions = """
 DROP SCHEMA IF EXISTS "vocab";
 CREATE SCHEMA "vocab" AUTHORIZATION ermrest;
@@ -652,6 +695,18 @@ COMMIT;
                           'anatomy': {'vocabulary': ['anatomy'], 'isa': ['human_anatomic_source', 'mouse_anatomic_source', 'zebrafish_anatomic_source']},
                           'enhancer': {'isa': ['human_enhancer', 'mouse_enhancer']}
                           }
+
+    """
+    The dictionary with the merged vocabularies.
+    """
+    union_dataset = {'gender': ['human_gender'],
+                      'gene': ['mouse_gene'],
+                      'genotype': ['mouse_genotype', 'zebrafish_genotype'],
+                      'mutation': ['mouse_mutation', 'zebrafish_mutation'],
+                      'stage': ['human_age_stage', 'mouse_age_stage', 'mouse_theiler_stage', 'zebrafish_age_stage'],
+                      'anatomy': ['human_anatomic_source', 'mouse_anatomic_source', 'zebrafish_anatomic_source'],
+                      'enhancer': ['human_enhancer', 'mouse_enhancer']
+                      }
 
     """
     The dictionary with the "Referenced by:" tables of the "vocab" schema.
@@ -1234,6 +1289,8 @@ COMMIT;
         out.write('BEGIN;\n')
         out.write('%s\n' % domain_functions)
         out.write('\n')
+        out.write('%s\n' % dataset_functions)
+        out.write('\n')
         for domain in vocabulary_domains:
             out.write('SELECT data_commons.make_facebase_domain_tables(\'vocab\', \'%s\');\n' % domain)
         
@@ -1398,6 +1455,14 @@ COMMIT;
                         
         out.write('\n')
         
+        for dataset,tables in union_dataset.iteritems():
+            out.write('SELECT data_commons.make_dataset_tables(\'isa\', \'dataset_%s\', \'%s\');\n' % (dataset, dataset))
+            for table in tables:
+                out.write('INSERT INTO isa.dataset_%s(dataset_id, %s, "RID", "RCB", "RMB", "RCT", "RMT") SELECT dataset_id as dataset_id, %s AS %s, "RID" as "RID", "RCB" AS "RCB", "RMB" AS "RMB", "RCT" AS "RCT", "RMT" AS "RMT" FROM isa.dataset_%s;\n' % (dataset, dataset, table, dataset, table))
+            out.write('\n')
+        
+        out.write('\n')
+        
         for table in vocabulary_tables:
             if table not in vocabulary_orphans['vocabulary']:
                 out.write('DROP TABLE "vocabulary"."%s" CASCADE;\n' % table)
@@ -1407,6 +1472,14 @@ COMMIT;
             if table not in vocabulary_orphans['isa']:
                 out.write('DROP TABLE "isa"."%s" CASCADE;\n' % table)
                 
+        out.write('\n')
+        
+        for dataset,tables in union_dataset.iteritems():
+            for table in tables:
+                out.write('DROP TABLE "isa"."dataset_%s" CASCADE;\n' % table)
+        
+        out.write('\n')
+        
         out.write('\n')
         out.write('\nSELECT _ermrest.model_change_event();\n')
         out.write('\n')
