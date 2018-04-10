@@ -48,6 +48,20 @@ $$ language plpgsql;
 DROP SCHEMA IF EXISTS temp;
 CREATE SCHEMA temp AUTHORIZATION ermrest;
 
+CREATE TABLE temp.terms_iri(name text PRIMARY KEY, dbxref text, iri text);
+ALTER TABLE temp.terms_iri OWNER TO ermrest;
+
+CREATE OR REPLACE FUNCTION temp.set_iri(schema_name name, table_name name, column_name name) RETURNS BOOLEAN AS $$
+DECLARE
+BEGIN
+    BEGIN
+        execute format('INSERT INTO temp.terms_iri(name, iri) SELECT %I AS name, iri AS iri FROM %I.%I WHERE iri IS NOT NULL AND iri != '''' ON CONFLICT DO NOTHING', column_name, schema_name, table_name);
+    EXCEPTION WHEN OTHERS THEN
+    END;
+    RETURN TRUE;
+END
+$$ language plpgsql;
+
 CREATE OR REPLACE FUNCTION temp.make_temp_tables_annotations(schema_name name, base_name name) RETURNS BOOLEAN AS $$
 DECLARE
 BEGIN
@@ -586,8 +600,6 @@ COMMIT;
     vocabulary_tables = [
                      'age',
                      'anatomy',
-                     'chemical_entities',
-                     'cvnames',
                      'equipment_model',
                      'experiment_type',
                      'file_extension',
@@ -693,7 +705,8 @@ COMMIT;
                           'mutation': {'vocabulary': ['mutation'], 'isa': ['mouse_mutation', 'zebrafish_mutation']},
                           'stage': {'vocabulary': ['stage', 'theiler_stage'], 'isa': ['human_age_stage', 'mouse_age_stage', 'mouse_theiler_stage', 'zebrafish_age_stage']},
                           'anatomy': {'vocabulary': ['anatomy'], 'isa': ['human_anatomic_source', 'mouse_anatomic_source', 'zebrafish_anatomic_source']},
-                          'enhancer': {'isa': ['human_enhancer', 'mouse_enhancer']}
+                          'enhancer': {'isa': ['human_enhancer', 'mouse_enhancer']},
+                          'species': {'vocabulary': ['species'], 'isa': ['organism']}
                           }
 
     """
@@ -709,6 +722,19 @@ COMMIT;
                       }
 
     """
+    The dictionary for mapping values.
+    """
+    mapping_terms = [{'table': 'isa.organism',
+                      'column': 'term',
+                      'mappings': {'Mouse': 'Mus musculus',
+                                   'Zebrafish': 'Danio rerio',
+                                   'Chimpanzee': 'Pan troglodytes',
+                                   'Human': 'Homo sapiens'
+                                   }
+                      }
+                     ]
+    
+    """
     The dictionary with the "Referenced by:" tables of the "vocab" schema.
     """
     domain_references = {}
@@ -722,7 +748,7 @@ COMMIT;
     """
     The dictionary that contains the vocabulary tables that have no "Referenced by:".
     """
-    vocabulary_orphans = {'vocabulary': ['gene_summary'], 'isa': []}
+    vocabulary_orphans = {'vocabulary': [], 'isa': []}
     
     """
     The dictionary that contains the column name used as a term in the vocabulary tables.
@@ -995,6 +1021,14 @@ COMMIT;
         out = file('%s/clean_up.sql' % output, 'w')
         out.write('BEGIN;\n')
         out.write('\n')
+        for mapping in mapping_terms:
+            table = mapping['table']
+            column = mapping['column']
+            for from_value,to_value in mapping['mappings'].iteritems():
+                out.write('UPDATE %s SET %s=\'%s\' WHERE %s=\'%s\';\n' % (table, column, to_value, column, from_value))
+                
+        out.write('\n')
+        
         for table in vocabulary_orphans['vocabulary']:
             out.write('DROP TABLE "vocabulary"."%s" CASCADE;\n' % table)
         out.write('\n')
@@ -1140,17 +1174,21 @@ COMMIT;
         delete_not_used_terms(out)
         update_mapped_terms(out)
         
+        iri = []
+        
         out.write('INSERT INTO temp.terms(name)\n')
         queries = []
         for table in vocabulary_tables:
             if table not in vocabulary_orphans['vocabulary']:
                 column = vocabulary_term_name['vocabulary'][table]
                 queries.append('SELECT DISTINCT %s AS name FROM vocabulary.%s' % (column, table))
+                iri.append('SELECT temp.set_iri(\'%s\', \'%s\', \'%s\');\n' %('vocabulary', table, column))
                 
         for table in isa_tables:
             if table not in vocabulary_orphans['isa']:
                 column = vocabulary_term_name['isa'][table]
                 queries.append('SELECT DISTINCT %s AS name FROM isa.%s' % (column, table))
+                iri.append('SELECT temp.set_iri(\'%s\', \'%s\', \'%s\');\n' %('isa', table, column))
                 
         out.write('\nUNION\n'.join(queries))
         out.write('\n;\n\n')
@@ -1189,6 +1227,8 @@ COMMIT;
                     if table in union_vocabularies.keys():
                         table_name = '%s_%s' % (schema, table)
                     queries.append('SELECT DISTINCT name AS name FROM temp.%s' % table_name)
+                    column = vocabulary_term_name[schema][table]
+                    iri.append('SELECT temp.set_iri(\'%s\', \'%s\', \'%s\');\n' %(schema, table, column))
             out.write('CREATE TABLE temp.%s AS %s;\n' % (domain, ' UNION '.join(queries)))
             
         out.write('\n')
@@ -1232,6 +1272,11 @@ COMMIT;
         
         for table in ['ocdm', 'facebase', 'terms', 'uberon']:
             out.write('SELECT temp.make_temp_tables_annotations(\'temp\', \'%s\');\n' % table)
+            
+        out.write('\n')
+        
+        for line in iri:
+            out.write('%s' % line)
             
         out.write('\n')
         out.write('\nSELECT _ermrest.model_change_event();\n')
@@ -1412,7 +1457,10 @@ COMMIT;
                         if schema_name != 'vocabulary':
                             fk_column = get_term_reference(goal, '%s' % schema_name, '%s' % table_name, '%s' % constraint)
                             if fk_column == 'id':
-                                out.write('SELECT data_commons.make_facebase_references(\'%s\', \'%s\', \'%s\', \'vocabulary\', \'%s\', \'id\', \'%s\', \'%s\');\n' % (schema_name, table_name, column_name, table, term, domain))                
+                                out.write('SELECT data_commons.make_facebase_references(\'%s\', \'%s\', \'%s\', \'vocabulary\', \'%s\', \'id\', \'%s\', \'%s\');\n' % (schema_name, table_name, column_name, table, term, domain))  
+                            else:
+                                out.write('SELECT data_commons.make_dataset_references(\'%s\', \'%s\', \'%s\', \'%s\');\n' % (schema_name, table_name, column_name, domain))
+                                                            
         out.write('\n')
         
         for table in isa_tables:
@@ -1479,6 +1527,10 @@ COMMIT;
                 out.write('DROP TABLE "isa"."dataset_%s" CASCADE;\n' % table)
         
         out.write('\n')
+        
+        out.write('UPDATE temp.terms_iri T1 SET dbxref = (SELECT dbxref from data_commons.cvterm T2, temp.terms T3 where T1.name = T2.name AND T2.name = T3.name AND T2.cv = T3.cv);\n')
+        out.write('INSERT INTO data_commons.dbxref(db,accession) SELECT \'URL\' AS db, iri AS accession FROM temp.terms_iri ON CONFLICT DO NOTHING;\n')
+        out.write('INSERT INTO data_commons.cvterm_dbxref(cvterm, alternate_dbxref) SELECT dbxref AS cvterm, \'URL:\' || iri || \':\' AS alternate_dbxref FROM temp.terms_iri ON CONFLICT DO NOTHING;\n')
         
         out.write('\n')
         out.write('\nSELECT _ermrest.model_change_event();\n')

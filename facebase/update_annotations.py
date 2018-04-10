@@ -27,7 +27,6 @@ def main(servername, credentialsfilename, catalog, target):
                      'molecule_type',
                      'mouse_genetic_background',
                      'mutation',
-                     'organism',
                      'origin',
                      'output_type',
                      'paired_end_or_single_read',
@@ -51,6 +50,16 @@ def main(servername, credentialsfilename, catalog, target):
                      'dataset_stage'
                      ]
         
+    def get_underline_space_title_case(value):
+        """
+        Replace "_" by a space and each resulted word to start uppercase
+        """
+        res = []
+        values = value.split('_')
+        for val in values:
+            res.append('%s%s' % (val[0].upper(), val[1:]))
+        return ' '.join(res)
+    
     def get_refereced_by(goal, schema_name, table_name, exclude_schema=None):
         """
         Get the "Referenced by:" tables for the given schema:table.
@@ -411,7 +420,7 @@ def main(servername, credentialsfilename, catalog, target):
                 ).foreign_keys[
                     reference['constraint_name']
                 ].foreign_key.update({
-                    "to_name": "%s" % foreign_key['column_name'],
+                    "to_name": "%s" % get_underline_space_title_case(foreign_key['column_name']),
                 })
                 counter = counter + 1
                 
@@ -434,7 +443,7 @@ def main(servername, credentialsfilename, catalog, target):
             ).foreign_keys[
                 ('isa', '%s_%s_fkey' % (table, column))
             ].foreign_key.update({
-                "to_name": "%s" % column
+                "to_name": "%s" % get_underline_space_title_case(column)
             })
         
             counter = counter + 2
@@ -451,19 +460,20 @@ def main(servername, credentialsfilename, catalog, target):
         goal.table('isa', 'dataset').visible_columns.update({
         "filter": {
                    "and": [
-                           {"source": [{"inbound": ["isa", "dataset_organism_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_organism_organism_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Organism"}, 
-                           {"source": [{"inbound": ["isa", "dataset_experiment_type_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_experiment_type_experiment_type_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Experiment Type"}, 
-                           {"source": [{"inbound": ["isa", "dataset_data_type_data_type_fkey"]}, {"outbound": ["isa", "dataset_data_type_dataset_id_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Data Type"}, 
-                           {"source": [{"inbound": ["isa", "dataset_gene_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_gene_gene_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Gene"}, 
-                           {"source": [{"inbound": ["isa", "dataset_stage_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_stage_stage_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Stage"}, 
-                           {"source": [{"inbound": ["isa", "dataset_anatomy_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_anatomy_anatomy_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Anatomy"},
-                           {"source": [{"inbound": ["isa", "dataset_genotype_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_genotype_genotype_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Genotype"},
-                           {"source": [{"inbound": ["isa", "dataset_phenotype_dataset_fkey"]}, {"outbound": ["isa", "dataset_phenotype_phenotype_fkey"]}, "dbxref"], "entity": True, "open": False, "markdown_name": "Chromosome"},
-                           {"source": [{"inbound": ["isa", "dataset_chromosome_dataset_id_fkey"]}, "chromosome"], "entity": True, "open": False,"markdown_name": "Chromosome"},
+                           {"source": [{"inbound": ["isa", "dataset_organism_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_organism_organism_fkey"]}, "dbxref"], "entity": True, "open": False}, 
+                           {"source": [{"inbound": ["isa", "dataset_experiment_type_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_experiment_type_experiment_type_fkey"]}, "dbxref"], "entity": True, "open": False}, 
+                           {"source": [{"inbound": ["isa", "dataset_data_type_data_type_fkey"]}, {"outbound": ["isa", "dataset_data_type_dataset_id_fkey"]}, "dbxref"], "entity": True, "open": False}, 
+                           {"source": [{"inbound": ["isa", "dataset_gene_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_gene_gene_fkey"]}, "dbxref"], "entity": True, "open": False}, 
+                           {"source": [{"inbound": ["isa", "dataset_stage_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_stage_stage_fkey"]}, "dbxref"], "entity": True, "open": False}, 
+                           {"source": [{"inbound": ["isa", "dataset_anatomy_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_anatomy_anatomy_fkey"]}, "dbxref"], "entity": True, "open": False},
+                           {"source": [{"inbound": ["isa", "dataset_genotype_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_genotype_genotype_fkey"]}, "dbxref"], "entity": True, "open": False},
+                           {"source": [{"inbound": ["isa", "dataset_phenotype_dataset_fkey"]}, {"outbound": ["isa", "dataset_phenotype_phenotype_fkey"]}, "dbxref"], "entity": True, "open": False},
+                           {"source": [{"inbound": ["isa", "dataset_chromosome_dataset_id_fkey"]}, "chromosome"], "entity": True, "open": False, "markdown_name": "Chromosome"},
                            {"source": [{"inbound": ["isa", "publication_dataset_fkey"]}, "pmid"], "entity": True, "open": False,"markdown_name": "Pubmed ID"},
                            {"source": [{"outbound": ["isa", "dataset_project_fkey"]},{"inbound": ["isa", "project_investigator_project_id_fkey"]} ,"username"], "entity": True, "open": False,"markdown_name": "Project Investigator"},
                            {"source": "accession", "entity": False, "open": False},
-                           {"source": [{"outbound": ["isa", "dataset_project_fkey"]}, "id"], "entity": True, "open": False,"markdown_name": "Project"},
+                           {"source": "title", "entity": False, "open": False},
+                           {"source": [{"outbound": ["isa", "dataset_project_fkey"]}, "id"], "entity": True, "open": False},
                            {"source": "release_date", "entity": False, "open": False},
                            {"source": [{"outbound": ["isa", "dataset_status_fkey"]}, "name"], "entity": True, "open": False}
                            ]
@@ -493,14 +503,14 @@ def main(servername, credentialsfilename, catalog, target):
         goal.table('isa', 'biosample').visible_columns.update({
         "filter": {
                    "and": [
-                          {"source": [{"outbound": ["isa", "biosample_species_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Species"},
-                          {"source": [{"outbound": ["isa", "biosample_stage_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Stage"},
-                          {"source": [{"outbound": ["isa", "biosample_anatomy_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Anatomy"},
-                          {"source": [{"outbound": ["isa", "biosample_phenotype_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Phenotype"},
-                          {"source": [{"outbound": ["isa", "biosample_gene_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Gene"},
-                          {"source": [{"outbound": ["isa", "biosample_genotype_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Genotype"},
-                          {"source": [{"outbound": ["isa", "biosample_strain_fkey"]},"dbxref"], "entity": True, "open": False,"markdown_name": "Strain"},
-                          {"source": "local_identifier", "entity": True, "open": False,"markdown_name": "Local Identifier"}
+                          {"source": [{"outbound": ["isa", "biosample_species_fkey"]},"dbxref"], "entity": True, "open": True},
+                          {"source": [{"outbound": ["isa", "biosample_stage_fkey"]},"dbxref"], "entity": True, "open": False},
+                          {"source": [{"outbound": ["isa", "biosample_anatomy_fkey"]},"dbxref"], "entity": True, "open": False},
+                          {"source": [{"outbound": ["isa", "biosample_phenotype_fkey"]},"dbxref"], "entity": True, "open": False},
+                          {"source": [{"outbound": ["isa", "biosample_gene_fkey"]},"dbxref"], "entity": True, "open": False},
+                          {"source": [{"outbound": ["isa", "biosample_genotype_fkey"]},"dbxref"], "entity": True, "open": False},
+                          {"source": [{"outbound": ["isa", "biosample_strain_fkey"]},"dbxref"], "entity": True, "open": False},
+                          {"source": "local_identifier", "entity": True, "open": False}
                           ]
                    },
         "detailed": [["isa","biosample_pkey"],
@@ -550,11 +560,11 @@ def main(servername, credentialsfilename, catalog, target):
         goal.table('isa', 'experiment').visible_columns.update({
         "filter": {
                    "and": [
-                          {"source": [{"outbound": ["isa", "experiment_experiment_type_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Experiment Type"},
-                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_species_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Species"},
-                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_stage_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Age"},
-                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_anatomy_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Anatomy"},
-                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_genotype_fkey"]},"dbxref"], "entity": True, "open": True,"markdown_name": "Genotype"}
+                          {"source": [{"outbound": ["isa", "experiment_experiment_type_fkey"]},"dbxref"], "entity": True, "open": True},
+                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_species_fkey"]},"dbxref"], "entity": True, "open": True},
+                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_stage_fkey"]},"dbxref"], "entity": True, "open": True},
+                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_anatomy_fkey"]},"dbxref"], "entity": True, "open": True},
+                          {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},{"outbound": ["isa", "replicate_biosample_fkey"]},{"outbound": ["isa", "biosample_genotype_fkey"]},"dbxref"], "entity": True, "open": True}
                           ]
                    },
         "detailed": [["isa","experiment_pkey"],
