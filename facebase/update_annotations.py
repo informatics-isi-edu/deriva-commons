@@ -12,7 +12,9 @@ def main(servername, credentialsfilename, catalog, target):
 
     domain_tables = [
                      'anatomy',
+                     'chromatin_modifier',
                      'data_type',
+                     'dataset_status',
                      'enhancer',
                      'experiment_type',
                      'file_format',
@@ -37,7 +39,8 @@ def main(servername, credentialsfilename, catalog, target):
                      'stage',
                      'strain',
                      'strandedness',
-                     'target_of_assay'
+                     'target_of_assay',
+                     'transcription_factor'
                      ]
         
     dataset_tables = [
@@ -156,7 +159,8 @@ def main(servername, credentialsfilename, catalog, target):
         tag:isrd.isi.edu,2016:table-display
         """
         goal.table('data_commons', 'cvterm').table_display.update({
-            "row_name": {"row_markdown_pattern": "{{name}}"}
+            "row_name": {"row_markdown_pattern": "{{name}}"},
+            "*": {"row_order":  [ { "column": "name" } ]}                     
         })                                                                         
     
         print 'Setting 3 annotations for the data_commons tables...'
@@ -253,10 +257,14 @@ def main(servername, credentialsfilename, catalog, target):
         counter = 0
         
         for table in domain_tables:
+            row_order = [ { "column": "name" } ]
+            if table == 'stage':
+                row_order = [ { "column": "sort_key" }, { "column": "name" } ]
             goal.table(
                 'vocab', '%s_terms' % table
             ).table_display.update({
-              "row_name": {"row_markdown_pattern": "{{name}}"}                      
+              "row_name": {"row_markdown_pattern": "{{name}}"},
+              "*": {"row_order":  row_order}                     
             })
             
             goal.table(
@@ -712,217 +720,6 @@ def main(servername, credentialsfilename, catalog, target):
         print 'Setting %d annotations for the visible columns of the "Referenced by:" tables of the vocab schema...' % counter
         apply(catalog, goal)
         
-    def set_pseudo_columns_table_display():
-        """
-        Set the tag:isrd.isi.edu,2016:table-display annotation for the pseudo_term column
-        """
-        
-        def hasReferences(goal, schema, table):
-            """
-            Check if the table has ReferencesBy 
-            """
-        
-            ret = False
-            if len(get_refereced_by(goal, schema, table)) > 0:
-                ret = True
-            return ret
-        
-        def getDoubleReferences():
-            """
-            Get the tables ReferencesBy by the vocab.*_terms tables excluding those from the vocab schema
-            """
-        
-            ret = {}
-            goal = catalog.get_catalog_model()
-            for table in domain_tables:
-                references = get_refereced_by(goal, 'vocab', '%s_terms' % table, exclude_schema='vocab')
-                for reference in references:
-                    schema_name = reference['foreign_key']['schema_name']
-                    table_name = reference['foreign_key']['table_name']
-                    if hasReferences(goal, schema_name, table_name):
-                        if schema_name not in ret.keys():
-                            ret[schema_name] = []
-                        if table_name not in ret[schema_name]:
-                            ret[schema_name].append(table_name)
-                        
-            return ret
-        
-        tables = getDoubleReferences()
-        """
-        for schema in tables.keys():
-            print len(tables[schema])
-            
-        print ''
-        """
-        for schema,table in tables.iteritems():
-            print '%s:%s' % (schema, table)
-        goal = catalog.get_catalog_model()
-        counter = 0
-        for schema in tables.keys():
-            for table in tables[schema]:
-                goal.table(schema, table).table_display.update({
-                    "row_name": {"row_markdown_pattern": "{{pseudo_term}}"}
-                })  
-                goal.column(schema, table, 'pseudo_term').generated = True    
-                counter = counter + 2
-            
-        print 'Setting %d annotations for the pseudo_term columns...' % counter
-        apply(catalog, goal)
-                                                                           
-        
-    def get_old_vocabulary_tables_references_by():
-        """
-        Set the tag:isrd.isi.edu,2016:table-display annotation for the pseudo_term column
-        """
-        vocabulary = [
-            'age',
-            'anatomy',
-            'chemical_entities',
-            'cvnames',
-            'equipment_model',
-            'experiment_type',
-            'file_format',
-            'gender',
-            'gene',
-            'gene_summary',
-            'genotype',
-            'histone_modification',
-            'icd10_code',
-            'icd10_diagnosis',
-            'image_creation_device',
-            'mapping_assembly',
-            'molecule_type',
-            'mutation',
-            'omim_code',
-            'omim_diagnosis',
-            'origin',
-            'output_type',
-            'paired_end_or_single_read',
-            'phenotype',
-            'rnaseq_selection',
-            'sample_type',
-            'sequencing_data_direction',
-            'species',
-            'specimen',
-            'stage',
-            'strain',
-            'strandedness',
-            'target_of_assay',
-            'theiler_stage'
-                      ]
-        
-        isa = [
-            'data_type',
-            'human_age',
-            'human_age_stage',
-            'human_anatomic_source',
-            'human_enhancer',
-            'human_gender',
-            'imaging_method',
-            'instrument',
-            'jax_strain',
-            'mouse_age_stage',
-            'mouse_anatomic_source',
-            'mouse_enhancer',
-            'mouse_gene',
-            'mouse_genetic_background',
-            'mouse_genotype',
-            'mouse_mutation',
-            'mouse_theiler_stage',
-            'organism',
-            'specimen',
-            'zebrafish_age_stage',
-            'zebrafish_anatomic_source',
-            'zebrafish_genotype',
-            'zebrafish_mutation'
-               ]
-        
-        def hasReferences(goal, schema, table):
-            """
-            Check if the table has ReferencesBy 
-            """
-        
-            ret = False
-            if len(get_refereced_by(goal, schema, table)) > 0:
-                ret = True
-            return ret
-        
-        print 'Total old vocabulary tables: %d' % (len(vocabulary) + len(isa))
-        goal = catalog.get_catalog_model()
-        schema_name = 'vocabulary'
-        counter = 0
-        for table in vocabulary:
-            if hasReferences(goal, schema_name, table) == False:
-                print 'DROP TABLE "%s"."%s" CASCADE;' % (schema_name, table)
-                counter = counter + 1
-        schema_name = 'isa'
-        for table in isa:
-            if hasReferences(goal, schema_name, table) == False:
-                print 'DROP TABLE "%s"."%s" CASCADE;' % (schema_name, table)
-                counter = counter + 1
-                
-        print 'Total excluded tables: %d' % counter
-            
-        counter = 0
-        vocabulary_domain = []
-        isa_domain = []
-        schema_name = 'vocabulary'
-        for table in vocabulary:
-            if hasReferences(goal, schema_name, table) == True:
-                vocabulary_domain.append(table)
-                counter = counter + 1
-        schema_name = 'isa'
-        for table in isa:
-            if hasReferences(goal, schema_name, table) == True:
-                isa_domain.append(table)
-                counter = counter + 1
-                
-        print 'Total valid tables: %d' % counter
-        schema_name = 'vocabulary'
-        for table in vocabulary_domain:
-            print '"%s"."%s"' % (schema_name, table)
-        schema_name = 'isa'
-        for table in isa_domain:
-            print '"%s"."%s"' % (schema_name, table)
-            
-        references = {}
-        for table in vocabulary_domain:
-            references[table] = get_refereced_by(goal, 'vocabulary', table)
-            
-        for table in vocabulary_domain:
-            print '\n%s:' % table
-            for reference in references[table]:
-                print reference
-        
-        for table in vocabulary_domain:
-            print ''
-            print '-- vocabulary.%s' % table
-            for reference in references[table]:
-                foreign_key = reference['foreign_key']
-                schema_name = foreign_key['schema_name']
-                table_name = foreign_key['table_name']
-                column_name = foreign_key['column_name']
-                if schema_name != 'vocabulary':
-                    print 'SELECT data_commons.make_facebase_references(\'%s\', \'%s\', \'%s\', \'vocabulary\', \'%s\', \'id\', \'term\');' % (schema_name, table_name, column_name, table)
-                
-        for table in vocabulary_domain:
-            print 'DROP TABLE "vocabulary"."%s" CASCADE;' % table
-               
-        """
-        for table in vocabulary_domain:
-            references = get_refereced_by(goal, 'vocab', table)
-            for reference in references:
-                schema_name = reference['foreign_key']['schema_name']
-                table_name = reference['foreign_key']['table_name']
-                if hasReferences(goal, schema_name, table_name):
-                    if schema_name not in ret.keys():
-                        ret[schema_name] = []
-                    if table_name not in ret[schema_name]:
-                        ret[schema_name].append(table_name)
-        print '"%s"."%s"' % (schema_name, table)
-        """    
-        
-        
     # could wrap in a deriva-qt GUI to use interactive login instead?
     credentials = json.load(open(credentialsfilename))
     catalog_number = int(catalog)
@@ -1007,14 +804,7 @@ def main(servername, credentialsfilename, catalog, target):
         print 'Setting 1 annotation for the vocab schema...'
         apply(catalog, goal)
         
-    #if target in ['all', 'table_visible_columns']:
-        #set_table_visible_columns()
-        
-    # apply goal configuration to live catalog
-    #print 'Total number of updates: %d' % counter
-    #print 'Applying the goal configuration to live catalog...'
-    
-    
+            
 if __name__ == '__main__':
     assert len(sys.argv) >= 4, "required arguments: servername credentialsfilename catalog"
     servername = sys.argv[1]

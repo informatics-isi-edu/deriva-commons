@@ -1698,6 +1698,23 @@ COMMIT;
         out.write('\n')
         out.close()
         
+    def make_age_sort_key_script():
+        """
+        Generate the sort_key column for the stage_terms table.
+        """
+        out = file('%s/stage_terms.sql' % output, 'w')
+        out.write('BEGIN;\n')
+        out.write('\n')
+        out.write('ALTER TABLE vocab.stage_terms ADD COLUMN sort_key INTEGER;\n')
+        out.write('UPDATE vocab.stage_terms SET sort_key = (regexp_replace(name, \'E\', \'\')::float * 10)::int WHERE name LIKE \'E%\';\n')
+        out.write('UPDATE vocab.stage_terms SET sort_key = (1000 + regexp_replace(name, \'P\', \'\')::float * 10)::int WHERE name LIKE \'P%\' AND name NOT LIKE \'P%:%\';\n')
+        out.write('UPDATE vocab.stage_terms SET sort_key = (10000 + regexp_replace(name, \'TS\', \'\')::float * 10)::int WHERE name LIKE \'TS%\';\n')
+        out.write('\n')
+        
+        out.write('COMMIT;\n')
+        out.write('\n')
+        out.close()
+        
     # could wrap in a deriva-qt GUI to use interactive login instead?
     credentials = json.load(open(credentialsfilename))
     catalog_number = int(catalog)
@@ -1718,6 +1735,7 @@ COMMIT;
     make_data_commons_ocdm_script()
     make_local_ocdm_script()
     make_facebase_terms_script()
+    make_age_sort_key_script()
     
 if __name__ == '__main__':
     assert len(sys.argv) >= 5, "required arguments: servername credentialsfilename catalog output [target]"

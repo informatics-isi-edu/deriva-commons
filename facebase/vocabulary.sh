@@ -260,6 +260,18 @@ if [ $? != 0 ]
     exit 1
   fi
 
+# Adding the sort_key column for the stage vocabulary table
+
+echo "Adding the sort_key column for the stage vocabulary table..."
+
+su -c "psql -v ON_ERROR_STOP=1 \"$1\"" - postgres < "$2"/stage_terms.sql > "$2"/out.log 2>"$2"/err.log
+
+if [ $? != 0 ]
+  then
+    echo "Check the \"$2\"/err.log file to see if there are just warnings."
+    exit 1
+  fi
+
 rm -f "$2"/out.log
 rm -f "$2"/err.log
 
