@@ -654,6 +654,7 @@ COMMIT;
     """
     isa_tables = [
                   'data_type',
+                  'dataset_status',
                   'experiment_type',
                   'human_age',
                   'human_age_stage',
