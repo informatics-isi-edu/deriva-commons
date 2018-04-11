@@ -595,6 +595,24 @@ COMMIT;
                      'Zebrafish': 'zebrafish'
                     }
     """
+    The db extracted from the "vocabulary" schema with the dbxref column.
+    """
+    other_db = [
+                 'Ensembl',
+                 'Gene',
+                 'Gene_ORFName',
+                 'HGNC'
+                 ]
+    
+    """
+    The vocabulary tables from the "vocabulary" schema with dbxref column.
+    """
+    vocabulary_dbxref_tables = [
+                     'chromatin_modifier',
+                     'transcription_factor'
+                     ]
+    
+    """
     The vocabulary tables from the "vocabulary" schema.
     """
     vocabulary_tables = [
@@ -1344,6 +1362,19 @@ COMMIT;
             out.write('SELECT data_commons.load_facebase_domain_tables(\'vocab\', \'%s\');\n' % domain)
         
         out.write('\n')
+        
+        for domain in vocabulary_dbxref_tables:
+            out.write('SELECT data_commons.make_facebase_domain_tables(\'vocab\', \'%s\');\n' % domain)
+        out.write('\n')
+        
+        for table in vocabulary_dbxref_tables:
+            out.write('CREATE TABLE temp.%s (name text PRIMARY KEY);\n' % table)
+            out.write('ALTER TABLE temp.%s OWNER TO ermrest;\n' % table)
+            out.write('INSERT INTO temp.%s SELECT DISTINCT gene_symbol FROM vocabulary.%s ON CONFLICT DO NOTHING;\n' % (table, table))
+            out.write('SELECT data_commons.load_facebase_domain_tables(\'vocab\', \'%s\');\n' % table)
+        out.write('\n')
+        
+        out.write('\n')
         out.write('\nSELECT _ermrest.model_change_event();\n')
         out.write('\n')
         
@@ -1533,6 +1564,20 @@ COMMIT;
         out.write('INSERT INTO data_commons.cvterm_dbxref(cvterm, alternate_dbxref) SELECT dbxref AS cvterm, \'URL:\' || iri || \':\' AS alternate_dbxref FROM temp.terms_iri ON CONFLICT DO NOTHING;\n')
         
         out.write('\n')
+        
+        for table in vocabulary_dbxref_tables:
+            out.write('INSERT INTO data_commons.dbxref(db,accession) SELECT split_part(dbxref,\':\',1) AS db, "UniProt Protein Identifier" AS accession FROM vocabulary.%s WHERE "UniProt Protein Identifier" IS NOT NULL AND "UniProt Protein Identifier" != \'\' ON CONFLICT DO NOTHING;\n' % (table))
+            out.write('INSERT INTO data_commons.cvterm_dbxref(cvterm, alternate_dbxref) SELECT dbxref || \':\' AS cvterm, split_part(dbxref,\':\',1) || \':\' || "UniProt Protein Identifier" || \':\' AS alternate_dbxref FROM vocabulary.%s WHERE "UniProt Protein Identifier" IS NOT NULL AND "UniProt Protein Identifier" != \'\' AND (dbxref || \':\') IN (SELECT dbxref FROM data_commons.cvterm) ON CONFLICT DO NOTHING;\n' % (table))
+            
+        for table in vocabulary_dbxref_tables:
+            out.write('ALTER TABLE isa.experiment DROP CONSTRAINT experiment_%s_fkey;\n' % (table))
+            out.write('UPDATE isa.experiment SET %s = %s || \':\';\n' % (table, table))
+            out.write('ALTER TABLE isa.experiment ADD CONSTRAINT experiment_%s_fkey FOREIGN KEY (%s) REFERENCES vocab.%s_terms(dbxref) ON UPDATE CASCADE ON DELETE RESTRICT;\n' % (table, table, table))
+            
+        for table in vocabulary_dbxref_tables:
+            out.write('DROP TABLE "vocabulary"."%s" CASCADE;\n' % table)
+            
+        out.write('\n')
         out.write('\nSELECT _ermrest.model_change_event();\n')
         out.write('\n')
         
@@ -1575,6 +1620,17 @@ COMMIT;
             
         out.write('\n')
         
+        for cv in vocabulary_dbxref_tables:
+            out.write('INSERT INTO data_commons.cv (name, definition) VALUES(\'facebase_%s\', \'Resource for Craniofacial Researchers\');\n' % cv)
+            out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'facebase_%s\', \'https://www.facebase.org/\', \'Resource for Craniofacial Researchers\');\n' % cv.upper())
+            
+        out.write('\n')
+        
+        for db in other_db:
+            out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'%s\', \'https://www.facebase.org/\', \'Resource for Craniofacial Researchers\');\n' % db)
+            
+        out.write('\n')
+        
         out.write('%s\n' % data_commons_ocdm_suffix)
         out.close()
         
@@ -1598,6 +1654,13 @@ COMMIT;
         
         out.write('\n')
         out.write('%s\n' % local_ocdm_suffix)
+        out.write('\n')
+        
+        for table in vocabulary_dbxref_tables:
+            out.write('INSERT INTO data_commons.dbxref(db,accession) SELECT split_part(dbxref,\':\',1) AS db, split_part(dbxref,\':\',2) AS accession FROM vocabulary.%s WHERE dbxref IS NOT NULL AND dbxref != \'\' ON CONFLICT DO NOTHING;\n' % (table))
+            out.write('INSERT INTO data_commons.cvterm(dbxref, cv, name, definition) SELECT dbxref || \':\' AS dbxref, \'facebase_%s\' AS cv, gene_symbol AS name, gene_definition AS definition FROM vocabulary.%s WHERE dbxref IS NOT NULL AND dbxref != \'\' ON CONFLICT DO NOTHING;\n' % (table, table))
+       
+        out.write('\n')
         out.close()
         
     def make_facebase_terms_script():
