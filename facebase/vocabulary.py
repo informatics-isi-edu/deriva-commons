@@ -581,6 +581,7 @@ COMMIT;
                      'Female': 'female organism',
                      'Human': 'human',
                      'Male': 'male organism',
+                     'Suture mesenchyme': 'Suture Mesenchyme',
                      'Maxilla defects': 'Maxilla defect',
                      'Mouse': 'mouse',
                      'Nasal suture': 'nasal suture',
