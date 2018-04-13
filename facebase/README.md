@@ -99,7 +99,7 @@ vocabulary_references.sql
 
 ```
 
-Run:
+Run (as root):
 
 ```
 $facebase_directory/vocabulary.sh $database $facebase_directory
