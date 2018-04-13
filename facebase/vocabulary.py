@@ -578,6 +578,8 @@ COMMIT;
                      'Adult': 'adult',
                      'Auditory Capsule': 'Auditory capsule',
                      'Cleft palate': 'oropharyngeal choana',
+                     'ChIP-Seq': 'Chip-seq',
+                     'Count': 'count',
                      'Female': 'female organism',
                      'Human': 'human',
                      'Male': 'male organism',
@@ -588,12 +590,15 @@ COMMIT;
                      'Neural Crest': 'Neural crest',
                      'Taenia Marginalis Anterior': 'taenia marginalis anterior',
                      'Taenia Marginalis Posterior': 'taenia marginalis posterior',
+                     'TGFBR2fl/fl': 'Tgfbr2fl/fl',
+                     'TIFF': 'tiff',
                      'Tooth defects': 'Tooth defect',
                      'Trigeminal v': 'Trigeminal V',
                      'Ts17 ectoderm of frontonasal process': 'TS17 ectoderm of frontonasal process',
                      'Ts19 ectoderm of frontonasal process': 'TS19 ectoderm of frontonasal process',
                      'Ts21 ectoderm of frontonasal process': 'TS21 ectoderm of frontonasal process',
-                     'Zebrafish': 'zebrafish'
+                     'Zebrafish': 'zebrafish',
+                     'wild type': 'Wild type' 
                     }
     """
     The db extracted from the "vocabulary" schema with the dbxref column.
