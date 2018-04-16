@@ -655,7 +655,10 @@ def main(servername, credentialsfilename, catalog, target):
             """
         
             ret = []
-            goal = catalog.get_catalog_model()
+            try:
+                goal = catalog.get_catalog_model()
+            except AttributeError:
+                goal = catalog.getCatalogModel()
             for table in domain_tables:
                 references = get_refereced_by(goal, 'vocab', '%s_terms' % table, exclude_schema='vocab')
                 ret.extend(references)
@@ -666,7 +669,10 @@ def main(servername, credentialsfilename, catalog, target):
             Get the visible columns of the tables ReferencesBy by the vocab.*_terms tables excluding those from the vocab schema
             """
             ret = {}
-            goal = catalog.get_catalog_model()
+            try:
+                goal = catalog.get_catalog_model()
+            except AttributeError:
+                goal = catalog.getCatalogModel()
             for reference in references:
                 schema_name = reference['foreign_key']['schema_name']
                 table_name = reference['foreign_key']['table_name']
@@ -709,7 +715,10 @@ def main(servername, credentialsfilename, catalog, target):
         references = getReferencesBy()
         visibleColumns = getVisibleColumns(references)
         
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         counter = 0
         for schema,tables in visibleColumns.iteritems():
             for table,visible_columns in tables.iteritems():
@@ -732,19 +741,28 @@ def main(servername, credentialsfilename, catalog, target):
     
     if target in ['all', 'data_commons_tables_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_data_commons_tables_annotations(goal)
         apply(catalog, goal)
             
     if target in ['all', 'data_commons_columns_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_data_commons_columns_annotations(goal)
         apply(catalog, goal)
         
     if target in ['all', 'data_commons_foreign_key_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_data_commons_foreign_key_annotations(goal)
         apply(catalog, goal)
         
@@ -755,49 +773,73 @@ def main(servername, credentialsfilename, catalog, target):
     
     if target in ['all', 'vocabulary_system_columns_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_vocabulary_system_columns_annotations(goal)
         apply(catalog, goal)
         
     if target in ['all', 'vocabulary_tables_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_vocabulary_tables_annotations(goal)
         apply(catalog, goal)
         
     if target in ['all', 'vocabulary_columns_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_vocabulary_columns_annotations(goal, catalog_number)
         apply(catalog, goal)
         
     if target in ['all', 'vocabulary_foreign_key_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_vocabulary_foreign_key_annotations(goal)
         apply(catalog, goal)
         
     if target in ['all', 'vocabulary_references_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_vocabulary_references_annotations(goal);
         apply(catalog, goal)
         
     if target in ['all', 'association_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_dataset_association_annotations(goal);
         apply(catalog, goal)
         
     if target in ['all', 'dataset_table_annotations']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         set_dataset_table_annotations(goal);
         apply(catalog, goal)
         
     if target in ['all', 'vocabulary_schema_annotation']:
         # get current model configuration from live DB
-        goal = catalog.get_catalog_model()
+        try:
+            goal = catalog.get_catalog_model()
+        except AttributeError:
+            goal = catalog.getCatalogModel()
         goal.schemas['vocab'].display.update({
            "name_style": {"underline_space": True, "title_case": True}
         })

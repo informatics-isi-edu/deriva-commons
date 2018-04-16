@@ -1726,7 +1726,10 @@ COMMIT;
     catalog_number = int(catalog)
     #print credentials
     catalog = ErmrestCatalog('https', servername, catalog, credentials)
-    goal = catalog.get_catalog_model()
+    try:
+        goal = catalog.get_catalog_model()
+    except AttributeError:
+        goal = catalog.getCatalogModel()
     set_vocabularies_relations(goal)
     get_vocabulary_orphans()
     generate_clean_up()
