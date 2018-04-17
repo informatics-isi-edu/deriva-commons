@@ -227,6 +227,46 @@ $$ language plpgsql;
 drop trigger if exists cvterm_push_updates_trigger on data_commons.cvterm;
 create trigger cvterm_push_updates_trigger  after update on data_commons.cvterm for each row execute procedure data_commons.push_cvterm_updates();
 
+create or replace function data_commons.push_cvtermpath_adds() returns trigger as $$
+declare
+   term_schema text;
+   term_table text;
+   path_schema text;
+   path_table text;
+   rel_schema text;
+   rel_table text;
+begin
+   for term_schema, term_table, path_schema, path_table, rel_schema, rel_table in
+       select d.term_schema, d.term_table, d.path_schema, d.path_table, d.rel_type_schema, d.rel_type_table from data_commons.domain_registry d
+   loop
+       begin
+           if TG_OP = 'DELETE' or TG_OP = 'UPDATE' then
+	      execute format ('delete from %I.%I where subject_dbxref = %L and object_dbxref = %L and type_dbxref = %L',
+                 path_schema, path_table, OLD.subject_dbxref, OLD.object_dbxref, OLD.type_dbxref);
+           elsif TG_OP = 'UPDATE' or TG_OP = 'INSERT' then
+	      execute format ('insert into %I.%I (subject_dbxref, object_dbxref, type_dbxref, cv, pathdistance, cvtermpath_id) 
+                  select %L, %L, %L, %L, %s, %s
+                  where exists (select 1 from %I.%I where dbxref = %L)
+                  and exists (select 1 from %I.%I where dbxref = %L)
+                  and exists (select 1 from %I.%I where cvterm_dbxref = %L)',
+                 path_schema, path_table, NEW.subject_dbxref, NEW.object_dbxref, NEW.type_dbxref, NEW.cv, NEW.pathdistance, NEW.cvtermpath_id,
+		 term_schema, term_table, NEW.subject_dbxref,
+		 term_schema, term_table, NEW.object_dbxref,
+		 rel_schema, rel_table, NEW.type_dbxref
+		 );
+           end if;
+--       exception when others then
+--           continue;
+       perform public.try_ermrest_data_change_event(term_schema, term_table);	   
+       end;
+   end loop;
+   return NEW;
+end
+$$ language plpgsql;
+
+drop trigger if exists cvtermpath_push_updates_trigger on data_commons.cvtermpath;
+create trigger cvtermpath_push_updates_trigger  after insert or update or delete on data_commons.cvtermpath for each row execute procedure data_commons.push_cvtermpath_adds();
+
 -- terrible hack
 insert into data_commons.db(name) values ('internal'), ('OBO_REL')
 on conflict do nothing;
