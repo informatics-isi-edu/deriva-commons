@@ -89,7 +89,7 @@ begin
          where d.rel_type_schema = TG_TABLE_SCHEMA and d.rel_type_table = TG_TABLE_NAME
    loop
        begin
-           perform data_commons.push_path_table_entries(TG_TABLE_SCHEMA, TG_TABLE_NAME, term_schema, term_table, path_schema, path_table, NEW.dbxref);
+           perform data_commons.push_path_table_entries(TG_TABLE_SCHEMA, TG_TABLE_NAME, term_schema, term_table, path_schema, path_table, NEW.cvterm_dbxref);
        exception when others then
            continue;
        end;
