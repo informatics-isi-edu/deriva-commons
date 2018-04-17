@@ -619,6 +619,13 @@ COMMIT;
                      ]
     
     """
+    The vocabulary tables from the "vocabulary" schema referring tables from the "vocabulary" schema.
+    """
+    vocabulary_ref_tables = [
+                     'gene_summary'
+                     ]
+    
+    """
     The vocabulary tables from the "vocabulary" schema.
     """
     vocabulary_tables = [
@@ -1006,7 +1013,10 @@ COMMIT;
         """
         Set the Foreign Keys and "Referenced by:" for the vocabulary tables.
         """
-        set_schema_vocabularies_relations(goal, 'vocabulary', vocabulary_tables)
+        tables = []
+        tables.extend(vocabulary_tables)
+        tables.extend(vocabulary_ref_tables)
+        set_schema_vocabularies_relations(goal, 'vocabulary', tables)
         set_schema_vocabularies_relations(goal, 'isa', isa_tables)
         print_vocabularies_relations()
         
@@ -1426,7 +1436,21 @@ COMMIT;
                         schema, constraint = foreign_key['constraint_name']
                         out.write('ALTER TABLE vocabulary.%s DROP CONSTRAINT IF EXISTS %s;\n' % (table, constraint))
         out.write('\n')
-                
+                        
+        for table in vocabulary_ref_tables:
+            table_model = goal.table('vocabulary', table)
+            foreign_keys_model = table_model.foreign_keys
+            for foreign_key_model in foreign_keys_model:
+                referenced_column = foreign_key_model.referenced_columns[0]
+                if referenced_column['schema_name'] == 'vocabulary':
+                    foreign_keys = vocabulary_relations['vocabulary'][table].get('foreign_keys', None)
+                    if foreign_keys != None:
+                        for foreign_key in foreign_keys:
+                            if foreign_key['foreign_key']['column_name'] == referenced_column['table_name']:
+                                schema, constraint = foreign_key['constraint_name']
+                                out.write('ALTER TABLE vocabulary.%s DROP CONSTRAINT IF EXISTS %s;\n' % (table, constraint))
+        out.write('\n')
+                        
         for table in isa_tables:
             if table not in vocabulary_orphans['isa']:
                 references = vocabulary_relations['isa'][table].get('references', None)
@@ -1492,7 +1516,7 @@ COMMIT;
                         schema_name = foreign_key['schema_name']
                         table_name = foreign_key['table_name']
                         column_name = foreign_key['column_name']
-                        if schema_name != 'vocabulary':
+                        if schema_name != 'vocabulary' or table_name == 'gene_summary':
                             fk_column = get_term_reference(goal, '%s' % schema_name, '%s' % table_name, '%s' % constraint)
                             if fk_column == 'id':
                                 out.write('SELECT data_commons.make_facebase_references(\'%s\', \'%s\', \'%s\', \'vocabulary\', \'%s\', \'id\', \'%s\', \'%s\');\n' % (schema_name, table_name, column_name, table, term, domain))  
