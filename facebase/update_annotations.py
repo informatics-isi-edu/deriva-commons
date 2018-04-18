@@ -464,6 +464,13 @@ def main(servername, credentialsfilename, catalog, target):
         Set the annotations for the dataset table
         """
         counter = 0
+
+        
+        goal.table('isa', 'dataset').table_display.update({
+            "row_name": {"row_markdown_pattern": "{{title}}"},
+            "*" : {"row_order": [{"column": "accession" , "descending": True}]}                     
+        })                                                                         
+
         
         goal.table('isa', 'dataset').visible_columns.update({
         "filter": {
