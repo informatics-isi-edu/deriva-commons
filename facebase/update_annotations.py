@@ -444,6 +444,10 @@ def main(servername, credentialsfilename, catalog, target):
         for table in dataset_tables:
             column = table[len('dataset_'):]
             value = '%s%s' % (column[0].upper(), column[1:])
+
+            if table == 'dataset_gender':
+                value = 'Sex'
+
             goal.table('isa', table).display.update({'name': '%s' % value})
             counter = counter + set_ermrest_system_column_annotations(goal, 'isa', table)
             goal.table(
@@ -453,6 +457,10 @@ def main(servername, credentialsfilename, catalog, target):
             ].foreign_key.update({
                 "to_name": "%s" % get_underline_space_title_case(column)
             })
+
+            if table == 'dataset_gender':
+                goal.table('isa', table).foreign_keys[('isa', '%s_%s_fkey' % (table, column))].foreign_key.update({"to_name": "%s" % get_underline_space_title_case(value)})
+
         
             counter = counter + 2
                 
@@ -464,6 +472,12 @@ def main(servername, credentialsfilename, catalog, target):
         Set the annotations for the dataset table
         """
         counter = 0
+
+
+        goal.table('isa', 'person').table_display.update({
+            "row_name": {"row_markdown_pattern": "{{{first_name}}} {{{last_name}}}"},
+            "*" : {"row_order": [{"column": "last_name" , "descending": False}]}                     
+        })                                                                         
 
         
         goal.table('isa', 'dataset').table_display.update({
@@ -485,7 +499,7 @@ def main(servername, credentialsfilename, catalog, target):
                            {"source": [{"inbound": ["isa", "dataset_phenotype_dataset_fkey"]}, {"outbound": ["isa", "dataset_phenotype_phenotype_fkey"]}, "dbxref"], "entity": True, "open": False},
                            {"source": [{"inbound": ["isa", "dataset_chromosome_dataset_id_fkey"]}, "chromosome"], "entity": True, "open": False, "markdown_name": "Chromosome"},
                            {"source": [{"inbound": ["isa", "publication_dataset_fkey"]}, "pmid"], "entity": True, "open": False,"markdown_name": "Pubmed ID"},
-                           {"source": [{"outbound": ["isa", "dataset_project_fkey"]},{"inbound": ["isa", "project_investigator_project_id_fkey"]} ,"username"], "entity": True, "open": False,"markdown_name": "Project Investigator"},
+                           {"source": [{"outbound": ["isa", "dataset_project_fkey"]},{"inbound": ["isa", "project_investigator_project_id_fkey"]},{"outbound": ["isa", "project_investigator_person_fkey"]},"RID"], "entity": True, "open": False,"markdown_name": "Project Investigator"},
                            {"source": "accession", "entity": False, "open": False},
                            {"source": "title", "entity": False, "open": False},
                            {"source": [{"outbound": ["isa", "dataset_project_fkey"]}, "id"], "entity": True, "open": False},
