@@ -4,6 +4,9 @@
 # $1 is the facebase database name
 # $2 is the facebase top directory
 
+LOAD_OCDM=${LOAD_OCDM:-false}
+
+
 rm -f "$2"/out.log
 rm -f "$2"/err.log
 rm -f "$2"/err_domain.log
@@ -67,6 +70,11 @@ if [ $? != 0 ]
     echo "Failure Getting the facebase and uberon terms."
     exit 1
   fi
+
+
+#==== ADD switch so we don't load OCDM terms to the cvterms table ... 
+if ${LOAD_OCDM}
+then 
 
 # Load the aeo terms
 
@@ -211,6 +219,10 @@ if [ -s "$2"/err.log ]
     echo "Failure Loading the ocdm terms."
     exit 1
   fi
+
+fi
+
+# ==========
 
 # Load the data_commons with the OCDM terms
 
