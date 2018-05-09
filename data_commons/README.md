@@ -1,8 +1,8 @@
 # Loading the data_commons schema
 
-## Export the `data-commons` schema from the `ontology` server
+## Export the data-commons schema from the ontology server
 
-As `root` run:
+On the `ontology` server, as `root` run:
 
 ```
 su -c "pg_dump -f data_commons.sql -n 'data_commons' data_commons" - postgres
