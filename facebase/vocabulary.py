@@ -142,7 +142,7 @@ BEGIN
     execute format('ALTER TABLE ONLY %I.%I
         ADD CONSTRAINT %I_dataset_id_fkey FOREIGN KEY (dataset_id) REFERENCES isa.dataset(id) ON UPDATE CASCADE ON DELETE CASCADE', schema_name, table_name, table_name);
     execute format('ALTER TABLE ONLY %I.%I
-        ADD CONSTRAINT %I_%I_fkey FOREIGN KEY (%I) REFERENCES vocab.%I_terms(dbxref)', schema_name, table_name, table_name, column_name, column_name, column_name);
+        ADD CONSTRAINT %I_%I_fkey FOREIGN KEY (%I) REFERENCES vocab.%I_terms(dbxref) ON UPDATE CASCADE ON DELETE RESTRICT ', schema_name, table_name, table_name, column_name, column_name, column_name);
         
     RETURN TRUE;
 END 
@@ -217,6 +217,20 @@ BEGIN
     RETURN TRUE;
 END 
 $$ language plpgsql;
+
+
+CREATE OR REPLACE FUNCTION data_commons.load_facebase_domain_tables_cv(schema_name name, base_name name,cv_name name) RETURNS BOOLEAN AS $$
+DECLARE
+   cvterm_name text = base_name || '_terms';
+BEGIN
+    execute format('INSERT INTO %I.%I(dbxref, dbxref_unversioned, cv, name, definition, is_obsolete, is_relationshiptype, synonyms, alternate_dbxrefs) 
+        SELECT dbxref, dbxref_unversioned, cv, name, definition, is_obsolete, is_relationshiptype, synonyms, alternate_dbxrefs from data_commons.cvterm 
+        WHERE name IN (SELECT name FROM temp.%I) AND cv = ''%I'' ',
+    schema_name, cvterm_name, base_name,cv_name);
+    RETURN TRUE;
+END 
+$$ language plpgsql;
+
 
     """
     
@@ -712,7 +726,6 @@ COMMIT;
  'Lip': 'lip',
  'Maxilla': 'maxilla',
  'Sphenofrontal suture': 'sphenofrontal suture',
-
  'Auditory Capsule': 'Auditory capsule',
  'embryonic limb': 'Embryonic limb',
  'Embryonic  limb': 'Embryonic limb',
@@ -738,8 +751,29 @@ COMMIT;
  'Ts21 ectoderm of frontonasal process': 'TS21 ectoderm of frontonasal process',
  'Zygomaticosquamosal suture': 'Zygomatico-squamosal suture',
  'Epiphyseal bar bone': 'epiphyseal bar',
- 'Laminae Orbitonalsis': 'Lamina orbitalis ossis ethmoidalis'
+ 'Laminae Orbitonalsis': 'Lamina orbitalis ossis ethmoidalis',
+        'Laser capture microdissection images': 'microscopy assay',
+        'Confocal microscope images': 'confocal fluorescence microscopy',
+        'Enhancer reporter gene assay': 'enhancer activity detection by reporter gene assay',
+        'Chip-seq': 'ChIP-seq assay',
+        'RNA expression (RNA-seq)': 'RNA-seq assay',
+        'miRNA expression (RNA-Seq)': 'microRNA profiling by high throughput sequencing assay',
+        'RNA expression (microarray)': 'transcription profiling by array assay',
+        'Exome sequencing assay (WES)': 'exome sequencing assay',
+        'Protein expression data': 'transcript expression location detection by hybridization chain reaction',
+        'Morphometric analysis': 'Morphometric analysis',
+        'Human genotype and phenotype data': 'genotyping assay',
+        'microMRI images': 'imaging assay',    
+        'Microcomputed tomography (microCT)': 'imaging assay',
+        'Hard tissue microCT images': 'imaging assay',
+        'Soft tissue microCT images': 'imaging assay',
+        'Optical Projection Tomography': 'imaging assay',
+        'Human genotype and phenotype data': 'comparative phenotypic assessment',
+        'Chromatin modifier-associated region identification assay': 'ChIP-seq assay',
+        'Chromatin Immunoprecipitation (ChIP-Seq)': 'ChIP-seq assay'
                     }
+
+
     """
     The db extracted from the "vocabulary" schema with the dbxref column.
     """
@@ -1324,19 +1358,66 @@ COMMIT;
         """
         Update the terms with the values from the existing ontologies.
         """
+
+        out.write('alter table isa.dataset_experiment_type drop constraint dataset_experiment_type_experiment_type_fkey;\n' )
+        out.write('alter table isa.dataset_experiment_type add constraint dataset_experiment_type_experiment_type_fkey FOREIGN KEY (experiment_type) REFERENCES isa.experiment_type(term) ON UPDATE CASCADE ON DELETE CASCADE;\n' )
+
+        #AB. Need to add logic to update term in referencing tables when transformed term collides w/ existing one
+
+        #AB. Do a first pass to update terms to new values if they don't collide w/ existing ones
         for table in vocabulary_tables:
             if table not in vocabulary_orphans['vocabulary']:
                 term = vocabulary_term_name['vocabulary'][table]
+                print 'MAPPING: table=%s term=%s' % (table,term)
                 for name,value in mapped_terms.iteritems():
+
                     out.write('UPDATE vocabulary.%s SET %s = \'%s\' WHERE %s = \'%s\' AND \'%s\' NOT IN (SELECT %s FROM vocabulary.%s);\n' % (table, term, value, term, name, value, term, table))
                 out.write('\n')
                 
         for table in isa_tables:
             if table not in vocabulary_orphans['isa']:
                 term = vocabulary_term_name['isa'][table]
+                print 'MAPPING: table=%s term=%s' % (table,term)
                 for name,value in mapped_terms.iteritems():
                     out.write('UPDATE isa.%s SET %s = \'%s\' WHERE %s = \'%s\' AND \'%s\' NOT IN (SELECT %s FROM isa.%s);\n' % (table, term, value, term, name, value, term, table))
                 out.write('\n')
+
+
+        #AB. Now remap to new terms in tables that reference the old term ....
+
+
+        for table in isa_tables:
+            if table not in vocabulary_orphans['isa']:
+                term = vocabulary_term_name['isa'][table]
+                for name,value in mapped_terms.iteritems():
+                    print '---> MAPPING: table=%s term=%s name=%s value=%s'  % (table,term,name,value)
+        
+                    references = vocabulary_relations['isa'][table].get('references', None)
+                    if len(references) > 0:
+                        queries = []
+                        for reference in references:
+                            schema, constraint = reference['constraint_name']
+                            foreign_key = reference['foreign_key']
+                            schema_name = foreign_key['schema_name']
+                            table_name = foreign_key['table_name']
+                            column_name = foreign_key['column_name']
+                            fk_column = get_term_reference(goal, '%s' % schema_name, '%s' % table_name, '%s' % constraint)
+
+                            if table_name == 'dataset_'+table:
+                                print '    Schema=%s | Table=%s | Column=%s | Constraint=%s | fk_column=%s' % (schema_name,table_name,column_name,constraint,fk_column) 
+
+                                out.write('alter table %s.%s drop  constraint if exists  %s_pkey;\n' % (schema_name,table_name,table_name))
+                                out.write('update %s.%s tt set %s =%s from isa.%s  where %s=\'%s\' AND  tt.%s=\'%s\' ;\n' % (schema_name,table_name,column_name,term,table,term,value,column_name,name))
+                                out.write('delete from %s.%s where "RID" in (SELECT "RID" FROM (SELECT "RID",row_number() over (partition by dataset_id,%s order by "RID") as row_num from %s.%s) T where T.row_num>1) ;\n' % (schema_name,table_name,column_name,schema_name,table_name))
+
+                                out.write('alter table %s.%s add constraint %s_pkey primary key (dataset_id,%s);\n' % (schema_name,table_name,table_name,column_name))
+                            
+                                out.write('\n')
+                        """
+                        update isa.dataset_experiment_type tt set experiment_type = term from isa.experiment_type  where term='Chip-seq' AND  TT.experiment_type='Chromatin Immunoprecipitation (ChIP-Seq)'
+                        delete from isa.dataset_experiment_type where "RID" in (SELECT "RID" FROM (SELECT "RID",row_number() over (partition by dataset_id,experiment_type order by "RID") as row_num from isa.dataset_experiment_type) T where T.row_num>1) ;
+                        """                         
+        
         
     def make_temp_schema():
         """
@@ -1525,10 +1606,11 @@ COMMIT;
         out.write('\n')
         
         for table in vocabulary_dbxref_tables:
-            out.write('CREATE TABLE temp.%s (name text PRIMARY KEY);\n' % table)
+            print 'Calling data_commons.load_facebase_domain_tables_cv for table= "%s"' % (table)
+            out.write('CREATE TABLE temp.%s (name text PRIMARY KEY,cv text);\n' % table)
             out.write('ALTER TABLE temp.%s OWNER TO ermrest;\n' % table)
-            out.write('INSERT INTO temp.%s SELECT DISTINCT gene_symbol FROM vocabulary.%s ON CONFLICT DO NOTHING;\n' % (table, table))
-            out.write('SELECT data_commons.load_facebase_domain_tables(\'vocab\', \'%s\');\n' % table)
+            out.write('INSERT INTO temp.%s (name,cv) SELECT DISTINCT gene_symbol,\'%s\' FROM vocabulary.%s ON CONFLICT DO NOTHING;\n' % (table, table,table))
+            out.write('SELECT data_commons.load_facebase_domain_tables_cv(\'vocab\', \'%s\',\'%s\');\n' % (table,table))
         out.write('\n')
         
         out.write('\n')
@@ -1786,14 +1868,21 @@ COMMIT;
         out.write('\n')
         
         for cv in vocabulary_domains:
-            out.write('INSERT INTO data_commons.cv (name, definition) VALUES(\'facebase_%s\', \'Resource for Craniofacial Researchers\');\n' % cv)
-            out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'facebase_%s\', \'https://www.facebase.org/\', \'Resource for Craniofacial Researchers\');\n' % cv.upper())
+            #out.write('INSERT INTO data_commons.cv (name, definition) VALUES(\'facebase_%s\', \'Resource for Craniofacial Researchers\');\n' % cv)
+            #out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'facebase_%s\', \'https://www.facebase.org/\', \'Resource for Craniofacial Researchers\');\n' % cv.upper())
+            out.write('INSERT INTO data_commons.cv (name, definition) VALUES(\'%s\', \'Resource for Craniofacial Researchers\');\n' % cv)
+            out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'%s\', \'https://www.facebase.org/\', \'Resource for Craniofacial Researchers\');\n' % cv.upper())
+
+
             
         out.write('\n')
         
         for cv in vocabulary_dbxref_tables:
-            out.write('INSERT INTO data_commons.cv (name, definition) VALUES(\'facebase_%s\', \'Resource for Craniofacial Researchers\');\n' % cv)
-            out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'facebase_%s\', \'https://www.facebase.org/\', \'Resource for Craniofacial Researchers\');\n' % cv.upper())
+            #out.write('INSERT INTO data_commons.cv (name, definition) VALUES(\'facebase_%s\', \'Resource for Craniofacial Researchers\');\n' % cv)
+            #out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'facebase_%s\', \'https://www.facebase.org/\', \'Resource for Craniofacial Researchers\');\n' % cv.upper())
+            out.write('INSERT INTO data_commons.cv (name, definition) VALUES(\'%s\', \'Resource for Craniofacial Researchers\');\n' % cv)
+            out.write('INSERT INTO data_commons.db (name, urlprefix, description) VALUES(\'%s\', \'https://www.facebase.org/\', \'Resource for Craniofacial Researchers\');\n' % cv.upper())
+
             
         out.write('\n')
         
@@ -1812,25 +1901,81 @@ COMMIT;
         out = file('%s/local_ocdm.sql' % output, 'w')
         out.write('%s\n' % local_ocdm_prefix)
         out.write('\n')
+
         
         for table in temporary_tables['vocabulary']:
             original_name = get_domain_table('vocabulary', table['original_name'])
-            out.write('UPDATE temp.facebase SET cv = \'facebase_%s\' WHERE name IN (SELECT name FROM temp.%s);\n' % (original_name, table['name']))
+            #out.write('UPDATE temp.facebase SET cv = \'facebase_%s\' WHERE name IN (SELECT name FROM temp.%s);\n' % (original_name, table['name']))
+            out.write('UPDATE temp.facebase SET cv = \'%s\' WHERE name IN (SELECT name FROM temp.%s);\n' % (original_name, table['name']))
+            
         
         out.write('\n')
         
         for table in temporary_tables['isa']:
             original_name = get_domain_table('isa', table['original_name'])
-            out.write('UPDATE temp.facebase SET cv = \'facebase_%s\' WHERE name IN (SELECT name FROM temp.%s);\n' % (original_name, table['name']))
+            #out.write('UPDATE temp.facebase SET cv = \'facebase_%s\' WHERE name IN (SELECT name FROM temp.%s);\n' % (original_name, table['name']))
+            out.write('UPDATE temp.facebase SET cv = \'%s\' WHERE name IN (SELECT name FROM temp.%s);\n' % (original_name, table['name']))
+
+
+        """
+        A.B. Here insert manual entries for experiment_type terms from OBI
+        """
+
+        out.write('\n')
+        out.write('INSERT INTO data_commons.db(name,description,urlprefix) VALUES (\'OBI\',\'Ontology for Biomedical Investigations\',\'http://purl.obolibrary.org/obo\'); \n')
+        out.write('INSERT INTO data_commons.db(name,description,urlprefix) VALUES (\'CHMO\',\'Ontology for Biomedical Investigations\',\'http://purl.obolibrary.org/obo\'); \n')
+        out.write('INSERT INTO data_commons.db(name,description,urlprefix) VALUES (\'SNOMEDCT\',\'SNOMED Clinical Terms\',\'http://purl.bioontology.org/ontology/SNOMEDCT\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0000185:\',\'0000185\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0000185:\',\'OBI:0000185\',\'experiment_type\',\'imaging assay\'); \n')
         
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0002119:\',\'0002119\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0002119:\',\'OBI:0002119\',\'experiment_type\',\'microscopy assay\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'CHMO\',\'CHMO:0000089:\',\'0000089\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'CHMO:0000089:\',\'CHMO:0000089\',\'experiment_type\',\'confocal fluorescence microscopy\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0002083:\',\'0002083\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0002083:\',\'OBI:0002083\',\'experiment_type\',\'enhancer activity detection by reporter gene assay\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0000716:\',\'0000716\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0000716:\',\'OBI:0000716\',\'experiment_type\',\'ChIP-seq assay\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0001271:\',\'0001271\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0001271:\',\'OBI:0001271\',\'experiment_type\',\'RNA-seq assay\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0001922:\',\'0001922\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0001922:\',\'OBI:0001922\',\'experiment_type\',\'microRNA profiling by high throughput sequencing assay\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0001463:\',\'0001463\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0001463:\',\'OBI:0001463\',\'experiment_type\',\'transcription profiling by array assay\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0002118:\',\'0002118\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0002118:\',\'OBI:0002118\',\'experiment_type\',\'exome sequencing assay\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0002085:\',\'0002085\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0002085:\',\'OBI:0002085\',\'experiment_type\',\'transcript expression location detection by hybridization chain reaction\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'SNOMEDCT\',\'SNOMEDCT:60374009:\',\'60374009\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'SNOMEDCT:60374009:\',\'SNOMEDCT:60374009\',\'experiment_type\',\'Morphometric analysis\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0000435:\',\'0000435\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0000435:\',\'OBI:0000435\',\'experiment_type\',\'genotyping assay\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0001546:\',\'0001546\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0001546:\',\'OBI:0001546\',\'experiment_type\',\'comparative phenotypic assessment\'); \n')
+
+            
         out.write('\n')
         out.write('%s\n' % local_ocdm_suffix)
         out.write('\n')
         
         for table in vocabulary_dbxref_tables:
             out.write('INSERT INTO data_commons.dbxref(db,accession) SELECT split_part(dbxref,\':\',1) AS db, split_part(dbxref,\':\',2) AS accession FROM vocabulary.%s WHERE dbxref IS NOT NULL AND dbxref != \'\' ON CONFLICT DO NOTHING;\n' % (table))
-            out.write('INSERT INTO data_commons.cvterm(dbxref, cv, name, definition) SELECT dbxref || \':\' AS dbxref, \'facebase_%s\' AS cv, gene_symbol AS name, gene_definition AS definition FROM vocabulary.%s WHERE dbxref IS NOT NULL AND dbxref != \'\' ON CONFLICT DO NOTHING;\n' % (table, table))
-       
+            #out.write('INSERT INTO data_commons.cvterm(dbxref, cv, name, definition) SELECT dbxref || \':\' AS dbxref, \'facebase_%s\' AS cv, gene_symbol AS name, gene_definition AS definition FROM vocabulary.%s WHERE dbxref IS NOT NULL AND dbxref != \'\' ON CONFLICT DO NOTHING;\n' % (table, table))
+            out.write('INSERT INTO data_commons.cvterm(dbxref, cv, name, definition) SELECT dbxref || \':\' AS dbxref, \'%s\' AS cv, gene_symbol AS name, gene_definition AS definition FROM vocabulary.%s WHERE dbxref IS NOT NULL AND dbxref != \'\' ON CONFLICT DO NOTHING;\n' % (table, table))
+
+            
         out.write('\n')
         out.close()
         

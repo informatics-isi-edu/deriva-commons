@@ -50,9 +50,16 @@ def main(servername, credentialsfilename, catalog, target):
                      'dataset_gene',
                      'dataset_genotype',
                      'dataset_mutation',
-                     'dataset_stage'
+                     'dataset_stage',
+                     'dataset_phenotype',
+                     'dataset_experiment_type',
+                     'dataset_data_type',
+                     'dataset_instrument',
+                     'dataset_mouse_genetic_background',
+                     'dataset_organism'
                      ]
-        
+
+    
     def get_underline_space_title_case(value):
         """
         Replace "_" by a space and each resulted word to start uppercase
@@ -290,12 +297,27 @@ def main(servername, credentialsfilename, catalog, target):
                       "synonyms", 
                       "alternate_dbxrefs"]                      
             })
-            
-            goal.table(
-                'vocab', '%s_terms' % table
-            ).visible_foreign_keys.update({
-                "*": []
-            })
+
+
+            if table == 'phenotype':
+                goal.table(
+                    'vocab', '%s_terms' % table
+                ).visible_foreign_keys.update({
+                    "*": [ {"source": [{"inbound": ["isa","dataset_%s_%s_fkey" % (table,table)]},{"outbound": ["isa","dataset_%s_dataset_fkey" % table]},"id"]}]
+                })
+            elif table == 'species':
+                goal.table(
+                    'vocab', '%s_terms' % table
+                ).visible_foreign_keys.update({
+                    "*": [ {"source": [{"inbound": ["isa","dataset_organism_organism_fkey"]},{"outbound": ["isa","dataset_organism_dataset_id_fkey"]},"id"]}]
+                })
+                
+            else:    
+                goal.table(
+                    'vocab', '%s_terms' % table
+                ).visible_foreign_keys.update({
+                    "*": [ {"source": [{"inbound": ["isa","dataset_%s_%s_fkey" % (table,table)]},{"outbound": ["isa","dataset_%s_dataset_id_fkey" % table]},"id"]}]
+                })
             
             goal.table(
                 'vocab', '%s_paths' % table
@@ -316,6 +338,7 @@ def main(servername, credentialsfilename, catalog, target):
                        "is_transitive"
                       ]                                    
             })
+
             
             counter = counter + 5
             
@@ -422,7 +445,7 @@ def main(servername, credentialsfilename, catalog, target):
         for table in domain_tables:
             references = get_refereced_by(goal, 'vocab', '%s_terms' % table)
             for reference in references:
-                foreign_key = reference['foreign_key']
+                foreign_key = reference['foreign_key']                    
                 goal.table(
                     foreign_key['schema_name'], foreign_key['table_name']
                 ).foreign_keys[
@@ -430,6 +453,8 @@ def main(servername, credentialsfilename, catalog, target):
                 ].foreign_key.update({
                     "to_name": "%s" % get_underline_space_title_case(foreign_key['column_name']),
                 })
+
+                    
                 counter = counter + 1
                 
         print 'Setting %d annotations for the "Referenced by:" tables of the vocab schema...' % counter
@@ -448,6 +473,8 @@ def main(servername, credentialsfilename, catalog, target):
             if table == 'dataset_gender':
                 value = 'Sex'
 
+            # print ' Table=%s | Column=%s | Value=%s' % (table,column,value)
+                
             goal.table('isa', table).display.update({'name': '%s' % value})
             counter = counter + set_ermrest_system_column_annotations(goal, 'isa', table)
             goal.table(
@@ -460,6 +487,25 @@ def main(servername, credentialsfilename, catalog, target):
 
             if table == 'dataset_gender':
                 goal.table('isa', table).foreign_keys[('isa', '%s_%s_fkey' % (table, column))].foreign_key.update({"to_name": "%s" % get_underline_space_title_case(value)})
+
+            
+            if table == 'dataset_phenotype':
+                goal.table(
+                    'isa', table
+                ).foreign_keys[
+                    ('isa', '%s_dataset_fkey' % (table))
+                ].foreign_key.update({
+                    "to_name": "Datasets"
+                })
+            else:
+                goal.table(
+                    'isa', table
+                ).foreign_keys[
+                    ('isa', '%s_dataset_id_fkey' % (table))
+                ].foreign_key.update({
+                    "to_name": "Datasets"
+                })
+                            
 
         
             counter = counter + 2
@@ -479,6 +525,8 @@ def main(servername, credentialsfilename, catalog, target):
             "*" : {"row_order": [{"column": "last_name" , "descending": False}]}                     
         })                                                                         
 
+
+        del goal.table('isa', 'dataset').annotations['tag:isrd.isi.edu,2016:table-display']
         
         goal.table('isa', 'dataset').table_display.update({
             "row_name": {"row_markdown_pattern": "{{title}}"},
@@ -528,7 +576,8 @@ def main(servername, credentialsfilename, catalog, target):
                      ["isa","dataset_chromosome_dataset_id_fkey"]
               ]
         })       
-                                                                          
+
+        
         goal.table('isa', 'biosample').visible_columns.update({
         "filter": {
                    "and": [
