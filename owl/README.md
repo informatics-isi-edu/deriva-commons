@@ -68,7 +68,7 @@ scp ontology.isrd.isi.edu:"$top_directory"/sql/*.sql "$database_directory"/
 Copy also the `$ontology.sh` file from the `$top_directory` directory of the ontology server into the `$database_directory` directory.
 
 ```
-scp ontology.isrd.isi.edu:"$top_directory"/$ontology.sh "$database_directory"/
+scp ontology.isrd.isi.edu:"$top_directory"/"$ontology.sh" "$database_directory"/
 
 ```
 
@@ -76,12 +76,12 @@ scp ontology.isrd.isi.edu:"$top_directory"/$ontology.sh "$database_directory"/
 Run (as root):
 
 ```
-"$database_directory"/$ontology.sh "$database" "$database_directory"
+"$database_directory"/"$ontology".sh "$database" "$database_directory"
 
 ```
 
-The script will load the terms and synonyms of the ontology into the `data_commons` schema with:
+The script will load the terms and synonyms of the ontology into the `data_commons` schema having:
 
- - The `db` having as values the `owl` files names.
- - The `cv` having as value `$ontology_$db`
+ - The `db` values as the `owl` files names.
+ - The `cv` values as `$ontology_$db`
  
