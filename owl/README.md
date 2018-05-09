@@ -7,6 +7,8 @@ For instructions, see [Loading the data_commons schema](/data_commons/README.md)
 
 ## Extract the terms and the synonyms from the ontology (on the ontology server)
 
+The ontology terms and synonyms are identified by using the predicates `preferred_name`, respectively `synonym`.
+
 We will refer the name of the ontology as `$ontology`.
 
 On the `ontology` server, create a top directory:
