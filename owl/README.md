@@ -7,9 +7,10 @@ For instructions, see [Loading the data_commons schema](/data_commons/README.md)
 
 ## Extract the terms and the synonyms from the ontology (on the ontology server)
 
-The ontology terms and synonyms are identified by using the predicates `preferred_name`, respectively `synonym`.
+The ontology terms and synonyms are identified by using the predicates defined in configuration files.
+You can find examples at [OCDM](ocdm.json) and [MONDO](mondo.json).
 
-We will refer the name of the ontology as `$ontology`.
+We will refer the name of the ontology as `$ontology` and the predicates configuration file as `$config`.
 
 On the `ontology` server, create a top directory:
 
@@ -40,7 +41,7 @@ parse_owl_directory.py
 Run:
 
 ```
-"$top_directory"/parse_owl_directory.py -i "$top_directory" -n "$ontology"
+"$top_directory"/parse_owl_directory.py -i "$top_directory" -n "$ontology" -c "$config"
 
 ```
 
