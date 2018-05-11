@@ -50,6 +50,7 @@ parser = OptionParser()
 parser.header = {}
 parser.add_option('-i', '--input', action='store', dest='input', type='string', help='Top directory')
 parser.add_option('-n', '--ontology', action='store', dest='ontology', type='string', help='Ontology name')
+parser.add_option('-c', '--config', action='store', dest='config', type='string', help='Configuration file for specifying the predicates for the terms and synonyms')
 
 (options, args) = parser.parse_args()
 
@@ -59,6 +60,10 @@ if not options.input:
     
 if not options.ontology:
     print 'ERROR: Missing Ontology name'
+    sys.exit()
+    
+if not options.config:
+    print 'ERROR: Missing configuration file.'
     sys.exit()
     
 top_directory = options.input
@@ -85,7 +90,7 @@ for filename in owl_files:
     db = parts[-1].split('.')[0]
     out.write(owl_template % dict(db=db))
     try:
-        args = ['%s/parse_owl_file.py' % top_directory, '--file', '%s' % filename, '--output', '%s' % sql_directory, '--ontology', '%s' % options.ontology]
+        args = ['%s/parse_owl_file.py' % top_directory, '--file', '%s' % filename, '--output', '%s' % sql_directory, '--ontology', '%s' % options.ontology, '--config', '%s' % options.config]
         p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdoutdata, stderrdata = p.communicate()
         returncode = p.returncode
