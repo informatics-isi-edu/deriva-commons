@@ -770,9 +770,16 @@ COMMIT;
         'Optical Projection Tomography': 'imaging assay',
         'Human genotype and phenotype data': 'comparative phenotypic assessment',
         'Chromatin modifier-associated region identification assay': 'ChIP-seq assay',
-        'Chromatin Immunoprecipitation (ChIP-Seq)': 'ChIP-seq assay'
-                    }
+        'Chromatin Immunoprecipitation (ChIP-Seq)': 'ChIP-seq assay',
+        'Single-cell RNA-sequencing (scRNA-seq)': 'single-cell RNA-seq assay (scRNA-seq)'
+    }
 
+
+    experiment_tables = [
+                          'experiment'
+                        ]
+
+    
 
     """
     The db extracted from the "vocabulary" schema with the dbxref column.
@@ -1230,6 +1237,8 @@ COMMIT;
         out = file('%s/clean_up.sql' % output, 'w')
         out.write('BEGIN;\n')
         out.write('\n')
+
+        
         for mapping in mapping_terms:
             table = mapping['table']
             column = mapping['column']
@@ -1239,11 +1248,14 @@ COMMIT;
         out.write('\n')
         
         for table in vocabulary_orphans['vocabulary']:
-            out.write('DROP TABLE "vocabulary"."%s" CASCADE;\n' % table)
+            if table != 'file_extension':
+                out.write('DROP TABLE "vocabulary"."%s" CASCADE;\n' % table)
         out.write('\n')
         for table in vocabulary_orphans['isa']:
             out.write('DROP TABLE "isa"."%s" CASCADE;\n' % table)
+
         
+            
         out.write('\nSELECT _ermrest.model_change_event();\n')
         out.write('\n')
         
@@ -1409,14 +1421,16 @@ COMMIT;
                                 out.write('alter table %s.%s drop  constraint if exists  %s_pkey;\n' % (schema_name,table_name,table_name))
                                 out.write('update %s.%s tt set %s =%s from isa.%s  where %s=\'%s\' AND  tt.%s=\'%s\' ;\n' % (schema_name,table_name,column_name,term,table,term,value,column_name,name))
                                 out.write('delete from %s.%s where "RID" in (SELECT "RID" FROM (SELECT "RID",row_number() over (partition by dataset_id,%s order by "RID") as row_num from %s.%s) T where T.row_num>1) ;\n' % (schema_name,table_name,column_name,schema_name,table_name))
-
                                 out.write('alter table %s.%s add constraint %s_pkey primary key (dataset_id,%s);\n' % (schema_name,table_name,table_name,column_name))
-                            
                                 out.write('\n')
-                        """
-                        update isa.dataset_experiment_type tt set experiment_type = term from isa.experiment_type  where term='Chip-seq' AND  TT.experiment_type='Chromatin Immunoprecipitation (ChIP-Seq)'
-                        delete from isa.dataset_experiment_type where "RID" in (SELECT "RID" FROM (SELECT "RID",row_number() over (partition by dataset_id,experiment_type order by "RID") as row_num from isa.dataset_experiment_type) T where T.row_num>1) ;
-                        """                         
+                                
+
+        for table in experiment_tables:
+            for name,value in mapped_terms.iteritems():
+               print '---> EXPERIMENT TABLE MAPPINGS: table=%s  name=%s value=%s'  % (table,name,value)
+               out.write('update isa.experiment tt set experiment_type = (SELECT "RID" from isa.experiment_type where term=\'%s\') WHERE  tt.experiment_type=(SELECT "RID" FROM isa.experiment_type WHERE term=\'%s\') ;\n' % (value,name))
+            out.write('\n')
+                 
         
         
     def make_temp_schema():
@@ -1965,6 +1979,25 @@ COMMIT;
         out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'OBI\',\'OBI:0001546:\',\'0001546\'); \n')
         out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'OBI:0001546:\',\'OBI:0001546\',\'experiment_type\',\'comparative phenotypic assessment\'); \n')
 
+        """
+        Add here manual entries for species from NCBITAXON
+        """
+        out.write('INSERT INTO data_commons.db(name,description,urlprefix) VALUES (\'NCBITAXON\',\'National Center for Biotechnology Information (NCBI) Organismal Classification\',\'http://purl.bioontology.org/ontology/NCBITAXON\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'NCBITAXON\',\'NCBITAXON:7955:\',\'7955\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'NCBITAXON:7955:\',\'NCBITAXON:7955\',\'species\',\'Danio rerio\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'NCBITAXON\',\'NCBITAXON:10090:\',\'10090\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'NCBITAXON:10090:\',\'NCBITAXON:10090\',\'species\',\'Mus musculus\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'NCBITAXON\',\'NCBITAXON:9606:\',\'9606\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'NCBITAXON:9606:\',\'NCBITAXON:9606\',\'species\',\'Homo sapiens\'); \n')
+
+        out.write('INSERT INTO data_commons.dbxref(db,name,accession) VALUES (\'NCBITAXON\',\'NCBITAXON:9598:\',\'9598\'); \n')
+        out.write('INSERT INTO data_commons.cvterm(dbxref,dbxref_unversioned, cv, name) VALUES (\'NCBITAXON:9598:\',\'NCBITAXON:9598\',\'species\',\'Pan troglodytes\'); \n')
+
+        
+        
             
         out.write('\n')
         out.write('%s\n' % local_ocdm_suffix)
@@ -2025,6 +2058,49 @@ COMMIT;
         out.write('UPDATE vocab.stage_terms SET sort_key = (1000 + regexp_replace(name, \'P\', \'\')::float * 10)::int WHERE name LIKE \'P%\' AND name NOT LIKE \'P%:%\';\n')
         out.write('UPDATE vocab.stage_terms SET sort_key = (10000 + regexp_replace(name, \'TS\', \'\')::float * 10)::int WHERE name LIKE \'TS%\';\n')
         out.write('\n')
+
+
+        """
+        Additional cleanup
+        """
+
+        out.write('\n')
+
+        out.write('DELETE from vocab.experiment_type_terms where name in (\'Chromatin modifier-associated region identification assay\',\'Hard tissue microCT images\',\'Microcomputed tomography (microCT)\',\'Optical Projection Tomography\',\'Soft tissue microCT images\',\'Chip-seq\',\'microMRI images\',\'Chromatin Immunoprecipitation (ChIP-Seq)\') and name not in (select name from vocab.experiment_type_terms v join isa.dataset_experiment_type d on (d.experiment_type=v.dbxref)); \n')
+
+        out.write('\n')
+
+
+        out.write('alter table vocabulary.file_extension drop constraint if exists file_extension_file_format_fkey;\n')
+        out.write('alter table vocabulary.file_extension set schema vocab ;\n')
+        out.write('alter table vocab.file_extension alter column file_format drop not null ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'NIfTI\') WHERE E.term=\'nii\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'NIfTI\') WHERE E.term=\'nii.gz\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'OME-TIFF\') WHERE E.term=\'ome.tif\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'OME-TIFF\') WHERE E.term=\'ome.tiff\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'TIFF\') WHERE E.term=\'tiff\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'TIFF\') WHERE E.term=\'tif\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'JPEG\') WHERE E.term=\'jpeg\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'JPEG\') WHERE E.term=\'jpg\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'PNG\') WHERE E.term=\'png\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'AIM\') WHERE E.term=\'aim\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'OBJ\') WHERE E.term=\'obj.gz\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'FastQ\') WHERE E.term=\'fastq.gz\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'FastQC\') WHERE E.term=\'fastqc.tgz\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'FastQC\') WHERE E.term=\'fastqc.zip\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'Tab-separated Values\') WHERE E.term=\'tsv\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'Count\') WHERE E.term=\'count\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'BAM\') WHERE E.term=\'bam\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'BAM Index\') WHERE E.term=\'bam.bai\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'BED\') WHERE E.term=\'bed\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'bigBed\') WHERE E.term=\'bb\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'bigWig\') WHERE E.term=\'bw\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'CEL\') WHERE E.term=\'CEL\'   ;\n')
+        out.write('update vocab.file_extension E set file_format= (SELECT "RID" FROM vocab.file_format_terms WHERE name=\'CEL\') WHERE E.term=\'CEL.gz\'   ;\n')
+
+        out.write('alter table vocab.file_extension add constraint file_extension_file_format_fkey FOREIGN KEY (file_format) REFERENCES vocab.file_format_terms ("RID") ON UPDATE CASCADE ON DELETE RESTRICT;\n')
+
+
         
         out.write('COMMIT;\n')
         out.write('\n')
