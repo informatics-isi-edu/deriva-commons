@@ -177,6 +177,8 @@ def main(servername, credentialsfilename, catalog, target):
         Set the annotations for the columns of the data_commons schema
         """
         counter = 0
+
+        print 'set_data_commons_columns_annotations(goal):.....'
         
         data_commons_tables = [
             "cv",
@@ -193,16 +195,25 @@ def main(servername, credentialsfilename, catalog, target):
             ]
         
         for table in data_commons_tables:
+            print '--- Table=%s' % table
             counter = counter + set_ermrest_system_column_annotations(goal, 'data_commons', table)
         
-        goal.column('data_commons', 'cvtermpath', 'type_dbxref').display.update({'name': 'Type'})       
-        goal.column('data_commons', 'cvtermpath', 'object_dbxref').display.update({'name': 'Object'})       
-        goal.column('data_commons', 'cvterm', 'dbxref').display.update({'name': 'Code'})       
-        goal.column('data_commons', 'cvterm', 'cv').display.update({'name': 'Controlled Vocabulary'})       
+        print ' -- Done w/ loop'
+        
+        goal.column('data_commons', 'cvtermpath', 'type_dbxref').display.update({'name': 'Type'})
+
+        print ' -- 1'
+        goal.column('data_commons', 'cvtermpath', 'object_dbxref').display.update({'name': 'Object'})
+        print ' -- 2'
+        goal.column('data_commons', 'cvterm', 'dbxref').display.update({'name': 'Code'})
+        print ' -- 3'
+        goal.column('data_commons', 'cvterm', 'cv').display.update({'name': 'Controlled Vocabulary'})
+        print ' -- 4'
         goal.column('data_commons', 'cvterm', 'alternate_dbxrefs').display.update({'name': 'Alternate Codes'})       
         
         counter = counter + 5
-                                                                 
+
+        
         print 'Setting %d annotations for the columns of the data_commons schema...' % counter
         
     def set_data_commons_foreign_key_annotations(goal):
@@ -264,6 +275,9 @@ def main(servername, credentialsfilename, catalog, target):
         counter = 0
         
         for table in domain_tables:
+
+            print 'set_vocabulary_tables_annotations(): Table=%s' % table
+            
             row_order = [ { "column": "name" } ]
             if table == 'stage':
                 row_order = [ { "column": "sort_key" }, { "column": "name" } ]
