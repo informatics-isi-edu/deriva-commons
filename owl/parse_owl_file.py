@@ -157,32 +157,9 @@ def isLiteral(value):
         return True
 
 def setNamespace():
-    f = open(options.file, 'r')
-    line = f.readline()
-    while line != '':
-        line = line.strip()
-        if line.startswith('<rdf:RDF '):
-            line = line[len('<rdf:RDF '):]
-        if line.endswith('>'):
-            line = line[:-1]
-        prefix = None
-        if line.startswith('xmlns:'):
-            prefix = 'xmlns:'
-        if line.startswith('xmlns='):
-            prefix = 'xmlns='
-        if line.startswith('xml:'):
-            prefix = 'xml:'
-            line = line[0:len(line)-1]
-
-        if prefix == 'xmlns:' or prefix == 'xml:':
-            line = line[len(prefix):]
-            values = line.split('=')
-            xmlns[values[0]] = values[1][1:len(values[1])-1]
-        elif prefix == 'xmlns=':
-            line = line[len(prefix):]
-            xmlns[''] = line[1:len(line)-1]
-        line = f.readline() 
-    f.close()
+    for namespace in g.namespaces():
+        prefix,uri = namespace
+        xmlns['%s' % prefix] = '%s' % uri
     
 def insert_terms(out, qres):
     for row in qres:
