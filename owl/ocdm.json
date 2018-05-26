@@ -1,0 +1,10 @@
+{
+    "terms_predicates": [
+		"preferred_name"
+	    ],
+    "synonyms_predicates": [
+		"/synonym"
+	    ]
+}
+
+

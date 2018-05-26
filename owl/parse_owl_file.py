@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 import traceback
 import rdflib
 from optparse import OptionParser
@@ -33,20 +34,20 @@ literals_objects = """
     ORDER BY ?o      
 """
 
-literals_terms = """
+literals_terms_template = """
     SELECT DISTINCT ?s ?o 
         WHERE {
             ?s ?p ?o .
-        FILTER (isLiteral(?o) && regex(str(?p), "preferred_name$"))
+        FILTER (isLiteral(?o) && %s)
         }
     ORDER BY ?o ?s  
 """
 
-literals_synonyms = """
+literals_synonyms_template = """
     SELECT DISTINCT ?s ?o 
         WHERE {
             ?s ?p ?o .
-        FILTER (isLiteral(?o) && regex(str(?p), "/synonym$"))
+        FILTER (isLiteral(?o) && %s)
         }
     ORDER BY ?o      
 """
@@ -83,17 +84,47 @@ parser.header = {}
 parser.add_option('-f', '--file', action='store', dest='file', type='string', help='OWL file name')
 parser.add_option('-n', '--ontology', action='store', dest='ontology', type='string', help='Ontology name')
 parser.add_option('-o', '--output', action='store', dest='output', type='string', help='Output directory')
+parser.add_option('-c', '--config', action='store', dest='config', type='string', help='Configuration file for specifying the predicates for the terms and synonyms')
 
 (options, args) = parser.parse_args()
 
 if not options.file:
-    print 'ERROR: Missing input OWL file'
+    print 'ERROR: Missing input OWL file.'
     sys.exit()
     
 if not options.ontology:
-    print 'ERROR: Missing ontology name'
+    print 'ERROR: Missing ontology name.'
     sys.exit()
     
+if not options.config:
+    print 'ERROR: Missing configuration file.'
+    sys.exit()
+    
+f = open(options.config, 'r')
+cfg = json.load(f)
+
+terms_predicates = cfg.get('terms_predicates', None)
+if terms_predicates == None:
+    print 'ERROR: Missing terms_predicates from the configuration file.'
+    sys.exit()
+
+synonyms_predicates = cfg.get('synonyms_predicates', None)
+if synonyms_predicates == None:
+    print 'ERROR: Missing synonyms_predicates from the configuration file.'
+    sys.exit()
+
+values = []
+for predicate in terms_predicates:
+    values.append('regex(str(?p), "%s$")' % predicate)
+
+literals_terms = literals_terms_template % ('(%s)' % ' || '.join(values))
+
+values = []
+for predicate in synonyms_predicates:
+    values.append('regex(str(?p), "%s$")' % predicate)
+
+literals_synonyms = literals_synonyms_template % ('(%s)' % ' || '.join(values))
+
 parts = options.file.split('/')
 db = parts[-1].split('.')[0]
 cv = '%s_%s' % (options.ontology, db)
@@ -126,32 +157,9 @@ def isLiteral(value):
         return True
 
 def setNamespace():
-    f = open(options.file, 'r')
-    line = f.readline()
-    while line != '':
-        line = line.strip()
-        if line.startswith('<rdf:RDF '):
-            line = line[len('<rdf:RDF '):]
-        if line.endswith('>'):
-            line = line[:-1]
-        prefix = None
-        if line.startswith('xmlns:'):
-            prefix = 'xmlns:'
-        if line.startswith('xmlns='):
-            prefix = 'xmlns='
-        if line.startswith('xml:'):
-            prefix = 'xml:'
-            line = line[0:len(line)-1]
-
-        if prefix == 'xmlns:' or prefix == 'xml:':
-            line = line[len(prefix):]
-            values = line.split('=')
-            xmlns[values[0]] = values[1][1:len(values[1])-1]
-        elif prefix == 'xmlns=':
-            line = line[len(prefix):]
-            xmlns[''] = line[1:len(line)-1]
-        line = f.readline() 
-    f.close()
+    for namespace in g.namespaces():
+        prefix,uri = namespace
+        xmlns['%s' % prefix] = '%s' % uri
     
 def insert_terms(out, qres):
     for row in qres:

@@ -1,0 +1,11 @@
+{
+    "terms_predicates": [
+		"label"
+	    ],
+    "synonyms_predicates": [
+		"hasExactSynonym",
+		"hasRelatedSynonym"
+	    ]
+}
+
+
