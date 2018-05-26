@@ -178,7 +178,6 @@ def main(servername, credentialsfilename, catalog, target):
         """
         counter = 0
 
-        print 'set_data_commons_columns_annotations(goal):.....'
         
         data_commons_tables = [
             "cv",
@@ -195,20 +194,17 @@ def main(servername, credentialsfilename, catalog, target):
             ]
         
         for table in data_commons_tables:
-            print '--- Table=%s' % table
+            
             counter = counter + set_ermrest_system_column_annotations(goal, 'data_commons', table)
-        
-        print ' -- Done w/ loop'
         
         goal.column('data_commons', 'cvtermpath', 'type_dbxref').display.update({'name': 'Type'})
 
-        print ' -- 1'
         goal.column('data_commons', 'cvtermpath', 'object_dbxref').display.update({'name': 'Object'})
-        print ' -- 2'
+
         goal.column('data_commons', 'cvterm', 'dbxref').display.update({'name': 'Code'})
-        print ' -- 3'
+
         goal.column('data_commons', 'cvterm', 'cv').display.update({'name': 'Controlled Vocabulary'})
-        print ' -- 4'
+
         goal.column('data_commons', 'cvterm', 'alternate_dbxrefs').display.update({'name': 'Alternate Codes'})       
         
         counter = counter + 5
@@ -276,7 +272,6 @@ def main(servername, credentialsfilename, catalog, target):
         
         for table in domain_tables:
 
-            print 'set_vocabulary_tables_annotations(): Table=%s' % table
             
             row_order = [ { "column": "name" } ]
             if table == 'stage':
@@ -534,6 +529,23 @@ def main(servername, credentialsfilename, catalog, target):
         counter = 0
 
 
+        print '===== Doing the isa.previews annotation in server=%s .....' % servername
+        
+        goal.table('isa', 'previews').table_display.update({
+            "compact" :{"row_markdown_pattern":":::iframe [**{{{filename}}}** -- click the **load** button below to view the downsampled preview](https://%s/_viewer/xtk/view_on_load.html?url=https://%s{{{preview_uri}}}){width=800 height=600 .iframe} \n:::" % (servername,servername) }
+        })                                                                         
+
+        goal.column(
+            'isa', 'previews', 'preview_uri'
+        ).column_display.update({
+            "compact" :{"markdown_pattern":":::iframe [**{{{filename}}}** -- click the **load** button below to view the downsampled preview](https://%s/_viewer/xtk/view_on_load.html?url=https://%s{{{preview_uri}}}){width=800 height=600 .iframe} \n:::" % (servername,servername)}
+        })
+
+        goal.table('isa','previews').display.update({'name': 'Downsampled Image Previews'})
+        
+
+        # ---------
+        
         goal.table('isa', 'person').table_display.update({
             "row_name": {"row_markdown_pattern": "{{{first_name}}} {{{last_name}}}"},
             "*" : {"row_order": [{"column": "last_name" , "descending": False}]}                     
@@ -590,6 +602,13 @@ def main(servername, credentialsfilename, catalog, target):
                      ["isa","dataset_chromosome_dataset_id_fkey"]
               ]
         })       
+
+        del goal.table('isa', 'dataset').annotations['tag:isrd.isi.edu,2016:visible-foreign-keys']
+        
+        goal.table('isa', 'dataset').visible_foreign_keys.update({
+            "*": [["isa","thumbnail_dataset_fkey"],["viz","model_dataset_fkey"],["isa","previews_dataset_id_fkey"],["isa","experiment_dataset_fkey"],["isa","biosample_dataset_fkey"],["isa","enhancer_dataset_fkey"],["isa","clinical_assay_dataset_fkey"],["isa","file_dataset_fkey"],["isa","external_reference_id_fkey"]]
+        })
+
 
         
         goal.table('isa', 'biosample').visible_columns.update({
