@@ -59,6 +59,8 @@ def main(servername, credentialsfilename, catalog, target):
                      'dataset_organism'
                      ]
 
+
+
     
     def get_underline_space_title_case(value):
         """
@@ -528,6 +530,39 @@ def main(servername, credentialsfilename, catalog, target):
         """
         counter = 0
 
+        print '===== Doing the isa.imaging_compact annotations in server=%s .....' % servername
+        
+        goal.table('isa', 'imaging_data').alternatives.update({"compact" : ["isa", "imaging_compact"],"compact/brief" : ["isa", "imaging_compact"]})                                                                         
+
+
+        goal.table('isa', 'imaging_compact').visible_columns.update({
+            "compact": [["isa","imaging_compact_rid_fkey"],"replicate","url","thumbnails",["isa","imaging_compact_file_type_fkey"],"byte_count", "md5","submitted_on"],                                                   
+            "detailed": [["isa","imaging_compact_rid_fkey"],"replicate","url","thumbnails",["isa","imaging_compact_file_type_fkey"],"byte_count", "md5","submitted_on"]
+        })       
+
+        goal.column(
+                'isa','imaging_compact', 'filename'
+                ).column_display.update({
+                    "compact": {"markdown_pattern":"[**{{filename}}**]({{{url}}})"},                                                                                                                                              
+                    "detailed": {"markdown_pattern":"[**{{filename}}**]({{{url}}})"}
+                })
+
+        goal.column(
+            'isa','imaging_compact', 'url'
+        ).column_display.update({
+            "compact": {"markdown_pattern":"[**{{filename}}**]({{{url}}})"},                                                                                                                                              
+            "detailed": {"markdown_pattern":"[**{{filename}}**]({{{url}}})"}
+        })
+
+        goal.column(
+            'isa','imaging_compact', 'thumbnails'
+        ).column_display.update({
+            "*": {"markdown_pattern":"{{#_thumbnails}} [![{{{filename}}}](https://%s{{{url}}}){height=90}](https://%s{{{url}}}){target=_blank} {{/_thumbnails}}" % (servername,servername) } 
+        })
+
+
+        goal.table('isa','imaging_compact').display.update({'name': 'Imaging Data'})
+    
 
         print '===== Doing the isa.previews annotation in server=%s .....' % servername
         
@@ -837,6 +872,7 @@ def main(servername, credentialsfilename, catalog, target):
     catalog_number = int(catalog)
     #print credentials
     catalog = ErmrestCatalog('https', servername, catalog, credentials)
+
     
     """
     Set the data_commons annotations
