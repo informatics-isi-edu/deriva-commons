@@ -530,6 +530,13 @@ def main(servername, credentialsfilename, catalog, target):
         """
         counter = 0
 
+        print '===== Doing vocab.gene_summary annotations .....'
+
+        goal.table('vocab', 'gene_summary').visible_columns.update({
+            "detailed" : [["vocab","gene_summary_gene_fkey"],["vocab","gene_summary_species_fkey"],["vocab","gene_summary_contributed_by_fkey"],"summary"],"compact" : [["vocab","gene_summary_gene_fkey"],["vocab","gene_summary_species_fkey"],"summary"]
+        })       
+
+        
         print '===== Doing the isa.imaging_compact annotations in server=%s .....' % servername
         
         goal.table('isa', 'imaging_data').alternatives.update({"compact" : ["isa", "imaging_compact"],"compact/brief" : ["isa", "imaging_compact"]})                                                                         
