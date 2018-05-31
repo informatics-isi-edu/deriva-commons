@@ -623,9 +623,9 @@ def main(servername, credentialsfilename, catalog, target):
                            {"source": [{"outbound": ["isa", "dataset_status_fkey"]}, "name"], "entity": True, "open": False}
                            ]
                    },
-        "compact": [["isa","accession_unique"],"title",["isa","dataset_project_fkey"],"status","release_date"],
+        "compact": [["isa","dataset_RID_key"],["isa","accession_unique"],"title",["isa","dataset_project_fkey"],"status","release_date"],
         "entry": ["accession","title",["isa","dataset_project_fkey"],"description","study_design","release_date",["isa","dataset_status_fkey"], "show_in_jbrowse"],
-        "detailed": ["accession","description","study_design",["isa","dataset_project_fkey"],["isa","dataset_status_fkey"],"funding","release_date","show_in_jbrowse",
+        "detailed": [["isa","dataset_RID_key"],"accession","description","study_design",["isa","dataset_project_fkey"],["isa","dataset_status_fkey"],"funding","release_date","show_in_jbrowse",
                      ["isa","publication_dataset_fkey"],
                      ["isa","dataset_experiment_type_dataset_id_fkey"],
                      ["isa","dataset_data_type_dataset_id_fkey"],
