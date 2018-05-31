@@ -44,7 +44,7 @@ function purgefb
 function purgefb_from
 {
     tmpfile="${1}.tmp"
-    cat "$1" | sed -e "s/'''FB'''/'''DC'''/g" | sed -e "s/https:\/\/www.facebase.org//g" | sed -e "s/https:\/\/dev.facebase.org//g" | sed -e "s/https:\/\/staging.facebase.org//g" | sed -e "s/facebase/commons/g" | sed -e "s/\/data\/record/\/chaise\/record/g" > "$tmpfile"
+    cat "$1" | sed -e "s/'''FB'''/'''DC'''/g" | sed -e "s/https:\/\/www.facebase.org//g" | sed -e "s/https:\/\/dev.facebase.org//g" | sed -e "s/https:\/\/staging.facebase.org//g" | sed -e "s/facebase/commons/g" | sed -e "s/\/data\/record/\/chaise\/record/g" | sed -e "s/\/fb2\//\//g" > "$tmpfile"
     rm "$1"
     mv "$tmpfile" "$1"
 }
