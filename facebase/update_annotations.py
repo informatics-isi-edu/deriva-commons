@@ -709,7 +709,12 @@ def main(servername, credentialsfilename, catalog, target):
                   "litter",
                   "collection_date"]                                                                                                                
         })  
-                                
+
+
+        """
+        Experiment
+        """
+        
         goal.table('isa', 'experiment').visible_columns.update({
         "filter": {
                    "and": [
@@ -741,8 +746,7 @@ def main(servername, credentialsfilename, catalog, target):
                     "biosample_summary",
                     ["isa","experiment_protocol_fkey"],
                     "local_identifier"],
-        "entry": ["RID",
-                  ["isa","experiment_dataset_fkey"],
+        "entry": [["isa","experiment_dataset_fkey"],
                   "local_identifier",
                   "biosample_summary",
                   ["isa","experiment_experiment_type_fkey"],
@@ -756,7 +760,45 @@ def main(servername, credentialsfilename, catalog, target):
                   ["isa","experiment_control_assay_fkey"],
                   ["isa","experiment_protocol_fkey"]]
         })  
-                                
+
+        """
+        Replicate
+        """
+        
+        goal.table('isa', 'replicate').visible_columns.update({
+            "detailed": [["isa","replicate_pkey"],["isa","replicate_experiment_fkey"],["isa","replicate_biosample_fkey"],"bioreplicate_number","technical_replicate_number"],
+            "compact":  [["isa","replicate_pkey"],["isa","replicate_biosample_fkey"],"bioreplicate_number","technical_replicate_number"],
+            "entry":    [["isa","replicate_experiment_fkey"],["isa","replicate_biosample_fkey"],"bioreplicate_number","technical_replicate_number"],
+            "filter" :{"and" : [
+                {"source": [{"outbound": ["isa", "replicate_dataset_fkey"]},"RID"], "entity": True, "open": True,"markdown_name": "Dataset"},
+                {"source": [{"outbound": ["isa", "replicate_experiment_fkey"]},"RID"], "entity": True, "open": True,"markdown_name": "Experiment"},
+                {"source": [{"outbound": ["isa", "replicate_biosample_fkey"]},"RID"], "entity": True, "open": True,"markdown_name": "Biosample"}
+            ]
+            }            
+        })  
+
+        """
+        Biosample
+        """
+
+        goal.table('isa', 'biosample').visible_columns.update({
+                "detailed": [["isa","biosample_pkey"],["isa","biosample_dataset_fkey"],"local_identifier","summary",["isa","biosample_species_fkey"],["isa","biosample_specimen_fkey"],["isa","biosample_gene_fkey"],["isa","biosample_genotype_fkey"],["isa","biosample_strain_fkey"],["isa","biosample_mutation_fkey"],["isa","biosample_stage_fkey"],["isa","biosample_theiler_stage_fkey"],["isa","biosample_anatomy_fkey"],["isa","biosample_origin_fkey"],["isa","biosample_phenotype_fkey"],["isa","biosample_gender_fkey"],"litter","collection_date"],
+            "compact": [["isa","biosample_pkey"],"species","genotype","strain","stage","anatomy","origin","phenotype","local_identifier"],
+            "entry": [["isa","biosample_dataset_fkey"],"local_identifier",["isa","biosample_species_fkey"],["isa","biosample_specimen_fkey"],["isa","biosample_gene_fkey"],["isa","biosample_genotype_fkey"],["isa","biosample_strain_fkey"],["isa","biosample_mutation_fkey"],["isa","biosample_stage_fkey"],["isa","biosample_theiler_stage_fkey"],["isa","biosample_anatomy_fkey"],["isa","biosample_origin_fkey"],["isa","biosample_phenotype_fkey"],["isa","biosample_gender_fkey"],"litter","collection_date"],
+            "filter" :{"and" : [
+                {"source": [{"outbound": ["isa", "biosample_species_fkey"]},"term"], "entity": True, "open": True,"markdown_name": "Species"},
+                {"source": [{"outbound": ["isa", "biosample_stage_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Stage"},
+                {"source": [{"outbound": ["isa", "biosample_anatomy_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Anatomy"},
+                {"source": [{"outbound": ["isa", "biosample_phenotype_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Phenotype"},
+                {"source": [{"outbound": ["isa", "biosample_gene_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Gene"},
+                {"source": [{"outbound": ["isa", "biosample_genotype_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Genotype"},
+                {"source": [{"outbound": ["isa", "biosample_strain_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Strain"},
+                {"source": "local_identifier", "entity": True, "open": False,"markdown_name": "Local Identifier"}
+            ]
+            }
+        })  
+
+        
         counter = counter + 3
                 
         print 'Setting %d annotations for the dataset table...' % counter
