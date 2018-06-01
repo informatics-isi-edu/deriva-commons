@@ -26,7 +26,9 @@ fi
 SOURCEDB=${1:-'facebasedb'}
 DESTDB=${2:-'commondb'}
 DESTCAT=${3:-'8'}
-ERMRESTDIR="/home/isrddev/ermrest"
+ERMRESTDIR=${ERMRESTDIR:-"/home/isrddev/ermrest"}
+HOST=${HOST:-$(hostname)}
+ACL_CONFIG=${ACL_CONFIG:-"$(pwd)/acl_config.json"}
 
 function question
 {
@@ -124,6 +126,11 @@ function ermrest_deploy
     cd $here
 }
 
+function update_acls
+{
+    runuser -c "deriva-acl-config --host ${HOST} --config-file ${ACL_CONFIG} ${DESTCAT}" - "${SUDO_USER:-$USER}"
+}
+
 echo "Running ${0} with:"
 echo "  SOURCEDB=${SOURCEDB}"
 echo "  DESTDB=${DESTDB}"
@@ -141,6 +148,9 @@ question "Register database ${DESTDB} as catalog ${DESTCAT} (y/n)?" \
 
 question "Run ermrest make deploy (y/n)?" \
     && ermrest_deploy
+
+question "Update acl configuration (y/n)?" \
+    && update_acls
 
 question "Dump final database (y/n)?" \
     && runuser -u ermrest pg_dump "${DESTDB}" > "${DESTDB}.sql"
