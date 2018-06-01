@@ -4,19 +4,44 @@
 # instance of the facebasedb.
 #
 # Run this script on a facebase host to create a template from its database:
-# $ sudo ./make_template SOURCEDB DESTDB DESTCAT
+# $ sudo ./make_template [-y] SOURCEDB DESTDB DESTCAT
 #
 # Where,
 #  SOURCEDB is 'facebasedb' by default, if left blank
 #  DESTDB is 'commondb' by default, if left blank
 #  DESTCAT is '8' by default, if left blank
 #
+# Option '-y' to answer 'yes' to all questions for optional steps.
+#
 # Note that DESTDB will be dropped and recreated!
+
+if [ "$1" == "-y" ];
+then
+    ALLYES=1
+    shift
+else
+    ALLYES=
+fi
 
 SOURCEDB=${1:-'facebasedb'}
 DESTDB=${2:-'commondb'}
 DESTCAT=${3:-'8'}
 ERMRESTDIR="/home/isrddev/ermrest"
+
+function question
+{
+    if [ "${ALLYES}" ];
+    then
+        return 0
+    else
+        read -t 30 -n 1 -p "$1 " ans
+        if [ "$ans" == "y" ];
+        then
+            return 0
+        fi
+    fi
+    return 1
+}
 
 function dropdb
 {
@@ -73,6 +98,13 @@ DELETE FROM _ermrest.valuemap;
 DELETE FROM _ermrest.model_modified;
 DELETE FROM _ermrest.table_modified;
 EOF
+
+    # hack the catalog owner acl, set to isrd-staff
+    cat <<EOF | runuser -u ermrest psql "$1"
+UPDATE _ermrest.known_catalog_acls
+SET members = '{"https://auth.globus.org/176baec4-ed26-11e5-8e88-22000ab4b42b"}'
+WHERE acl = 'owner';
+EOF
 }
 
 function registerdb
@@ -84,11 +116,18 @@ ON CONFLICT DO NOTHING;
 EOF
 }
 
+function ermrest_deploy
+{
+    here=$(pwd)
+    cd ${ERMRESTDIR}
+    make deploy
+    cd $here
+}
+
 echo "Running ${0} with:"
 echo "  SOURCEDB=${SOURCEDB}"
 echo "  DESTDB=${DESTDB}"
 echo "  DESTCAT=${DESTCAT}"
-echo
 
 dropdb "$DESTDB"
 createdb "$DESTDB"
@@ -97,38 +136,14 @@ purgefb "$DESTDB"
 restoredb "$DESTDB"
 hackdb "$DESTDB"
 
-read -t 30 -n 1 -p "Register database ${DESTDB} as catalog ${DESTCAT} (y/n)? " reg_ans
-echo
-if [ "$reg_ans" == "y" ];
-then
-    registerdb "$DESTCAT" "$DESTDB"
-else
-    echo "Skipping catalog registration..."
-fi
+question "Register database ${DESTDB} as catalog ${DESTCAT} (y/n)?" \
+    && registerdb "$DESTCAT" "$DESTDB"
 
-read -t 30 -n 1 -p "Run ermrest make deploy (y/n)? " deploy_ans
-echo
-if [ "$deploy_ans" == "y" ];
-then
-    here=$(pwd)
-    cd ${ERMRESTDIR}
-    make deploy
-    cd $here
-else
-    echo "Skipping make deploy..."
-fi
+question "Run ermrest make deploy (y/n)?" \
+    && ermrest_deploy
 
-read -t 30 -n 1 -p "Dump final database (y/n)? " dump_ans
-echo
-if [ "$dump_ans" == "y" ];
-then
-    dumpfile="${DESTDB}.sql"
-    echo "Dumping ${DESTDB} to ${dumpfile}..."
-    runuser -u ermrest pg_dump "${DESTDB}" > "${dumpfile}"
-else
-    echo "Skipping final database dump..."
-fi
+question "Dump final database (y/n)?" \
+    && runuser -u ermrest pg_dump "${DESTDB}" > "${DESTDB}.sql"
 
-echo
 echo "Done"
 
