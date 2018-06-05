@@ -31,8 +31,11 @@
       "types": ["select"],
         "projection": [
             {"outbound_col" : "dataset"},
-            {"filter": "status", "operator": "geq", "operand": 2},
-            "id"
+            {"or": [
+              {"filter": "status", "operator": "=", "operand": "commons:228:"}, 
+              {"filter": "status", "operator": "=", "operand": "commons:226:"}
+            ]},
+            "RID"
         ],
         "projection_type": "nonnull"
     },
@@ -41,8 +44,8 @@
       "types": ["select"],
         "projection": [
             {"outbound_col" : "dataset"},
-            {"filter": "status", "operator": "geq", "operand": 3},
-            "id"
+            {"filter": "status", "operator": "=", "operand": "commons:226:"},
+            "RID"
         ],
         "projection_type": "nonnull"
     },
