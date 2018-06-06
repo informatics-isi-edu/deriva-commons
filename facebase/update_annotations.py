@@ -652,6 +652,10 @@ def main(servername, credentialsfilename, catalog, target):
         })
 
 
+
+        """
+        Biosample
+        """
         
         goal.table('isa', 'biosample').visible_columns.update({
         "filter": {
@@ -692,8 +696,7 @@ def main(servername, credentialsfilename, catalog, target):
                     ["isa","biosample_origin_fkey"],
                     ["isa","biosample_phenotype_fkey"],
                     "local_identifier"],       
-        "entry": ["RID",
-                  ["isa","biosample_dataset_fkey"],
+        "entry": [["isa","biosample_dataset_fkey"],
                   "local_identifier",
                   ["isa","biosample_species_fkey"],
                   ["isa","biosample_specimen_fkey"],
@@ -775,27 +778,6 @@ def main(servername, credentialsfilename, catalog, target):
                 {"source": [{"outbound": ["isa", "replicate_biosample_fkey"]},"RID"], "entity": True, "open": True,"markdown_name": "Biosample"}
             ]
             }            
-        })  
-
-        """
-        Biosample
-        """
-
-        goal.table('isa', 'biosample').visible_columns.update({
-                "detailed": [["isa","biosample_pkey"],["isa","biosample_dataset_fkey"],"local_identifier","summary",["isa","biosample_species_fkey"],["isa","biosample_specimen_fkey"],["isa","biosample_gene_fkey"],["isa","biosample_genotype_fkey"],["isa","biosample_strain_fkey"],["isa","biosample_mutation_fkey"],["isa","biosample_stage_fkey"],["isa","biosample_theiler_stage_fkey"],["isa","biosample_anatomy_fkey"],["isa","biosample_origin_fkey"],["isa","biosample_phenotype_fkey"],["isa","biosample_gender_fkey"],"litter","collection_date"],
-            "compact": [["isa","biosample_pkey"],"species","genotype","strain","stage","anatomy","origin","phenotype","local_identifier"],
-            "entry": [["isa","biosample_dataset_fkey"],"local_identifier",["isa","biosample_species_fkey"],["isa","biosample_specimen_fkey"],["isa","biosample_gene_fkey"],["isa","biosample_genotype_fkey"],["isa","biosample_strain_fkey"],["isa","biosample_mutation_fkey"],["isa","biosample_stage_fkey"],["isa","biosample_theiler_stage_fkey"],["isa","biosample_anatomy_fkey"],["isa","biosample_origin_fkey"],["isa","biosample_phenotype_fkey"],["isa","biosample_gender_fkey"],"litter","collection_date"],
-            "filter" :{"and" : [
-                {"source": [{"outbound": ["isa", "biosample_species_fkey"]},"term"], "entity": True, "open": True,"markdown_name": "Species"},
-                {"source": [{"outbound": ["isa", "biosample_stage_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Stage"},
-                {"source": [{"outbound": ["isa", "biosample_anatomy_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Anatomy"},
-                {"source": [{"outbound": ["isa", "biosample_phenotype_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Phenotype"},
-                {"source": [{"outbound": ["isa", "biosample_gene_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Gene"},
-                {"source": [{"outbound": ["isa", "biosample_genotype_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Genotype"},
-                {"source": [{"outbound": ["isa", "biosample_strain_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Strain"},
-                {"source": "local_identifier", "entity": True, "open": False,"markdown_name": "Local Identifier"}
-            ]
-            }
         })  
 
         
