@@ -3267,12 +3267,17 @@
             "tag:isrd.isi.edu,2017:asset", 
             "tag:misd.isi.edu,2015:display", 
             "tag:misd.isi.edu,2015:url", 
-            "tag:misd.isi.edu,2016:generated"
+            "tag:misd.isi.edu,2016:generated",
+            "comment", 
+            "description", 
+            "facetOrder", 
+            "tag:misd.isi.edu,2015:hidden"
         ], 
         "to_delete": [
             "comment", 
             "description", 
-            "facetOrder"
+            "facetOrder", 
+            "tag:misd.isi.edu,2015:hidden"
         ]
     }, 
     "schema_annotations": [
