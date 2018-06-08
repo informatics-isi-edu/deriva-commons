@@ -542,7 +542,21 @@
             "value": {
                 "name": "Alternate Codes"
             }
-        }, 
+        },
+        {
+            "column": "alternate_dbxrefs", 
+            "schema": "data_commons", 
+            "table": "cvterm", 
+            "uri" : "tag:isrd.isi.edu,2016:generated",
+            "value" : null       
+        },
+        {
+            "column": "synonyms", 
+            "schema": "data_commons", 
+            "table": "cvterm", 
+            "uri" : "tag:isrd.isi.edu,2016:generated",
+            "value" : null       
+        }, 	
         {
             "column": "file_url", 
             "schema": "isa", 
@@ -10821,46 +10835,57 @@
             "schema": "data_commons", 
             "table": "cvterm", 
             "uri": "tag:isrd.isi.edu,2016:visible-columns", 
-            "value": {
-                "*": [
-                    "name", 
-                    [
-                        "data_commons", 
-                        "cvterm_dbxref_fkey"
-                    ], 
-                    "definition", 
-                    [
-                        "data_commons", 
-                        "cvterm_cv_fkey"
-                    ], 
-                    "is_obsolete", 
-                    "is_relationshiptype", 
-                    "synonyms", 
-                    "alternate_dbxrefs"
-                ], 
-                "filter": {
-                    "and": [
-                        {
-                            "source": "name"
-                        }, 
-                        {
-                            "source": "dbxref"
-                        }, 
-                        {
-                            "source": "definition"
-                        }, 
-                        {
-                            "source": "cv"
-                        }, 
-                        {
-                            "source": "is_obsolete"
-                        }, 
-                        {
-                            "source": "is_relationshiptype"
-                        }
-                    ]
-                }
-            }
+            "value" : {
+		"*" : [
+		    "name",
+		    [
+			"data_commons",
+			"cvterm_dbxref_fkey"
+		    ],
+		    "definition",
+		    [
+			"data_commons",
+			"cvterm_cv_fkey"
+		    ],
+		    "is_obsolete",
+		    "is_relationshiptype",
+		    "synonyms",
+		    "alternate_dbxrefs"
+		],
+		"entry/create" : [
+		    "name",
+		    [
+			"data_commons",
+			"cvterm_cv_fkey"
+		    ],
+		    "definition",
+		    "is_obsolete",
+		    "is_relationshiptype"
+		],
+		"filter" : {
+		    "and" : [
+			{
+			    "source" : "name"
+			},
+			{
+			    "source" : "dbxref"
+			},
+			{
+			    "source" : "definition"
+			},
+			{
+			    "source" : "cv"
+			},
+			{
+			    "source" : "is_obsolete"
+			},
+			{
+			    "source" : "is_relationshiptype"
+			}
+		    ]
+		}
+	    }
+
         }
     ]
 }
