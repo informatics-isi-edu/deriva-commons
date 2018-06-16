@@ -6,15 +6,15 @@ from requests import HTTPError
 from deriva.core import DerivaServer, get_credential
 from deriva.core.ermrest_model import Table, Column, Key, builtin_types
 
-if len(sys.argv) < 3:
-    print('usage: {prog} hostname files...'.format(prog=sys.argv[0]))
+if len(sys.argv) < 4:
+    print('usage: %(prog)s hostname { catalog | - } files...' % {'prog': sys.argv[0]})
     exit(1)
 
 # General settings
-catalog_num = None  # set to a catalog number or None to create a new one
 schema_name = 'public'  # name of the schema to load the table into
-use_syscols = False  # create table with system columns
+use_syscols = True  # create table with system columns
 use_delimiter = None  # set delimited; e.g., set to '\t' for tab delimited
+drop_table = True  # set to true, to drop existing table of same name and redefine
 
 # Formatting settings
 # This script reads a csv file with additional "header" sub-headings, in this order:
@@ -32,7 +32,8 @@ has_value_map = True
 
 # Arguments
 hostname = sys.argv[1]
-csv_files = sys.argv[2:]
+catalog_num = sys.argv[2] if sys.argv[2] != "-" else None  # if '-' a new catalog will be created
+csv_files = sys.argv[3:]
 
 # Create/connect catalog and get various interfaces
 credential = get_credential(hostname)
@@ -42,13 +43,16 @@ model = catalog.getCatalogModel()
 public = model.schemas[schema_name]
 config = catalog.getCatalogConfig()
 
-# Update catalog config
+# ACLs to be defined on catalog and table
 acls = {
     "select": ['*'],
     "enumerate": ['*']
 }
-config.acls.update(acls)
-catalog.applyCatalogConfig(config)
+
+if not catalog_num:
+    # Only when creating a new catalog do we update its ACLs.
+    config.acls.update(acls)
+    catalog.applyCatalogConfig(config)
 
 
 def valid_value(val, vtype, vmap=None):
@@ -79,6 +83,17 @@ def valid_value(val, vtype, vmap=None):
 for fname in csv_files:
     print('Importing {fname}...'.format(fname=fname))
     tname = os.path.splitext(os.path.basename(fname))[0]
+    visible_columns = []
+
+    if tname in public.tables:
+        print("Found existing table '{tname}' in catalog".format(tname=tname))
+        if drop_table:
+            table = public.tables[tname]
+            table.delete(catalog, public)
+            print("Dropped table from catalog")
+        else:
+            print("Skipping '{tname}'. Set 'drop_table' to True to drop, redefine and import".format(tname=tname))
+            continue
 
     if not use_syscols:
         pk = 'key'
@@ -89,6 +104,7 @@ for fname in csv_files:
         col_defs = []
         key_defs = []
         types = {}
+        visible_columns.append('RID')
 
     with open(fname) as csvfile:
         reader = csv.DictReader(csvfile, delimiter=use_delimiter) if use_delimiter else csv.DictReader(csvfile)
@@ -99,6 +115,7 @@ for fname in csv_files:
         dictionary = next(reader) if has_value_map else {}
 
         for cname in reader.fieldnames:
+            visible_columns.append(cname)
             comment = comments.get(cname)
             ctype = builtin_types[typenames.get(cname)] if typenames.get(cname) else builtin_types.text
             types[cname] = ctype
@@ -108,7 +125,15 @@ for fname in csv_files:
             if display_names.get(cname):
                 annotation["tag:misd.isi.edu,2015:display"] = {"markdown_name": display_names.get(cname)}
             col_defs.append(Column.define(cname, ctype, comment=comment, annotations=annotation))
-        tab_def = Table.define(tname, column_defs=col_defs, key_defs=key_defs, acls=acls, provide_system=use_syscols)
+
+        tab_def = Table.define(tname,
+                               column_defs=col_defs,
+                               key_defs=key_defs,
+                               acls=acls,
+                               annotations={
+                                   "tag:isrd.isi.edu,2016:visible-columns": {"*": visible_columns}
+                               },
+                               provide_system=use_syscols)
 
         print('Creating table {tname}...'.format(tname=tname))
         try:
