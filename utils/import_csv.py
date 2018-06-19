@@ -1,46 +1,78 @@
-# A real quick-and-dirty hack right now for importing csv files
-import sys
-import os.path
+# A utility for importing CSV/TSV data files into newly defined tables in ERMrest.
+import argparse
 import csv
+import os.path
 from requests import HTTPError
 from deriva.core import DerivaServer, get_credential
 from deriva.core.ermrest_model import Table, Column, Key, builtin_types
 
-if len(sys.argv) < 4:
-    print('usage: %(prog)s hostname { catalog | - } files...' % {'prog': sys.argv[0]})
-    exit(1)
+# Sub-heading types
+subh_display_name = 'displayname'
+subh_comments = 'comments'
+subh_types = 'types'
+subh_annotations = 'annotations'
+subh_valuemap = 'valuemap'
 
-# General settings
-schema_name = 'public'  # name of the schema to load the table into
-use_syscols = True  # create table with system columns
-use_delimiter = None  # set delimited; e.g., set to '\t' for tab delimited
-drop_table = True  # set to true, to drop existing table of same name and redefine
+known_subheaders = [
+subh_display_name,
+subh_comments,
+subh_types,
+subh_annotations,
+subh_valuemap,
+]
 
-# Formatting settings
-# This script reads a csv file with additional "header" sub-headings, in this order:
-#   - standard header (expected)
-#   - display name
-#   - comments
-#   - types (use ermrest typenames)
-#   - annotations (currently single tag w/out body only)
-#   - value mappings (of the form "#=term\t...")
-has_display_name = True
-has_comments = True
-has_types = True
-has_annotations = True
-has_value_map = True
+# Program description
+description = """
+A utility for importing CSV (or CSV-like) files into an ERMrest catalog. For each input 'file' it will create a table in
+the specified schema in the catalog and it will load the data file into the newly defined table. The input file format
+can be a standard CSV or TSV file format. Optionally, you may specify additional non-standard sub-header rows which may
+include: {subheaders}. The 'types' must be defined ERMrest column types (e.g., 'int8'). The 'annotations' must be 
+tab-separated list of ERMrest annotations but currently does not support annotation body only annotation tag names 
+(e.g., 'tag:isrd.isi.edu,2017:asset'). The 'valuemap' must be a tab-delimited set of '='-delimited value mappings 
+(e.g., '1=male\t2=female'). When a valuemap is given the values in that column will be remapped. The extended 
+sub-headers will be processed in the order given. A special keyword 'all' may be used in place of specifying the 
+sub-headers individually which will specify all sub-headers in the order as introduced above.
+""".format(subheaders=', '.join(known_subheaders))
 
-# Arguments
-hostname = sys.argv[1]
-catalog_num = sys.argv[2] if sys.argv[2] != "-" else None  # if '-' a new catalog will be created
-csv_files = sys.argv[3:]
+
+class SubheaderAction(argparse.Action):
+    """Custom action for subheader."""
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(SubheaderAction, self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values == 'all':
+            values = known_subheaders
+        else:
+            values = values.split(':')
+            for v in values:
+                if v not in known_subheaders:
+                    parser.error("unrecognized --subheader '%s'" % v)
+
+        setattr(namespace, self.dest, values)
+
+
+# Argument parser
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('hostname')
+parser.add_argument('--catalog', type=int, help='Catalog number, if none given, will attempt to create new catalog on the host')
+parser.add_argument('-t', '--tsv', action='store_true', help='Expect tab-delimited values (TSV) format')
+parser.add_argument('-s', '--schema', default='public', help='Schema name where tables will be defined')
+parser.add_argument('--nosyscols', action='store_true', help='Do not use system columns in table definitions')
+parser.add_argument('--droptable', action='store_true', help='If table exists, attempt to drop, otherwise skip it')
+parser.add_argument('--subheaders', default=[], action=SubheaderAction,
+                    help="A ':'-seperated set of subheaders to read from the data file (e.g., 'displayname:comments:types') or 'all'.")
+parser.add_argument('file', nargs='+', help='File names of input data files')
+args = parser.parse_args()
 
 # Create/connect catalog and get various interfaces
-credential = get_credential(hostname)
-server = DerivaServer('https', hostname, credential)
-catalog = server.connect_ermrest(catalog_num) if catalog_num else server.create_ermrest_catalog()
+credential = get_credential(args.hostname)
+server = DerivaServer('https', args.hostname, credential)
+catalog = server.connect_ermrest(args.catalog) if args.catalog else server.create_ermrest_catalog()
 model = catalog.getCatalogModel()
-public = model.schemas[schema_name]
+schema = model.schemas[args.schema]
 config = catalog.getCatalogConfig()
 
 # ACLs to be defined on catalog and table
@@ -49,7 +81,7 @@ acls = {
     "enumerate": ['*']
 }
 
-if not catalog_num:
+if not args.catalog:
     # Only when creating a new catalog do we update its ACLs.
     config.acls.update(acls)
     catalog.applyCatalogConfig(config)
@@ -80,22 +112,22 @@ def valid_value(val, vtype, vmap=None):
         return None
 
 
-for fname in csv_files:
+for fname in args.file:
     print('Importing {fname}...'.format(fname=fname))
     tname = os.path.splitext(os.path.basename(fname))[0]
     visible_columns = []
 
-    if tname in public.tables:
+    if tname in schema.tables:
         print("Found existing table '{tname}' in catalog".format(tname=tname))
-        if drop_table:
-            table = public.tables[tname]
-            table.delete(catalog, public)
+        if args.droptable:
+            table = schema.tables[tname]
+            table.delete(catalog, schema)
             print("Dropped table from catalog")
         else:
-            print("Skipping '{tname}'. Set 'drop_table' to True to drop, redefine and import".format(tname=tname))
+            print("Skipping.")
             continue
 
-    if not use_syscols:
+    if args.nosyscols:
         pk = 'key'
         col_defs = [Column.define(pk, builtin_types.int8, comment="Row key (generated by client tool on import)")]
         key_defs = [Key.define([pk])]
@@ -107,23 +139,19 @@ for fname in csv_files:
         visible_columns.append('RID')
 
     with open(fname) as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=use_delimiter) if use_delimiter else csv.DictReader(csvfile)
-        display_names = next(reader) if has_display_name else {}
-        comments = next(reader) if has_comments else {}
-        typenames = next(reader) if has_types else {}
-        annotations = next(reader) if has_annotations else {}
-        dictionary = next(reader) if has_value_map else {}
+        reader = csv.DictReader(csvfile, delimiter='\t') if args.tsv else csv.DictReader(csvfile)
+        subheaders = {k: {} for k in known_subheaders}
 
         for cname in reader.fieldnames:
             visible_columns.append(cname)
-            comment = comments.get(cname)
-            ctype = builtin_types[typenames.get(cname)] if typenames.get(cname) else builtin_types.text
+            comment = subheaders[subh_comments].get(cname)
+            ctype = builtin_types[subheaders[subh_types].get(cname)] if subheaders[subh_types].get(cname) else builtin_types.text
             types[cname] = ctype
-            if dictionary.get(cname):
-                dictionary[cname] = {kv.split('=')[0]: kv.split('=')[1] for kv in dictionary[cname].split('\n')}
-            annotation = {annotations[cname]: None} if annotations.get(cname) else {}
-            if display_names.get(cname):
-                annotation["tag:misd.isi.edu,2015:display"] = {"markdown_name": display_names.get(cname)}
+            if subheaders[subh_valuemap].get(cname):
+                subheaders[subh_valuemap][cname] = {kv.split('=')[0]: kv.split('=')[1] for kv in subheaders[subh_valuemap][cname].split('\n')}
+            annotation = {subheaders[subh_annotations][cname]: None} if subheaders[subh_annotations].get(cname) else {}
+            if subheaders[subh_display_name].get(cname):
+                annotation["tag:misd.isi.edu,2015:display"] = {"markdown_name": subheaders[subh_display_name].get(cname)}
             col_defs.append(Column.define(cname, ctype, comment=comment, annotations=annotation))
 
         tab_def = Table.define(tname,
@@ -133,11 +161,11 @@ for fname in csv_files:
                                annotations={
                                    "tag:isrd.isi.edu,2016:visible-columns": {"*": visible_columns}
                                },
-                               provide_system=use_syscols)
+                               provide_system=(not args.nosyscols))
 
         print('Creating table {tname}...'.format(tname=tname))
         try:
-            public.create_table(catalog, tab_def)
+            schema.create_table(catalog, tab_def)
         except HTTPError as e:
             print(e)
             print(e.response.text)
@@ -157,9 +185,9 @@ for fname in csv_files:
             # read from file the next batch of entities
             for row in reader:
                 entity = dict(row)
-                if not use_syscols:
+                if args.nosyscols:
                     entity[pk] = reader.line_num
-                entity = {k: valid_value(v, types[k], dictionary.get(k)) for k,v in entity.items()}
+                entity = {k: valid_value(v, types[k], subheaders[subh_valuemap].get(k)) for k,v in entity.items()}
                 entities.append(entity)
                 i += 1
                 if i >= max:
@@ -175,4 +203,3 @@ for fname in csv_files:
                 exit(1)
 
         print('Done importing into {tname}'.format(tname=tname))
-
