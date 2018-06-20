@@ -141,6 +141,8 @@ for fname in args.file:
     with open(fname) as csvfile:
         reader = csv.DictReader(csvfile, delimiter='\t') if args.tsv else csv.DictReader(csvfile)
         subheaders = {k: {} for k in known_subheaders}
+        for subheader in args.subheaders:
+            subheaders[subheader] = next(reader)
 
         for cname in reader.fieldnames:
             visible_columns.append(cname)
