@@ -110,7 +110,6 @@
   "catalog_acl": {"acl" : "catalog_policy"},
 
   "schema_acls": [
-    {"schema" : "public", "acl" : "hidden"},
     {"schema" : "vocab", "acl" : "vocabulary_curation_policy"},
     {"schema_pattern": "^isa$|^viz$|^data_commons$", "acl": "isa_curation_policy"}
   ],
