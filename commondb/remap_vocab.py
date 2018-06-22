@@ -232,12 +232,12 @@ def replace_vocab_table(schema_name, old_table_name, new_table_name, replace_if_
 
             # Define new fkey
             verbose('Defining and creating new foreign key reference to new vocab table')
-            fkey.referenced_columns[i] = 'id'
+            fkey.referenced_columns[i]['column_name'] = 'id'
             new_fkey = ForeignKey.define(
-                fkey.foreign_key_columns,
+                [fkey.foreign_key_columns[j]['column_name'] for j in range(len(fkey.foreign_key_columns))],
                 schema_name,
                 new_table_name,
-                fkey.referenced_columns,
+                [fkey.referenced_columns[k]['column_name'] for k in range(len(fkey.referenced_columns))],
                 fkey.on_update or 'NO ACTION',
                 fkey.on_delete or 'NO ACTION',
                 fkey.names or [],
@@ -249,18 +249,18 @@ def replace_vocab_table(schema_name, old_table_name, new_table_name, replace_if_
             if not args.dryrun:
                 reftable.create_fkey(catalog, new_fkey)
 
-    verbose('Dropping "dbxref" column from new vocab table')
-    dbxref = old_table.column_definitions['dbxref']
     if not args.dryrun:
+        verbose('Dropping "dbxref" column from new vocab table')
+        dbxref = new_table.column_definitions['dbxref']
         dbxref.delete(catalog, new_table)
 
 
 def find_and_replace_vocab_tables():
     """Finds vocab tables to be removed and replaces them."""
-    for schema_name in model.schemas:
+    for schema_name in list(model.schemas):
         if schema_pattern.match(schema_name):
             verbose('Schema "{sname}" matched "{pattern}"'.format(sname=schema_name, pattern=args.schema_regex))
-            for table_name in model.schemas[schema_name].tables:
+            for table_name in list(model.schemas[schema_name].tables):
                 if table_pattern.match(table_name):
                     new_table_name = re.sub(args.name_sub_pattern, args.name_sub_repl, table_name)
                     verbose('Table "{tname}" matched "{pattern}", replacing with "{new_tname}"'.format(
