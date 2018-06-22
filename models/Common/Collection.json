@@ -1,0 +1,322 @@
+{
+  "comment": "A collection of data", 
+  "keys": [
+    {
+      "comment": null, 
+      "unique_columns": [
+        "Title"
+      ], 
+      "annotations": {}, 
+      "names": [
+        [
+          "Common", 
+          "Collection_Title_key"
+        ]
+      ]
+    }, 
+    {
+      "comment": null, 
+      "unique_columns": [
+        "RID"
+      ], 
+      "annotations": {}, 
+      "names": [
+        [
+          "Common", 
+          "Collection_RID_key"
+        ]
+      ]
+    }
+  ], 
+  "kind": "table", 
+  "rights": {
+    "owner": true, 
+    "insert": true, 
+    "update": true, 
+    "select": true, 
+    "delete": true
+  }, 
+  "acls": {
+    "select": []
+  }, 
+  "table_name": "Collection", 
+  "schema_name": "Common", 
+  "column_definitions": [
+    {
+      "comment": "System-generated record ID", 
+      "name": "RID", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": "_ermrest.urlb32_encode(nextval('_ermrest.rid_seq'::regclass))", 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "ermrest_rid", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "RID"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": null, 
+      "name": "Title", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {}
+    }, 
+    {
+      "comment": "A short description of the collection. This value will be used for DOI metadata.", 
+      "name": "Description", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "markdown", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {}
+    },
+    {
+      "comment": "Additional details. This value will NOT be used for DOI metadata.", 
+      "name": "Details", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": true, 
+      "type": {
+        "typename": "markdown", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {}
+    },
+    {
+      "comment": "True/Yes if a DOI is required (recommended if the collection will be cited in a publication). A DOI will be generated after the Collection is Released. Default is False/No.", 
+      "name": "Require_DOI?", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": false, 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": true, 
+      "type": {
+        "typename": "boolean"
+      }, 
+      "annotations": {
+        "tag:isrd.isi.edu,2016:column-display": {
+          "*": {
+            "pre_format": {
+              "bool_true_value": "Yes", 
+              "bool_false_value": "No", 
+              "format": "%t"
+            }
+          }
+        }
+      }
+    }, 
+    {
+      "comment": null, 
+      "name": "Persistent_ID", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": true, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {
+        "tag:isrd.isi.edu,2016:column-display": {
+          "*": {
+            "markdown_pattern": "[{{{Persistent_ID}}}]({{{Persistent_ID}}})"
+          }
+        }, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": "System-generated row created by user provenance.", 
+      "name": "RCB", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {
+        "enumerate": []
+      }, 
+      "acl_bindings": {
+        "no_binding": false
+      }, 
+      "nullok": true, 
+      "type": {
+        "typename": "ermrest_rcb", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Created By"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": "System-generated row modified by user provenance.", 
+      "name": "RMB", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {
+        "enumerate": []
+      }, 
+      "acl_bindings": {
+        "no_binding": false
+      }, 
+      "nullok": true, 
+      "type": {
+        "typename": "ermrest_rmb", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Last Modified By"
+        }, 	
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": "System-generated row creation timestamp.", 
+      "name": "RCT", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": "now()", 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "ermrest_rct", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "timestamptz"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Creation Time"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": "System-generated row modification timestamp", 
+      "name": "RMT", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": "now()", 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "ermrest_rmt", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "timestamptz"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Last Modified Time"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }
+  ],
+  "acl_bindings": {}, 
+  "annotations": {
+    "tag:isrd.isi.edu,2016:visible-columns": {
+      "*": [
+        "RID", 
+        "Name",
+	"Description",
+	"URI",
+        "RCT", 
+        "RMT"
+      ]
+    }
+  }
+}

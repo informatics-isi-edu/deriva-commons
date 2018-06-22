@@ -1,0 +1,266 @@
+{
+  "comment": null, 
+  "foreign_keys": [], 
+  "keys": [
+    {
+      "comment": null, 
+      "unique_columns": [
+        "Name"
+      ], 
+      "annotations": {}, 
+      "names": [
+        [
+          "Common", 
+          "Publication_Venue_pkey"
+        ]
+      ]
+    }, 
+    {
+      "comment": null, 
+      "unique_columns": [
+        "RID"
+      ], 
+      "annotations": {}, 
+      "names": [
+        [
+          "Common", 
+          "Publication_Venue_RID_key"
+        ]
+      ]
+    }
+  ], 
+  "kind": "table", 
+  "rights": {
+    "owner": true, 
+    "insert": true, 
+    "update": true, 
+    "select": true, 
+    "delete": true
+  }, 
+  "acls": {}, 
+  "table_name": "Publication_Venue", 
+  "schema_name": "Publication", 
+  "column_definitions": [
+    {
+      "comment": null, 
+      "name": "RID", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": "_ermrest.urlb32_encode(nextval('_ermrest.rid_seq'::regclass))", 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "ermrest_rid", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "RID"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": null, 
+      "name": "Name", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {}
+    },
+    {
+      "comment": null, 
+      "name": "Description", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {}
+    }, 
+    {
+      "comment": null, 
+      "name": "URI", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {
+        "tag:isrd.isi.edu,2016:column-display": {
+          "*": {
+            "markdown_pattern": "[{{{URI}}}]({{{URI}}})"
+          }
+        }
+      }
+    }, 
+    {
+      "comment": null, 
+      "name": "RCB", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {
+        "enumerate": []
+      }, 
+      "acl_bindings": {
+        "no_binding": false
+      }, 
+      "nullok": true, 
+      "type": {
+        "typename": "ermrest_rcb", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Created By"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": null, 
+      "name": "RMB", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": null, 
+      "acls": {
+        "enumerate": []
+      }, 
+      "acl_bindings": {
+        "no_binding": false
+      }, 
+      "nullok": true, 
+      "type": {
+        "typename": "ermrest_rmb", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Last Modified By"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": null, 
+      "name": "RCT", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": "now()", 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "ermrest_rct", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "timestamptz"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Creation Time"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": null, 
+      "name": "RMT", 
+      "rights": {
+        "insert": true, 
+        "update": true, 
+        "select": true, 
+        "delete": true
+      }, 
+      "default": "now()", 
+      "acls": {}, 
+      "acl_bindings": {}, 
+      "nullok": false, 
+      "type": {
+        "typename": "ermrest_rmt", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "timestamptz"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Last Modified Time"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }
+  ], 
+  "acl_bindings": {}, 
+  "annotations": {
+    "tag:isrd.isi.edu,2016:visible-columns": {
+      "compact": [
+        "RID", 
+        "Title",
+        "Description",	
+	"Persistent_ID",
+        "RCT", 
+        "RMT"
+      ]
+    }
+  }
+}

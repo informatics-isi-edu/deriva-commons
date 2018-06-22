@@ -1,0 +1,18 @@
+{
+  "comment": null,
+  "rights": {
+    "owner": true, 
+    "create": true
+  }, 
+  "acls": {}, 
+  "schema_name": "Common", 
+  "annotations": {
+    "tag:misd.isi.edu,2015:display": {
+      "name_style": {
+        "underline_space": true, 
+        "title_case": false
+      }
+    }
+  }
+}
+  
