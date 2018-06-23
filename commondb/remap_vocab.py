@@ -238,12 +238,13 @@ def replace_vocab_table(schema_name, old_table_name, new_table_name, replace_if_
                 schema_name,
                 new_table_name,
                 [fkey.referenced_columns[k]['column_name'] for k in range(len(fkey.referenced_columns))],
-                fkey.on_update or 'NO ACTION',
-                fkey.on_delete or 'NO ACTION',
-                fkey.names or [],
-                fkey.acls or {},
-                fkey.acl_bindings or {},
-                fkey.annotations or {}
+                on_update=fkey.on_update or 'NO ACTION',
+                on_delete=fkey.on_delete or 'NO ACTION',
+                constraint_names=fkey.names or [],
+                comment=fkey.comment or None,
+                acls=fkey.acls or {},
+                acl_bindings=fkey.acl_bindings or {},
+                annotations=fkey.annotations or {}
             )
             vverbose(new_fkey)
             if not args.dryrun:
