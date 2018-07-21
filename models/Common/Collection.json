@@ -43,7 +43,7 @@
   "schema_name": "Common", 
   "column_definitions": [
     {
-      "comment": "System-generated record ID", 
+      "comment": "System generated unique record ID", 
       "name": "RID", 
       "rights": {
         "insert": true, 
@@ -184,6 +184,41 @@
         }, 
         "tag:isrd.isi.edu,2016:generated": null
       }
+    },
+    {
+      "comment": null, 
+      "name": "Curation_Status", 
+      "rights": {
+        "insert": false, 
+        "update": false, 
+        "select": null, 
+        "delete": false
+      }, 
+      "default": "In Preparation", 
+      "nullok": false, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {
+      }
+    },
+    {
+      "comment": null, 
+      "name": "Release_Date", 
+      "rights": {
+        "insert": false, 
+        "update": false, 
+        "select": null, 
+        "delete": false
+      }, 
+      "default": null, 
+      "nullok": true, 
+      "type": {
+        "typename": "timestamptz"
+      }, 
+      "annotations": {
+        "tag:isrd.isi.edu,2016:generated": null
+      }
     }, 
     {
       "comment": "System-generated row created by user provenance.", 
@@ -311,11 +346,33 @@
     "tag:isrd.isi.edu,2016:visible-columns": {
       "*": [
         "RID", 
-        "Name",
+        "Title",
 	"Description",
-	"URI",
+	"Require_DOI?",
+	"Persistent_ID",
+	["Common", "Collection_Curation_Status_fkey"],	
         "RCT", 
         "RMT"
+      ],
+      "detailed": [
+        "RID", 
+        "Title",
+	"Description",
+	"Details",	
+	"Require_DOI?",
+	"Persistent_ID",
+	["Common", "Collection_Curation_Status_fkey"],
+        "RCT", 
+        "RMT"
+      ],
+      "entry": [
+        "RID", 
+        "Title",
+	"Description",
+	"Details",	
+	"Require_DOI?",
+	"Persistent_ID",
+	["Common", "Collection_Curation_Status_fkey"]
       ]
     }
   }
