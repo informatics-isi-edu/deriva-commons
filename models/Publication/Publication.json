@@ -1,37 +1,5 @@
 {
   "comment": null, 
-  "foreign_keys": [
-    {
-      "comment": null, 
-      "acls": {}, 
-      "foreign_key_columns": [
-        {
-          "table_name": "Publication", 
-          "schema_name": "Common", 
-          "column_name": "Publication_Venue"
-        }
-      ], 
-      "names": [
-        [
-          "Common", 
-          "Publication_Publication_Venue_fkey"
-        ]
-      ], 
-      "rights": {
-        "insert": true, 
-        "update": true
-      }, 
-      "acl_bindings": {}, 
-      "annotations": {}, 
-      "referenced_columns": [
-        {
-          "table_name": "Publication_Venue", 
-          "schema_name": "Common", 
-          "column_name": "Name"
-        }
-      ]
-    }
-  ], 
   "keys": [
     {
       "comment": null, 
@@ -220,8 +188,8 @@
       }
     }, 
     {
-      "comment": "DOI.", 
-      "name": "DOI", 
+      "comment": "Persistent ID such as DOI", 
+      "name": "Persistent_ID", 
       "rights": {
         "insert": true, 
         "update": true, 
@@ -238,7 +206,7 @@
       "annotations": {
         "tag:isrd.isi.edu,2016:column-display": {
           "*": {
-            "markdown_pattern": "[{{DOI}}]({{DOI}})"
+            "markdown_pattern": "[{{Persistent_ID}}]({{Persistent_ID}})"
           }
         }
       }
@@ -415,7 +383,7 @@
         "Issue", 
         "Pages", 
         "PubMed_ID", 
-        "DOI", 
+        "Persistent_ID", 
         "Authors_List", 
         "URI", 
         "RCT", 
