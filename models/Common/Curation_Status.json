@@ -1,0 +1,225 @@
+{
+  "comment": null, 
+  "kind": "table", 
+  "column_definitions": [
+    {
+      "comment": "System generated unique record ID", 
+      "name": "RID", 
+      "default": "_ermrest.urlb32_encode(nextval('_ermrest.rid_seq'::regclass))", 
+      "nullok": false, 
+      "type": {
+        "typename": "ermrest_rid", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "RID"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": null, 
+      "name": "Name", 
+      "default": null, 
+      "nullok": false, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {}
+    }, 
+    {
+      "comment": null, 
+      "name": "Description", 
+      "default": null, 
+      "nullok": true, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {}
+    },
+    {
+      "comment": null, 
+      "name": "Order", 
+      "default": null, 
+      "nullok": true, 
+      "type": {
+        "typename": "int4"
+      }, 
+      "annotations": {}
+    },
+    {
+      "comment": null, 
+      "name": "CSS_Class_Compact", 
+      "default": null, 
+      "nullok": true, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {}
+    },
+    {
+      "comment": null, 
+      "name": "CSS_Class_Detailed", 
+      "default": null, 
+      "nullok": true, 
+      "type": {
+        "typename": "text"
+      }, 
+      "annotations": {}
+    }, 
+    {
+      "comment": "System-generated row created by user provenance.", 
+      "name": "RCB", 
+      "default": null, 
+      "acls": {
+        "enumerate": []
+      }, 
+      "acl_bindings": {
+        "no_binding": false
+      }, 
+      "nullok": true, 
+      "type": {
+        "typename": "ermrest_rcb", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Created By"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": "System-generated row modified by user provenance.", 
+      "name": "RMB", 
+      "default": null, 
+      "acls": {
+        "enumerate": []
+      }, 
+      "acl_bindings": {
+        "no_binding": false
+      }, 
+      "nullok": true, 
+      "type": {
+        "typename": "ermrest_rmb", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "text"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Last Modified By"
+        }, 	
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": "Creation timestamp.", 
+      "name": "RCT", 
+      "default": "now()", 
+      "nullok": false, 
+      "type": {
+        "typename": "ermrest_rct", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "timestamptz"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Creation Time"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    }, 
+    {
+      "comment": "Last modification timestamp", 
+      "name": "RMT", 
+      "default": "now()", 
+      "nullok": false, 
+      "type": {
+        "typename": "ermrest_rmt", 
+        "is_domain": true, 
+        "base_type": {
+          "typename": "timestamptz"
+        }
+      }, 
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "name": "Last Modified Time"
+        }, 
+        "tag:isrd.isi.edu,2016:immutable": null, 
+        "tag:isrd.isi.edu,2016:generated": null
+      }
+    } 
+  ], 
+  "table_name": "Curation_Status", 
+  "schema_name": "Common", 
+  "keys": [
+    {
+      "comment": null, 
+      "unique_columns": [
+        "RID"
+      ], 
+      "annotations": {}, 
+      "names": [
+        [
+          "Common", 
+          "Curation_Status_RID_key"
+        ]
+      ]
+    }, 
+    {
+      "comment": null, 
+      "unique_columns": [
+        "Name"
+      ], 
+      "annotations": {}, 
+      "names": [
+        [
+          "Common", 
+          "Curation_Status_Name_key"
+        ]
+      ]
+    }
+  ], 
+  "annotations": {
+    "tag:isrd.isi.edu,2016:table-display": {
+      "compact": {
+        "row_order": [
+          {
+            "column": "Order", 
+            "descending": false
+          }
+        ]
+      }, 
+      "row_name/compact": {
+        "row_markdown_pattern": ":span:{{{Name}}}:/span:{ {{#CSS_Class_Compact}}{{{.}}}{{/CSS_Class_Compact}} }"
+      }, 
+      "row_name/detailed": {
+        "row_markdown_pattern": ":span:{{{Name}}}:/span:{ {{#CSS_Class_Detailed}}{{{.}}}{{/CSS_Class_Detailed}} }"
+      }
+    }, 
+    "tag:isrd.isi.edu,2016:generated": null, 
+    "tag:isrd.isi.edu,2016:visible-columns": {
+      "*": [
+        "Name", 
+        "Description"
+      ]
+    }
+  }, 
+  "foreign_keys": [
+  ]
+}

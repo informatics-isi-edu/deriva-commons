@@ -1,0 +1,32 @@
+{
+  "foreign_keys": [
+    {
+      "comment": "Collection curation status", 
+      "foreign_key_columns": [
+        {
+          "table_name": "Collection", 
+          "schema_name": "Common", 
+          "column_name": "Curation_Status"
+        }
+      ], 
+      "names": [
+        [
+          "Common", 
+          "Collection_Curation_Status_fkey"
+        ]
+      ], 
+      "rights": {
+        "insert": false, 
+        "update": false
+      }, 
+      "annotations": {}, 
+      "referenced_columns": [
+        {
+          "table_name": "Curation_Status", 
+          "schema_name": "Common", 
+          "column_name": "Name"
+        }
+      ]
+    }   
+  ]
+}
