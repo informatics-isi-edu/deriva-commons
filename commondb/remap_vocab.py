@@ -57,6 +57,7 @@ intra-vocabulary schema foreign keys.
 """)
 parser.add_argument('--droptable', action='store_true', help='If table exists, attempt to drop, otherwise skip it')
 parser.add_argument('-n', '--dryrun', action='store_true', help='Dry run. No changes to the catalog.')
+parser.add_argument('--max_update', type=int, default=100, help='Maximum update payload sent to server')
 parser.add_argument('-v', '--verbose', action="count", default=0, help='Increase verbosity of output.')
 
 args = parser.parse_args()
@@ -216,11 +217,12 @@ def replace_vocab_table(schema_name, old_table_name, new_table_name, replace_if_
                 fkey.delete(catalog, reftable)
 
             # Fix fkey column value
-            verbose('Remapping fkey column values')
+            verbose('Getting existing fkey column values')
             reftable_path = datapaths.schemas[fkeycol['schema_name']].tables[fkeycol['table_name']]
             entities = reftable_path.entities(reftable_path.RID, reftable_path.column_definitions[fkeycol['column_name']])
 
             # Map the old dbxref value to the new curie id value for the reference
+            verbose('Remapping {count} fkey column values'.format(count=len(entities)))
             for entity in entities:
                 if entity[fkeycol['column_name']]:
                     entity[fkeycol['column_name']] = dbxref_to_id[entity[fkeycol['column_name']]]
@@ -228,7 +230,19 @@ def replace_vocab_table(schema_name, old_table_name, new_table_name, replace_if_
 
             # Update referring table
             if not args.dryrun:
-                reftable_path.update(entities, targets=[fkeycol['column_name']])
+                verbose('Updating fkey column values, {max_up} at a time'.format(max_up=args.max_update))
+                slice_ct = 0
+                slice_sz = args.max_update
+                updated = []
+                while (slice_ct * slice_sz) < len(entities):
+                    data = entities[(slice_ct * slice_sz):((1 + slice_ct) * slice_sz)]
+                    reftable_path.update(data, targets=[fkeycol['column_name']])
+                    updated.extend(data)
+                    slice_ct += 1
+                if len(updated) != len(entities):
+                    print('WARNING: only updated {up_count} of {ent_count} entities!'.format(
+                        up_count=len(updated), ent_count=len(entities)
+                    ))
 
             # Define new fkey
             verbose('Defining and creating new foreign key reference to new vocab table')
