@@ -119,6 +119,7 @@ def cleanup_old_vocab_tables():
     p3 = re.compile('.+_paths$')
 
     for schema_name in list(model.schemas):
+
         if schema_pattern.match(schema_name):
             schema = model.schemas[schema_name]
             verbose('Schema "{sname}" matched "{pattern}"'.format(sname=schema_name, pattern=args.schema_regex))
@@ -127,7 +128,7 @@ def cleanup_old_vocab_tables():
                 if p3.match(table_name):
                     #verbose('    --->Table "{tname}" matches delete pattern....'.format(tname=table_name))
                     if not args.dryrun:
-                        verbose('Table "{tname}" matched deteting pattern....Deleting it....'.format(tname=table_name))
+                        verbose('Deleting Table="{tname}" ...'.format(tname=table_name))
                         schema.tables[table_name].delete(catalog, schema)
                     else:
                         verbose("Found {tname} but skipping delete in dry-run mode...".format(tname=table_name))
@@ -138,7 +139,7 @@ def cleanup_old_vocab_tables():
                 if p2.match(table_name):
                     #verbose('    --->Table "{tname}" matches delete pattern....'.format(tname=table_name))
                     if not args.dryrun:
-                        verbose('Table "{tname}" matched deteting pattern....Deleting it....'.format(tname=table_name))
+                        verbose('Deleting Table="{tname}" ...'.format(tname=table_name))
                         schema.tables[table_name].delete(catalog, schema)
                     else:
                         verbose("Found {tname} but skipping delete in dry-run mode...".format(tname=table_name))
@@ -148,7 +149,7 @@ def cleanup_old_vocab_tables():
                 if p1.match(table_name):
                     #verbose('    --->Table "{tname}" matches delete pattern....'.format(tname=table_name))
                     if not args.dryrun:
-                        verbose('Table "{tname}" matched deteting pattern....Deleting it....'.format(tname=table_name))
+                        verbose('Deleting Table="{tname}" ...'.format(tname=table_name))
                         schema.tables[table_name].delete(catalog, schema)
                     else:
                         verbose("Found {tname} but skipping delete in dry-run mode...".format(tname=table_name))
@@ -176,11 +177,17 @@ def update_annotations_vocab_table(schema_name,table_name,goal):
 
     row_order = [{"column": "name"}]
 
+
+
     if table_name == 'stage':
         row_order = [{"column": "sort_key"}, {"column": "name"}]
 
 
     if table_name != 'file_extension' and table_name != 'gene_summary':
+
+        goal.column('%s' % schema_name, '%s' % table_name, 'id').display.update({'name': 'ID'})
+        goal.column('%s' % schema_name, '%s' % table_name, 'uri').display.update({'name': 'URI'})
+
         goal.table(
             '%s' % schema_name, '%s' % table_name
         ).table_display.update({
@@ -218,6 +225,7 @@ def update_annotations_vocab_table(schema_name,table_name,goal):
                 "id","name","uri","description","synonyms","alternate_ids"
             ],
             "detailed": [["vocab","%s_RIDkey1" % table_name],
+                  "id",
                   "name",
                   "uri",
                   "description",
@@ -225,6 +233,7 @@ def update_annotations_vocab_table(schema_name,table_name,goal):
                   "alternate_ids"
             ],
             "compact": [["vocab","%s_RIDkey1" % table_name],
+                         "id",
                          "name",
                          "description",
                          "synonyms",
@@ -305,6 +314,202 @@ def update_annotations_vocab_table(schema_name,table_name,goal):
         })
 
 
+
+
+def update_annotations_dataset_table(goal):
+
+    verbose('Setting up viz cols for Dataset')
+    goal.table('isa', 'dataset').visible_columns.update({
+            "filter": {
+                       "and": [
+                               {"source": [{"inbound": ["isa", "dataset_organism_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_organism_organism_fkey"]}, "id"], "entity": True, "open": False},
+                               {"source": [{"inbound": ["isa", "dataset_experiment_type_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_experiment_type_experiment_type_fkey"]}, "id"], "entity": True, "open": False},
+                               {"source": [{"inbound": ["isa", "dataset_data_type_data_type_fkey"]}, {"outbound": ["isa", "dataset_data_type_dataset_id_fkey"]}, "id"], "entity": True, "open": False},
+                               {"source": [{"inbound": ["isa", "dataset_gene_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_gene_gene_fkey"]}, "id"], "entity": True, "open": False},
+                               {"source": [{"inbound": ["isa", "dataset_stage_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_stage_stage_fkey"]}, "id"], "entity": True, "open": False},
+                               {"source": [{"inbound": ["isa", "dataset_anatomy_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_anatomy_anatomy_fkey"]}, "id"], "entity": True, "open": False},
+                               {"source": [{"inbound": ["isa", "dataset_genotype_dataset_id_fkey"]}, {"outbound": ["isa", "dataset_genotype_genotype_fkey"]}, "id"], "entity": True, "open": False},
+                               {"source": [{"inbound": ["isa", "dataset_phenotype_dataset_fkey"]}, {"outbound": ["isa", "dataset_phenotype_phenotype_fkey"]}, "id"], "entity": True, "open": False},
+                               {"source": [{"inbound": ["isa", "dataset_chromosome_dataset_id_fkey"]}, "chromosome"], "entity": True, "open": False, "markdown_name": "Chromosome"},
+                               {"source": [{"inbound": ["isa", "publication_dataset_fkey"]}, "pmid"], "entity": True, "open": False,"markdown_name": "Pubmed ID"},
+                               {"source": [{"outbound": ["isa", "dataset_project_fkey"]},{"inbound": ["isa", "project_investigator_project_id_fkey"]},{"outbound": ["isa", "project_investigator_person_fkey"]},"RID"], "entity": True, "open": False,"markdown_name": "Project Investigator"},
+                               {"source": "accession", "entity": False, "open": False},
+                               {"source": "title", "entity": False, "open": False},
+                               {"source": [{"outbound": ["isa", "dataset_project_fkey"]}, "id"], "entity": True, "open": False},
+                               {"source": "release_date", "entity": False, "open": False},
+                               {"source": [{"outbound": ["isa", "dataset_status_fkey"]}, "name"], "entity": True, "open": False}
+                               ]
+                       },
+            "compact": [["isa","dataset_RID_key"],["isa","accession_unique"],"title",["isa","dataset_project_fkey"],"status","release_date"],
+            "entry": ["accession","title",["isa","dataset_project_fkey"],"description","study_design","release_date",["isa","dataset_status_fkey"], "show_in_jbrowse"],
+            "detailed": [["isa","dataset_RID_key"],"accession","description","study_design",["isa","dataset_project_fkey"],["isa","dataset_status_fkey"],"funding","release_date","show_in_jbrowse",
+                         ["isa","publication_dataset_fkey"],
+                         ["isa","dataset_experiment_type_dataset_id_fkey"],
+                         ["isa","dataset_data_type_dataset_id_fkey"],
+                         ["isa","dataset_phenotype_dataset_fkey"],
+                         ["isa","dataset_organism_dataset_id_fkey"],
+                         ["isa","dataset_gene_dataset_id_fkey"],
+                         ["isa","dataset_stage_dataset_id_fkey"],
+                         ["isa","dataset_anatomy_dataset_id_fkey"],
+                         ["isa","dataset_mutation_dataset_id_fkey"],
+                         ["isa","dataset_enhancer_dataset_id_fkey"],
+                         ["isa","dataset_mouse_genetic_background_dataset_id_fkey"],
+                         ["isa","dataset_gender_dataset_id_fkey"],
+                         ["isa","dataset_genotype_dataset_id_fkey"],
+                         ["isa","dataset_instrument_dataset_id_fkey"],
+                         ["isa","dataset_geo_dataset_id_fkey"],
+                         ["isa","dataset_chromosome_dataset_id_fkey"]
+                  ]
+            })
+
+
+def update_annotations_ebr(goal):
+
+    """
+    Experiment
+    """
+
+    verbose('Setting up viz cols for Experiment')
+    goal.table('isa', 'experiment').visible_columns.update({
+        "filter": {
+            "and": [
+                {"source": [{"outbound": ["isa", "experiment_experiment_type_fkey"]}, "id"], "entity": True,
+                 "open": True},
+                {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
+                            {"outbound": ["isa", "replicate_biosample_fkey"]},
+                            {"outbound": ["isa", "biosample_species_fkey"]}, "id"], "entity": True, "open": True},
+                {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
+                            {"outbound": ["isa", "replicate_biosample_fkey"]},
+                            {"outbound": ["isa", "biosample_stage_fkey"]}, "id"], "entity": True, "open": True},
+                {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
+                            {"outbound": ["isa", "replicate_biosample_fkey"]},
+                            {"outbound": ["isa", "biosample_anatomy_fkey"]}, "id"], "entity": True, "open": True},
+                {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
+                            {"outbound": ["isa", "replicate_biosample_fkey"]},
+                            {"outbound": ["isa", "biosample_genotype_fkey"]}, "id"], "entity": True, "open": True}
+            ]
+        },
+        "detailed": [["isa", "experiment_pkey"],
+                     ["isa", "experiment_dataset_fkey"],
+                     "local_identifier",
+                     ["isa", "experiment_experiment_type_fkey"],
+                     "biosample_summary",
+                     ["isa", "experiment_molecule_type_fkey"],
+                     ["isa", "experiment_strandedness_fkey"],
+                     ["isa", "experiment_rnaseq_selection_fkey"],
+                     ["isa", "experiment_target_of_assay_fkey"],
+                     ["isa", "experiment_chromatin_modifier_fkey"],
+                     ["isa", "experiment_transcription_factor_fkey"],
+                     ["isa", "experiment_histone_modification_fkey"],
+                     ["isa", "experiment_control_assay_fkey"],
+                     ["isa", "experiment_protocol_fkey"]
+                     ],
+        "compact": [["isa", "experiment_pkey"],
+                    ["isa", "experiment_dataset_fkey"],
+                    ["isa", "experiment_experiment_type_fkey"],
+                    "biosample_summary",
+                    ["isa", "experiment_protocol_fkey"],
+                    "local_identifier"],
+        "entry": [["isa", "experiment_dataset_fkey"],
+                  "local_identifier",
+                  "biosample_summary",
+                  ["isa", "experiment_experiment_type_fkey"],
+                  ["isa", "experiment_molecule_type_fkey"],
+                  ["isa", "experiment_strandedness_fkey"],
+                  ["isa", "experiment_rnaseq_selection_fkey"],
+                  ["isa", "experiment_target_of_assay_fkey"],
+                  ["isa", "experiment_chromatin_modifier_fkey"],
+                  ["isa", "experiment_transcription_factor_fkey"],
+                  ["isa", "experiment_histone_modification_fkey"],
+                  ["isa", "experiment_control_assay_fkey"],
+                  ["isa", "experiment_protocol_fkey"]]
+    })
+
+    """
+    Biosample
+    """
+
+    verbose('Setting up viz cols for Biosample')
+    goal.table('isa', 'biosample').visible_columns.update({
+        "filter": {
+            "and": [
+                {"source": [{"outbound": ["isa", "biosample_species_fkey"]}, "id"], "entity": True, "open": True},
+                {"source": [{"outbound": ["isa", "biosample_stage_fkey"]}, "id"], "entity": True, "open": False},
+                {"source": [{"outbound": ["isa", "biosample_anatomy_fkey"]}, "id"], "entity": True, "open": False},
+                {"source": [{"outbound": ["isa", "biosample_phenotype_fkey"]}, "id"], "entity": True,
+                 "open": False},
+                {"source": [{"outbound": ["isa", "biosample_gene_fkey"]}, "id"], "entity": True, "open": False},
+                {"source": [{"outbound": ["isa", "biosample_genotype_fkey"]}, "id"], "entity": True, "open": False},
+                {"source": [{"outbound": ["isa", "biosample_strain_fkey"]}, "id"], "entity": True, "open": False},
+                {"source": "local_identifier", "entity": True, "open": False}
+            ]
+        },
+        "detailed": [["isa", "biosample_pkey"],
+                     ["isa", "biosample_dataset_fkey"],
+                     "local_identifier", "summary",
+                     ["isa", "biosample_species_fkey"],
+                     ["isa", "biosample_specimen_fkey"],
+                     ["isa", "biosample_gene_fkey"],
+                     ["isa", "biosample_genotype_fkey"],
+                     ["isa", "biosample_strain_fkey"],
+                     ["isa", "biosample_mutation_fkey"],
+                     ["isa", "biosample_stage_fkey"],
+                     ["isa", "biosample_anatomy_fkey"],
+                     ["isa", "biosample_origin_fkey"],
+                     ["isa", "biosample_phenotype_fkey"],
+                     ["isa", "biosample_gender_fkey"],
+                     "litter",
+                     "collection_date"
+                     ],
+        "compact": [["isa", "biosample_pkey"],
+                    ["isa", "biosample_species_fkey"],
+                    ["isa", "biosample_genotype_fkey"],
+                    ["isa", "biosample_strain_fkey"],
+                    ["isa", "biosample_stage_fkey"],
+                    ["isa", "biosample_anatomy_fkey"],
+                    ["isa", "biosample_origin_fkey"],
+                    ["isa", "biosample_phenotype_fkey"],
+                    "local_identifier"],
+        "entry": [["isa", "biosample_dataset_fkey"],
+                  "local_identifier",
+                  ["isa", "biosample_species_fkey"],
+                  ["isa", "biosample_specimen_fkey"],
+                  ["isa", "biosample_gene_fkey"],
+                  ["isa", "biosample_genotype_fkey"],
+                  ["isa", "biosample_strain_fkey"],
+                  ["isa", "biosample_mutation_fkey"],
+                  ["isa", "biosample_stage_fkey"],
+                  ["isa", "biosample_anatomy_fkey"],
+                  ["isa", "biosample_origin_fkey"],
+                  ["isa", "biosample_phenotype_fkey"],
+                  ["isa", "biosample_gender_fkey"],
+                  "litter",
+                  "collection_date"]
+    })
+
+    """
+    Replicate
+    """
+
+    verbose('Setting up viz cols for Replicate')
+    goal.table('isa', 'replicate').visible_columns.update({
+        "detailed": [["isa", "replicate_pkey"], ["isa", "replicate_experiment_fkey"],
+                     ["isa", "replicate_biosample_fkey"], "bioreplicate_number", "technical_replicate_number"],
+        "compact": [["isa", "replicate_pkey"], ["isa", "replicate_biosample_fkey"], "bioreplicate_number",
+                    "technical_replicate_number"],
+        "entry": [["isa", "replicate_experiment_fkey"], ["isa", "replicate_biosample_fkey"], "bioreplicate_number",
+                  "technical_replicate_number"],
+        "filter": {"and": [
+            {"source": [{"outbound": ["isa", "replicate_dataset_fkey"]}, "RID"], "entity": True, "open": True,
+             "markdown_name": "Dataset"},
+            {"source": [{"outbound": ["isa", "replicate_experiment_fkey"]}, "RID"], "entity": True, "open": True,
+             "markdown_name": "Experiment"},
+            {"source": [{"outbound": ["isa", "replicate_biosample_fkey"]}, "RID"], "entity": True, "open": True,
+             "markdown_name": "Biosample"}
+        ]
+        }
+    })
+
 def update_annotations():
     try:
         goal = catalog.get_catalog_model()
@@ -312,6 +517,8 @@ def update_annotations():
         goal = catalog.getCatalogModel()
 
     update_annotations_vocab_tables(goal)
+    update_annotations_dataset_table(goal)
+    update_annotations_ebr(goal)
 
     try:
         catalog.applyCatalogConfig(goal)
@@ -322,6 +529,11 @@ def update_annotations():
     except:
         et, ev, tb = sys.exc_info()
         verbose('Exception "{yoon}"'.format(yoon=str(ev)))
+
+
+"""
+RUN CALLS
+"""
 
 if args.cleanup:
     cleanup_old_vocab_tables()
