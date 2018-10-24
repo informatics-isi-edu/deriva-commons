@@ -510,6 +510,73 @@ def update_annotations_ebr(goal):
         }
     })
 
+def update_annotations_clinical_assay(goal):
+
+    """
+    Clinical Assay
+    """
+
+
+    verbose('Setting up viz cols for Clinical Assay ')
+    goal.table('isa', 'clinical_assay').visible_columns.update({
+        "filter": {
+            "and": [
+                {"source": [{"outbound": ["isa", "clinical_assay_dataset_fkey"]}, "id"], "entity": True,"open": True},
+                {"source": "Age (yrs)", "entity": True,"open": True},
+                {"source": "sex", "entity": True,"open": True},
+                {"source": "ethnicity", "entity": True,"open": True},
+                {"source": [{"outbound": ["isa", "clinical_assay_anatomy_fkey"]}, "id"], "entity": True,"open": True},
+                {"source": [{"outbound": ["isa", "clinical_assay_gene_fkey"]}, "id"], "entity": True,"open": True},
+                {"source": "syndrome", "entity": True,"open": True},
+                {"source": [{"outbound": ["isa", "clinical_assay_phenotype_fkey"]}, "id"], "entity": True,"open": True}
+            ]
+        },
+        "detailed":[
+            ["isa", "clinical_assay_dataset_fkey"],
+            "local_id",
+            "release_date",
+            "Age (yrs)",
+            "sex",
+            ["isa", "clinical_assay_gene_fkey"],
+            "syndrome",
+            "Syndrome Subtype",
+            "Height (cm)",
+            "Weight (kg)",
+            "race",
+            "ethnicity",
+            "OMIM Number",
+            "Full Molecular Diagnosis",
+            "Head Circumference (cm)",
+            "camera",
+            "Diagnosis Status",
+            "DNA_Source",
+            "DNA Ext Method",
+            ["isa", "clinical_assay_species_fkey"],
+            ["isa", "clinical_assay_specimen_fkey"],
+            ["isa", "clinical_assay_genotype_fkey"],
+            ["isa", "clinical_assay_anatomy_fkey"],
+            ["isa", "clinical_assay_phenotype_fkey"],
+            "molecule_type",
+            "assay_type",
+            "sample_composition",
+            "isolation_protocol",
+            "alignment_id"
+        ],
+        "compact": [
+            "local_id",
+            ["isa", "clinical_assay_species_fkey"],
+            ["isa", "clinical_assay_specimen_fkey"],
+            "Age (yrs)",
+            "sex",
+            "ethnicity",
+            "syndrome",
+            ["isa", "clinical_assay_anatomy_fkey"],
+            ["isa", "clinical_assay_gene_fkey"]
+        ]
+    })
+
+
+
 def update_annotations():
     try:
         goal = catalog.get_catalog_model()
@@ -519,6 +586,7 @@ def update_annotations():
     update_annotations_vocab_tables(goal)
     update_annotations_dataset_table(goal)
     update_annotations_ebr(goal)
+    update_annotations_clinical_assay(goal)
 
     try:
         catalog.applyCatalogConfig(goal)
