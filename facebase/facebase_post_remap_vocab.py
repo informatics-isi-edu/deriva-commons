@@ -492,10 +492,28 @@ def update_annotations_ebr(goal):
     """
 
     verbose('Setting up viz cols for Replicate')
+
     goal.table('isa', 'replicate').visible_columns.update({
-        "detailed": [["isa", "replicate_pkey"], ["isa", "replicate_experiment_fkey"],
-                     ["isa", "replicate_biosample_fkey"], "bioreplicate_number", "technical_replicate_number"],
-        "compact": [["isa", "replicate_pkey"], ["isa", "replicate_biosample_fkey"], "bioreplicate_number",
+        "detailed": [["isa", "replicate_pkey"],
+                     ["isa", "replicate_experiment_fkey"],
+                     ["isa", "replicate_biosample_fkey"],
+                     "bioreplicate_number",
+                     "technical_replicate_number"],
+        "compact": [["isa", "replicate_pkey"],
+                    ["isa", "replicate_biosample_fkey"],
+                    {"source": [{"outbound": ["isa", "replicate_biosample_fkey"]},
+                                {"outbound": ["isa", "biosample_species_fkey"]}, "name"], "entity": False,
+                     "markdown_name": "Species", "comment": "Biosample Species"},
+                    {"source": [{"outbound": ["isa", "replicate_biosample_fkey"]},
+                                {"outbound": ["isa", "biosample_stage_fkey"]}, "name"], "entity": False,
+                     "markdown_name": "Stage", "comment": "Biosample Stage"},
+                    {"source": [{"outbound": ["isa", "replicate_biosample_fkey"]},
+                                {"outbound": ["isa", "biosample_anatomy_fkey"]}, "name"], "entity": False,
+                     "markdown_name": "Anatomy", "comment": "Biosample Anatomy"},
+                    {"source": [{"outbound": ["isa", "replicate_biosample_fkey"]},
+                                {"outbound": ["isa", "biosample_genotype_fkey"]}, "name"], "entity": False,
+                     "markdown_name": "Genotype", "comment": "Biosample Genotype"},
+                    "bioreplicate_number",
                     "technical_replicate_number"],
         "entry": [["isa", "replicate_experiment_fkey"], ["isa", "replicate_biosample_fkey"], "bioreplicate_number",
                   "technical_replicate_number"],
@@ -509,6 +527,9 @@ def update_annotations_ebr(goal):
         ]
         }
     })
+
+    verbose('Setting annotations for the isa.replicate table...')
+
 
 def update_annotations_clinical_assay(goal):
 
