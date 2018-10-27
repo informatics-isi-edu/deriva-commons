@@ -373,20 +373,25 @@ def update_annotations_ebr(goal):
     goal.table('isa', 'experiment').visible_columns.update({
         "filter": {
             "and": [
-                {"source": [{"outbound": ["isa", "experiment_experiment_type_fkey"]}, "id"], "entity": True,
-                 "open": True},
+                {"source": [{"outbound": ["isa", "experiment_experiment_type_fkey"]}, "id"], "entity": True,"open": True},
+                {"source": [{"outbound": ["isa", "experiment_dataset_fkey"]}, "RID"], "entity": True,"open": False},
                 {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
                             {"outbound": ["isa", "replicate_biosample_fkey"]},
-                            {"outbound": ["isa", "biosample_species_fkey"]}, "id"], "entity": True, "open": True},
+                            {"outbound": ["isa", "biosample_species_fkey"]}, "id"], "entity": True, "open": False},
                 {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
                             {"outbound": ["isa", "replicate_biosample_fkey"]},
-                            {"outbound": ["isa", "biosample_stage_fkey"]}, "id"], "entity": True, "open": True},
+                            {"outbound": ["isa", "biosample_stage_fkey"]}, "id"], "entity": True, "open": False},
                 {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
                             {"outbound": ["isa", "replicate_biosample_fkey"]},
-                            {"outbound": ["isa", "biosample_anatomy_fkey"]}, "id"], "entity": True, "open": True},
+                            {"outbound": ["isa", "biosample_anatomy_fkey"]}, "id"], "entity": True, "open": False},
                 {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
                             {"outbound": ["isa", "replicate_biosample_fkey"]},
-                            {"outbound": ["isa", "biosample_genotype_fkey"]}, "id"], "entity": True, "open": True}
+                            {"outbound": ["isa", "biosample_genotype_fkey"]}, "id"], "entity": True, "open": False},
+                {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
+                            {"inbound": ["isa", "track_data_replicate_fkey"]},
+                            {"outbound": ["isa", "track_data_mapping_assembly_fkey"]},"id"], "entity": True, "open": False,"markdown_name": "Mapping Assembly"},
+                {"source": [{"inbound": ["isa", "replicate_experiment_fkey"]},
+                            {"inbound": ["isa", "track_data_replicate_fkey"]},"RID"], "entity": True,"open": False, "markdown_name": "Track Data"}
             ]
         },
         "detailed": [["isa", "experiment_pkey"],
