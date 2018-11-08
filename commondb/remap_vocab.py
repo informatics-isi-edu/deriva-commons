@@ -97,6 +97,7 @@ def clean_term(term):
     else:
         term['id'] = None
 
+
     # Similarly, clean up the alternative_dbxrefs
     if args.altids:
         term['alternate_ids'] = []
@@ -104,10 +105,17 @@ def clean_term(term):
             for old_alt_dbxref in term['alternate_dbxrefs']:
                 if old_alt_dbxref.startswith('URL:'):
                     old_alt_dbxref = old_alt_dbxref[len('URL:'):old_alt_dbxref.rindex(':')]  # strip 'URL:' prefix and the trailing ':###'
+                elif old_alt_dbxref.startswith('NULL:C'):
+                    old_alt_dbxref = 'NCIT:C'+old_alt_dbxref[len('NULL:C'):old_alt_dbxref.rindex(':')]  # strip 'URL:' prefix and the trailing ':###'
+                elif old_alt_dbxref.startswith('NULLXXX:'):
+                    old_alt_dbxref = old_alt_dbxref[len('NULL:'):old_alt_dbxref.rindex(':')]  # strip 'URL:' prefix and the trailing ':###'
                 else:
                     old_alt_dbxref = old_alt_dbxref[:old_alt_dbxref.rindex(':')]  # strip the trailing ':###'
                 term['alternate_ids'].append(old_alt_dbxref)
         del term['alternate_dbxrefs']
+
+        #verbose("ALTERNATE IDs={altid}".format(altid=term['alternate_ids']))
+
 
     # Description must be non-null but many existing terms have none
     if not term['description']:
@@ -145,7 +153,7 @@ def replace_vocab_table(schema_name, old_table_name, new_table_name, replace_if_
                 comment='Alternate identifiers for this term.'
             )
         ] + extra_cols
-    vocab_table_def = Table.define_vocabulary(new_table_name, args.curie_template, column_defs=extra_cols)
+    vocab_table_def = Table.define_vocabulary(new_table_name, args.curie_template, uri_template='https://www.facebase.org/id/{RID}',column_defs=extra_cols)
     if not args.dryrun:
         new_table = schema.create_table(catalog, vocab_table_def)
 

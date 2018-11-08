@@ -222,7 +222,7 @@ def update_annotations_vocab_table(schema_name,table_name,goal):
                                ]
                        },
             "entry": [
-                "id","name","uri","description","synonyms","alternate_ids"
+                "id","name","uri","description"
             ],
             "detailed": [["vocab","%s_RIDkey1" % table_name],
                   "id",
