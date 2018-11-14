@@ -601,6 +601,115 @@ def update_annotations_clinical_assay(goal):
         ]
     })
 
+def update_annotations_viz_model(goal):
+
+    """
+    viz.model
+    """
+    verbose('Setting up annotations for viz.model ')
+
+    goal.column('viz','model','unit_conversion').display.update({'name': 'Unit Conversion (mm/voxel)'})
+    goal.column('viz', 'model', 'bg_color_r').display.update({'name': 'Background Color R (RGB)'})
+    goal.column('viz', 'model', 'bg_color_g').display.update({'name': 'Background Color G (RGB)'})
+    goal.column('viz', 'model', 'bg_color_b').display.update({'name': 'Background Color B (RGB)'})
+
+    goal.table('viz', 'model').visible_columns.update({
+        "filter": {
+            "and": [
+                {"source": [{"outbound": ["viz", "model_dataset_fkey"]}, "id"], "entity": True,"open": True},
+                {"source": "label", "entity": True,"open": False},
+                {"source": [{"inbound": ["viz", "model_mesh_data_model_fkey"]}, "RID"], "entity": True,"open": False}
+            ]
+        },
+        "entry":[
+            "label",
+            ["viz", "model_dataset_fkey"],
+            "unit_conversion",
+            "description",
+            "bg_color_r",
+            "bg_color_g",
+            "bg_color_b",
+            "show_bounding_box",
+            "bounding_box_color_r",
+            "bounding_box_color_g",
+            "bounding_box_color_b",
+            ["viz", "model_volume_fkey"],
+            "rotate"
+                  ],
+        "detailed":[
+            ["viz","model_RID_key"],
+            "label",
+            ["viz", "model_dataset_fkey"],
+            "unit_conversion",
+            "description",
+            "bg_color_r",
+            "bg_color_g",
+            "bg_color_b",
+            "show_bounding_box",
+            "bounding_box_color_r",
+            "bounding_box_color_g",
+            "bounding_box_color_b",
+            ["viz", "model_volume_fkey"],
+            "rotate"
+        ],
+        "compact": [
+            ["viz", "model_RID_key"],
+            "label",
+            ["viz", "model_dataset_fkey"],
+            "unit_conversion",
+            "description",
+            ["viz", "model_volume_fkey"]
+        ]
+    })
+
+    goal.table('viz', 'model').visible_foreign_keys.update({
+        "*": [["viz", "model_mesh_data_model_fkey"]]
+    })
+
+    """
+     viz.model_mesh_data
+    """
+
+    verbose('Setting up annotations for viz.model_mesh_data ')
+
+
+
+    goal.table('viz', 'model_mesh_data').visible_columns.update({
+        "filter": {
+            "and": [
+                {"source": [{"outbound": ["viz", "model_mesh_data_model_fkey"]},{"outbound": ["viz", "model_dataset_fkey"]},"id"], "entity": True, "open": True},
+                {"source": [{"outbound": ["viz", "model_mesh_data_mesh_fkey"]}, "RID"], "entity": True, "open": True},
+                {"source": [{"outbound": ["viz", "model_mesh_data_model_fkey"]}, "RID"], "entity": True, "open": False}
+            ]
+        },
+        "entry": [
+            ["viz", "model_mesh_data_mesh_fkey"],
+            ["viz", "model_mesh_data_model_fkey"],
+            "color_r",
+            "color_g",
+            "color_b",
+            "opacity"
+        ],
+        "detailed": [
+            ["viz", "model_mesh_data_pkey"],
+            ["viz", "model_mesh_data_mesh_fkey"],
+            ["viz", "model_mesh_data_model_fkey"],
+            "color_r",
+            "color_g",
+            "color_b",
+            "opacity"
+        ],
+        "compact": [
+            ["viz", "model_mesh_data_pkey"],
+            ["viz", "model_mesh_data_mesh_fkey"],
+            ["viz", "model_mesh_data_model_fkey"],
+            "color_r",
+            "color_g",
+            "color_b",
+            "opacity"
+        ]
+    })
+
 
 
 def update_annotations():
@@ -613,6 +722,7 @@ def update_annotations():
     update_annotations_dataset_table(goal)
     update_annotations_ebr(goal)
     update_annotations_clinical_assay(goal)
+    update_annotations_viz_model(goal)
 
     try:
         catalog.applyCatalogConfig(goal)
