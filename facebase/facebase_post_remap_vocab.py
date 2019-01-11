@@ -341,7 +341,7 @@ def update_annotations_dataset_table(goal):
                                ]
                        },
             "compact": [["isa","dataset_RID_key"],["isa","accession_unique"],"title",["isa","dataset_project_fkey"],"status","release_date"],
-            "entry": ["accession","title",["isa","dataset_project_fkey"],"description","study_design","release_date",["isa","dataset_status_fkey"], "show_in_jbrowse"],
+            "entry": ["accession","title",["isa","dataset_project_fkey"],"description","study_design","released","release_date", "show_in_jbrowse"],
             "detailed": [["isa","dataset_RID_key"],"accession","description","study_design",["isa","dataset_project_fkey"],["isa","dataset_status_fkey"],"funding","release_date","show_in_jbrowse",
                          ["isa","publication_dataset_fkey"],
                          ["isa","dataset_experiment_type_dataset_id_fkey"],
