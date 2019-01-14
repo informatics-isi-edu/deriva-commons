@@ -2,7 +2,7 @@
 #
 # Example usage:
 #
-# $ python 2019_create_vocab_prefix.py dev.facebase.org 1 
+# $ python 2019_create_vocab_prefix.py dev.facebase.org 1
 # The command above would run this script on the dev.facebase.org catalog 1
 
 import argparse
@@ -86,7 +86,7 @@ def create_new_table(schema_name):
     table_def = em.Table.define(
         "prefix",
         column_defs,
-        comment="Table to map ontology prefix to an uri",
+        comment="Table to map ontology prefix to an URI",
         acls={},
         acl_bindings={},
         annotations={},
@@ -113,10 +113,12 @@ def set_table_annotations(goal):
         ]
     })
 
+    goal.column('vocab','prefix','uri').display.update({'name': 'URI'})
+
     print('Setting annotations for the prefix vocabulary table...')
 
 
-#create_new_table('vocab')
+create_new_table('vocab')
 
 try:
     goal = catalog.get_catalog_model()
