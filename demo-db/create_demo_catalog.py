@@ -87,11 +87,11 @@ class DemoCatalog:
             "Specimen",
             column_defs = [
                 Column.define("Species", builtin_types.text, nullok=False),
-                Column.define("Sex", builtin_types.text, nullok=False),
-                Column.define("Stage", builtin_types.text, nullok=False, comment="developmental stage of this specimen"),
-                Column.define("Anatomy", builtin_types.text, nullok=False),                
+                Column.define("Sex", builtin_types.text, nullok=True),
+                Column.define("Stage", builtin_types.text, nullok=True, comment="developmental stage of this specimen"),
+                Column.define("Anatomy", builtin_types.text, nullok=True),                
                 Column.define("Assay_Type", builtin_types.text, nullok=False, comment="type of assay performed on this specimen"),
-                Column.define("Internal_ID", builtin_types.text, nullok=False, comment="data-provider-defined unique identifier")
+                Column.define("Internal_ID", builtin_types.text, nullok=True, comment="data-provider-defined unique identifier")
                 ],
             key_defs = [
                 Key.define(["Internal_ID"])
@@ -139,7 +139,6 @@ class DemoCatalog:
                 # rbk Notes becomes experiment Internal_ID
                 Column.define("Internal_ID", builtin_types.text, nullok=False, comment="data-provider-defined unique identifier"),
                 Column.define("Study", builtin_types.text, nullok=False, comment="study that this experiment is part of"),
-                Column.define("Specimen", builtin_types.text, nullok=False, comment="biospecimen used in this experiment"),
                 Column.define("Molecule_Type", builtin_types.text, nullok=False),                
                 Column.define("Sequencing_Type", builtin_types.text, nullok=True),
                 Column.define("Cell_Count", builtin_types.int4, nullok=False),

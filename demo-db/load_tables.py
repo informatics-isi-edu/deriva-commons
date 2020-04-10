@@ -10,6 +10,7 @@ class DemoLoad:
     def __init__(self, host, catalog, credentials, data_directory):
         self.server = DerivaServer("https", host, credentials)
         self.catalog = self.server.connect_ermrest(catalog)
+        self.catalog.dcctx['cid'] = "oneoff/load_tables.py";
         self.pb = self.catalog.getPathBuilder()
         self.parent = Path(data_directory)
         self.known_tables = OrderedDict({
@@ -40,9 +41,33 @@ class DemoLoad:
                 "dest": self.pb.Vocabulary.Molecule_Type,
                 "extra_defaults" : ["ID", "URI"],
                 "transform_func": self.vocab_to_vocabulary
+            },
+            "Specimen" : {
+                "src": "Data/Specimen.json",
+                "dest": self.pb.Data.Specimen,
+                "transform_func": self.transform_specimen
+            },            
+            
+            "Study" : {
+                "src": "Data/Study.json",
+                "dest": self.pb.Data.Study
+            },
+            "Experiment" : {
+                "src": "Data/Experiment.json",
+                "dest": self.pb.Data.Experiment,
+                "transform_func": self.transform_experiment
             }
         })
 
+    def transform_experiment(self, table, data):
+        for row in data:
+            row["Internal_ID"] = row.get("Notes")
+            row["Study"] = row.get("Study_RID")
+            row["Specimen"] = row.get("Specimen_RID")
+
+    def transform_specimen(self, table, data):
+        for row in data:
+            row["Stage"] = row.get("Stage_ID")
 
     def load(self, table_names):
         todo = []
@@ -75,6 +100,7 @@ class DemoLoad:
         for row in data:
             if row.get("Description") is None:
                 row["Description"] = row["Name"]
+                                        
 
 
 if __name__ == '__main__':
