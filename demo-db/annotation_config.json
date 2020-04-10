@@ -1,0 +1,32 @@
+{
+    "catalog_annotations" : [
+	{	    
+	    "uri": "tag:isrd.isi.edu,2017:bulk-upload",
+	    "value":
+	    {
+		"asset_mappings": [
+		    {
+			"asset_type": "table",
+			"default_columns": [
+			    "RID",
+			    "RCB",
+			    "RCT",
+			    "RMB",
+			    "RMT"
+			],
+			"ext_pattern": "^.*[.](?P<file_ext>json|csv)$",
+			"file_pattern": "^((?!/assets/).)*/records/(?P<schema>.+?)/(?P<table>.+?)[.]"
+		    }
+		]
+	    }
+	}
+    ],
+    "known_attributes" : {
+	"ignore_all_unmanaged": false,
+	"managed" : [
+	    "tag:isrd.isi.edu,2017:bulk-upload"
+	]
+    }
+}
+    
+		    
