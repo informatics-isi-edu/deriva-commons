@@ -19,7 +19,7 @@ class RBKDump:
         
         for table in [self.pb.Vocabulary.Species, self.pb.Vocabulary.Developmental_Stage, self.pb.Vocabulary.Sex,
                       self.pb.Vocabulary.Assay_Type, self.pb.Vocab.Sequencing_Type,
-                      self.pb.Vocab.Molecule_Type]:
+                      self.pb.Vocab.File_Type, self.pb.Vocab.Molecule_Type]:
             self.dump_file(table)
 
         self.dump_experiment()
@@ -77,19 +77,24 @@ class RBKDump:
         path = experiment.filter(experiment.Species=='Mus musculus')\
            .filter(experiment.Sequencing_Type=="mRNA-Seq")\
            .link(replicate)\
-           .link(specimen.alias("S"))\
-           .link(tissue.alias("T"), on=specimen.RID==tissue.Specimen_RID, join_type="left")
+           .link(specimen.alias("S"))
 
         data = path.attributes(
             path.S.RID,
-            path.S.Species,path.S.Sex, path.S.Stage_ID, path.S.Assay_Type, path.S.Internal_ID,
-            path.T.Tissue
+            path.S.Species,path.S.Sex, path.S.Stage_ID, path.S.Assay_Type, path.S.Internal_ID
         )
         stage_map = dict()
         for row in stage.entities():
             stage_map[row['ID']] = row['Name']
         for row in data:
             row["Stage"] = stage_map.get(row.get("Stage_ID"))
+
+        anatomy_map = dict()
+        for row in tissue.entities():
+            anatomy_map[row['Specimen_RID']] = row['Tissue']
+        for row in data:
+            row["Anatomy"] = anatomy_map.get(row.get("RID"))
+            
         print(len(data))
         json.dump(list(data), file)
         file.close()

@@ -12,7 +12,7 @@
     "acl_definitions" : {
 	"unrestricted_read" : {"select" : "public"},
         "no_read" : {"select" : []},
-	"isrd-read" : {"owner" : "isrd-systems", "write": "isrd-all", "select": "isrd-all"},
+	"isrd-read" : {"owner" : "isrd-systems", "write": "isrd-all", "select": "isrd-all", "enumerate": "public"},
 	"isrd-write" : {"owner" : "isrd-systems", "write": "isrd-all", "select": "public"}	
     },
 

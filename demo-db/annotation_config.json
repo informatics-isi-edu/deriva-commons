@@ -6,18 +6,134 @@
 	    {
 		"asset_mappings": [
 		    {
-			"asset_type": "table",
-			"default_columns": [
-			    "RID",
-			    "RCB",
-			    "RCT",
-			    "RMB",
-			    "RMT"
+			"file_pattern": "(?i)^.*/data/replicate/(?P<replicate_rid>[^/]+)/(?P<custom>[^/]*?)[.][^/]+$",
+			"ext_pattern": "(?P<file_ext>([IR][0-2][.])[a-zA-Z0-9_+]+([.]gz)?$)",
+			"target_table": ["Data", "File"],
+			"create_record_before_upload": "False",
+			"record_query_template": "/entity/{target_table}/File_MD5={md5}",
+			"metadata_query_templates": [
+			    "/attribute/R:=Data:Replicate/RID={replicate_rid}/biological_replicate_number:=R:Biological_Replicate_Number,technical_replicate_number:=R:Technical_Replicate_Number,experiment:=R:Experiment"
 			],
-			"ext_pattern": "^.*[.](?P<file_ext>json|csv)$",
-			"file_pattern": "^((?!/assets/).)*/records/(?P<schema>.+?)/(?P<table>.+?)[.]"
+			"column_value_templates": {
+			    "caption": "Ex[eriment {experiment} replicate {biological_replicate_number}.{technical_replicate_number}"
+			},
+			"hatrac_templates":{
+			    "hatrac_uri": "/hatrac/resources/Data/File/{replicate_rid}/{md5}.{file_ext}",
+			    "content-disposition": "filename*=UTF-8''{replicate_rid}_{custom}.{file_ext}"
+			},
+			"hatrac_options": {
+			    "versioned_urls": "False"
+			},
+			"column_map": {
+			    "Replicate": "{replicate_rid}",
+			    "File_URI": "{URI}",
+			    "File_Name": "{file_name}",
+			    "File_Size": "{file_size}",
+			    "File_MD5": "{md5}",
+			    "File_SHA256": "{sha256}",
+			    "File_Type": "{file_type}",
+			    "Caption": "{caption}"
+			},
+			"checksum_types": [
+			    "sha256", "md5"
+			]
 		    }
-		]
+		],
+		"file_ext_mappings": {
+		    "bam": {
+			"file_type": "bam",
+			"file_desc": "alignment"
+		    },
+		    "bed": {
+			"file_type": "bed",
+			"file_desc": "positive regions"
+		    },
+		    "gene.rpkm.txt": {
+			"file_type": "txt",
+			"file_desc": "expression value"
+		    },
+		    "gene.tpm.txt": {
+			"file_type": "txt",
+			"file_desc": "expression value"
+		    },
+		    "bw": {
+			"file_type": "bigWig",
+			"file_desc": "visualization track"
+		    },
+		    "R1.fastq.gz" : {
+			"file_ext": "fastq.gz",
+			"file_type": "FastQ",
+			"file_desc": "F reads"
+		    },
+		    "R2.fastq.gz": {
+			"file_ext": "fastq.gz",
+			"file_type": "FastQ",
+			"file_desc": "R reads"
+		    },
+		    "tpm.csv": {
+			"file_ext": "tpm.csv",
+			"file_type": "csv",
+			"file_desc": "expression value"
+		    },
+		    "tpm.tsv": {
+			"file_ext": "tpm.tsv",
+			"file_type": "tsv",
+			"file_desc": "expression value"
+		    },
+		    "tpm.txt": {
+			"file_ext": "tpm.txt",
+			"file_type": "txt",
+			"file_desc": "expression value"
+		    },	
+		    "rpkm.csv": {
+			"file_ext": "rpkm.csv",
+			"file_type": "csv",
+			"file_desc": "expression value"
+		    },
+		    "rpkm.tsv": {
+			"file_ext": "rpkm.tsv",
+			"file_type": "tsv",
+			"file_desc": "expression value"
+		    },
+		    "rpkm.txt": {
+			"file_ext": "rpkm.txt",
+			"file_type": "txt",
+			"file_desc": "expression value"
+		    },
+		    "fpkm.csv": {
+			"file_ext": "fpkm.csv",
+			"file_type": "csv",
+			"file_desc": "expression value"
+		    },
+		    "fpkm.tsv": {
+			"file_ext": "fpkm.tsv",
+			"file_type": "tsv",
+			"file_desc": "expression value"
+		    },
+		    "fpkm.txt": {
+			"file_ext": "fpkm.txt",
+			"file_type": "txt",
+			"file_desc": "expression value"
+		    },
+		    "ReadsPerGene.csv": {
+			"file_ext": "ReadsPerGene.csv",
+			"file_type": "csv",
+			"file_desc": "expression value"
+		    },
+		    "ReadsPerGene.tsv": {
+			"file_ext": "ReadsPerGene.tsv",
+			"file_type": "tsv",
+			"file_desc": "expression value"
+		    },
+		    "ReadsPerGene.txt": {
+			"file_ext": "ReadsPerGene.txt",
+			"file_type": "txt",
+			"file_desc": "expression value"
+		    },
+		    "png": {
+			"is_image": true
+		    }
+		}
 	    }
 	}
     ],

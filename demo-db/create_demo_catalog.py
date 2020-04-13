@@ -62,7 +62,7 @@ class DemoCatalog:
         self.try_create_table(schema, table_def)
 
         table_def = Table.define_vocabulary("Anatomy", "deriva-demo:{RID}", 
-                                            provide_system=True, key_defs=[Key.define(['Name'])],
+                                            provide_system=True,
                                             comment="Anatomical Region")
         self.try_create_table(schema, table_def)
 
@@ -169,6 +169,7 @@ class DemoCatalog:
                 Column.define("Technical_Replicate_Number", builtin_types.int4, nullok = False),
                 Column.define("Mapped_Reads", builtin_types.float8, nullok = True),                
                 Column.define("RNA_Reads", builtin_types.float8, nullok = True),
+                Column.define("Specimen", builtin_types.text, nullok=True),
                 Column.define("Description", builtin_types.text, nullok = True)
                 ],
             key_defs = [
@@ -176,7 +177,9 @@ class DemoCatalog:
                 ],
             fkey_defs = [
                 ForeignKey.define(["Experiment"], self.DATA, "Experiment", ["RID"],
-                                  constraint_names=[[self.DATA, "Replicate_Experiment_fkey"]])                                  
+                                  constraint_names=[[self.DATA, "Replicate_Experiment_fkey"]]),
+                ForeignKey.define(["Specimen"], self.DATA, "Specimen", ["RID"],
+                                  constraint_names=[[self.DATA, "Replicate_Specimen_fkey"]])
                 ],
             comment="A biological or technical replicate in a sequencing experiment")
         self.try_create_table(schema, table_def)

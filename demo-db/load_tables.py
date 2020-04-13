@@ -30,6 +30,16 @@ class DemoLoad:
                 "src" : "Vocabulary/Assay_Type.json",
                 "dest": self.pb.Vocabulary.Assay_Type,
             },
+            "Anatomy": {
+                "src" : "Vocabulary/Anatomy.json",
+                "dest": self.pb.Vocabulary.Anatomy
+            },            
+            "File_Type": {
+                "src": "Vocabulary/File_Type.json",
+                "dest": self.pb.Vocabulary.File_Type,
+                "extra_defaults" : ["ID", "URI"],
+                "transform_func": self.vocab_to_vocabulary
+            },            
             "Sequencing_Type": {
                 "src": "Vocabulary/Sequencing_Type.json",
                 "dest": self.pb.Vocabulary.Sequencing_Type,
