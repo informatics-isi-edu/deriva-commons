@@ -140,9 +140,223 @@
     "known_attributes" : {
 	"ignore_all_unmanaged": false,
 	"managed" : [
-	    "tag:isrd.isi.edu,2017:bulk-upload"
+            "tag:misd.isi.edu,2015:display",
+            "tag:misd.isi.edu,2015:url",
+            "tag:isrd.isi.edu,2016:column-display",
+            "tag:isrd.isi.edu,2016:display",
+            "tag:isrd.isi.edu,2016:foreign-key",
+            "tag:isrd.isi.edu,2016:export",
+            "tag:isrd.isi.edu,2016:generated",
+            "tag:misd.isi.edu,2016:generated",	 
+            "tag:isrd.isi.edu,2016:ignore",
+            "tag:isrd.isi.edu,2016:immutable",
+            "tag:isrd.isi.edu,2016:recordlink",
+            "tag:isrd.isi.edu,2016:table-alternatives",
+            "tag:isrd.isi.edu,2016:table-display",
+            "tag:isrd.isi.edu,2016:visible-columns",
+            "tag:isrd.isi.edu,2016:visible-foreign-keys",
+            "tag:isrd.isi.edu,2017:asset",
+            "tag:isrd.isi.edu,2017:bulk-upload",
+            "tag:isrd.isi.edu,2018:citation",
+            "tag:isrd.isi.edu,2018:required",
+            "tag:isrd.isi.edu,2019:export",
+            "tag:isrd.isi.edu,2019:source-definitions"
 	]
-    }
+    },
+    "schema_annotations" : [
+	{
+	    "schema" : "Vocabulary",
+            "uri" : "tag:misd.isi.edu,2015:display",
+	    "value" : {
+		"name_style" : {
+		    "title_case" : false,
+		    "underline_space" : true
+		}
+	    }
+	},
+	{
+	    "schema" : "Data",
+            "uri" : "tag:misd.isi.edu,2015:display",
+	    "value" :
+	    {
+		"name_style" : {
+		    "title_case" : false,
+		    "underline_space" : true
+		}
+	    }
+	}
+    ],
+    "column_annotations" : [
+	{
+            "column" : "File_URI",
+            "schema" : "Data",
+            "table" : "File",
+            "uri" : "tag:isrd.isi.edu,2017:asset",
+            "value" : {
+		"byte_count_column" : "File_Size",
+		"filename_column" : "File_Name",
+		"md5" : "File_MD5",
+		"url_pattern" : "/hatrac/resources/Data/File/{{{Replicate}}}/{{{Filee_MD5}}}"
+            }
+	},
+	{
+            "column" : "RCT",
+            "schema_pattern" : ".*",
+            "table_pattern" : ".*",
+            "uri" : "tag:misd.isi.edu,2015:display",
+            "value" : {
+		"name" : "Created"
+            }
+	},
+	{
+            "column" : "RMT",
+            "schema_pattern" : ".*",
+            "table_pattern" : ".*",
+            "uri" : "tag:misd.isi.edu,2015:display",
+            "value" : {
+		"name" : "Last Modified"
+            }
+	},
+      {
+         "column" : "Persistent_ID",
+         "schema" : "Data",
+         "table" : "Collection",
+         "uri" : "tag:isrd.isi.edu,2016:column-display",
+         "value" : {
+            "*" : {
+               "markdown_pattern" : "[{{{Persistent_ID}}}]({{{Persistent_ID}}})"
+            }
+         }
+      }
+    ],
+    "table_annotations": [
+	{
+            "schema" : "Vocabulary",
+            "table_pattern" : ".*",
+            "uri" : "tag:isrd.isi.edu,2016:visible-columns",
+            "value" : {
+		"*" : [
+		    "RID",
+		    "ID",
+		    "Name",
+		    "Description",
+		    "RCT",
+		    "RMT"
+		]
+            }
+	},
+	{
+            "schema" : "Data",
+            "table" : "Specimen",
+            "uri" : "tag:isrd.isi.edu,2016:visible-columns",
+            "value" : {
+		"*" : [
+		    "RID",
+		    ["Data", "Specimen_Species_fkey"],
+		    ["Data", "Specimen_Stage_fkey"],
+		    ["Data", "Specimen_Sex_fkey"],
+		    ["Data", "Specimen_Anatomy_fkey"],
+		    ["Data", "Specimen_Assay_Type_fkey"],
+		    "Internal_ID",
+		    "RCT",
+		    "RMT"
+		]
+            }
+	},
+	{
+            "schema" : "Data",
+            "table" : "Study",
+            "uri" : "tag:isrd.isi.edu,2016:visible-columns",
+            "value" : {
+		"*" : [
+		    "RID",
+		    "Title",
+		    "Summary",
+		    "RCT",
+		    "RMT"
+		]
+            }
+	},
+	{
+            "schema" : "Data",
+            "table" : "Experiment",
+            "uri" : "tag:isrd.isi.edu,2016:visible-columns",
+            "value" : {
+		"*" : [
+		    "RID",
+		    "Title",
+		    ["Data", "Experiment_Study_fkey"],
+		    ["Data", "Experiment_Molecule_Type_fkey"],
+		    ["Data", "Experiment_Sequencing_Type_fkey"],
+		    "Cell_Count",
+		    "Notes",
+		    "RCT",
+		    "RMT"
+		]
+            }
+	},
+	{
+            "schema" : "Data",
+            "table" : "Replicate",
+            "uri" : "tag:isrd.isi.edu,2016:visible-columns",
+            "value" : {
+		"*" : [
+		    "RID",
+		    ["Data", "Replicate_Experiment_fkey"],
+		    "Biological_Replicate_Number",
+		    "Technical_Replicate_Number",
+		    "Maooed_Reads",
+		    "RNA_Reads",
+		    ["Data", "Replicate_Specimen_fkey"],
+		    "Description",
+		    "RCT",
+		    "RMT"
+		]
+            }
+	},
+	{
+            "schema" : "Data",
+            "table" : "File",
+            "uri" : "tag:isrd.isi.edu,2016:visible-columns",
+            "value" : {
+		"*" : [
+		    "RID",
+		    "File_URI",
+		    ["Data", "File_Replicate_fkey"],
+		    ["Data", "File_File_Type_fkey"],
+		    "Caption",
+		    "RCT",
+		    "RMT"
+		]
+            }
+	},
+	{
+            "schema" : "Data",
+            "table" : "File",
+            "uri" : "tag:isrd.isi.edu,2016:table-display",
+	    "value" : {
+		"row_name" : {
+		    "row_markdown_pattern" : "{{{File_Name}}}"
+		}
+	    }
+	},
+	{
+            "schema" : "Data",
+            "table" : "Collection",
+            "uri" : "tag:isrd.isi.edu,2016:visible-columns",
+            "value" : {
+		"*" : [
+		    "RID",
+		    "Title",
+		    "Description",
+		    "Persistent_ID",
+		    "Details",
+		    "RCT",
+		    "RMT"
+		]
+            }
+	}
+    ]
 }
     
 		    
