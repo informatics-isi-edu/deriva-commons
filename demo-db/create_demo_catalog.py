@@ -141,7 +141,7 @@ class DemoCatalog:
                 Column.define("Study", builtin_types.text, nullok=False, comment="study that this experiment is part of"),
                 Column.define("Molecule_Type", builtin_types.text, nullok=False),                
                 Column.define("Sequencing_Type", builtin_types.text, nullok=True),
-                Column.define("Cell_Count", builtin_types.int4, nullok=False),
+                Column.define("Cell_Count", builtin_types.int4, nullok=True),
                 Column.define("Notes", builtin_types.markdown, nullok=True),
                 ],
             key_defs = [
@@ -150,8 +150,6 @@ class DemoCatalog:
             fkey_defs = [
                 ForeignKey.define(["Study"], self.DATA, "Study", ["RID"],
                                   constraint_names=[[self.DATA, "Experiment_Study_fkey"]]),
-                ForeignKey.define(["Specimen"], self.DATA, "Specimen", ["RID"],
-                                  constraint_names=[[self.DATA, "Experiment_Specimen_fkey"]]),
                 ForeignKey.define(["Molecule_Type"], self.VOCABULARY, "Molecule_Type", ["Name"],
                                   constraint_names=[[self.DATA, "Experiment_Molecule_Type_fkey"]]),
                 ForeignKey.define(["Sequencing_Type"], self.VOCABULARY, "Sequencing_Type", ["Name"],
@@ -240,7 +238,7 @@ class DemoCatalog:
             fkey_defs = [
                 ForeignKey.define(["Study"], self.DATA, "Study", ["RID"],
                                   constraint_names=[[self.DATA, "Study_Collection_Study_fkey"]]),
-                ForeignKey.define(["Study"], self.DATA, "Collection", ["RID"],
+                ForeignKey.define(["Collection"], self.DATA, "Collection", ["RID"],
                                   constraint_names=[[self.DATA, "Study_Collection_Collection_fkey"]])
                 ],
             comment="Many-to-many associations between studies and collection")

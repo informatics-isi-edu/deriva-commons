@@ -45,7 +45,6 @@ class DemoLoad:
             "Specimen" : {
                 "src": "Data/Specimen.json",
                 "dest": self.pb.Data.Specimen,
-                "transform_func": self.transform_specimen
             },            
             
             "Study" : {
@@ -56,19 +55,54 @@ class DemoLoad:
                 "src": "Data/Experiment.json",
                 "dest": self.pb.Data.Experiment,
                 "transform_func": self.transform_experiment
+            },
+            "Replicate" : {
+                "src": "Data/Replicate.json",
+                "dest": self.pb.Data.Replicate,
+                "transform_func": self.transform_replicate
+            },
+            "Collection" : {
+                "src": "Data/Collection.json",
+                "dest": self.pb.Data.Collection,            
+            },
+            "Study_Collection" : {
+                "src": "Data/Sequencing_Study_Collection.json",
+                "dest": self.pb.Data.Study_Collection,
+                "load_func": self.load_study_collection
             }
-        })
+    })
+
 
     def transform_experiment(self, table, data):
         for row in data:
-            row["Internal_ID"] = row.get("Notes")
             row["Study"] = row.get("Study_RID")
+
+    def transform_replicate(self, table, data):
+        for row in data:
+            row["Experiment"] = row.get("Experiment_RID")
             row["Specimen"] = row.get("Specimen_RID")
 
-    def transform_specimen(self, table, data):
-        for row in data:
-            row["Stage"] = row.get("Stage_ID")
+    def load_study_collection(self, entry):
+        collections = json.load(open(self.parent.joinpath(self.known_tables["Collection"].get("src")), "r"))
+        studies = json.load(open(self.parent.joinpath(self.known_tables["Study"].get("src")), "r"))
+        srcdata = json.load(open(self.parent.joinpath(entry.get("src")), "r"))
+        data = []
+        for row in srcdata:
+            if self.rid_exists(studies, row.get("Sequencing_Study_RID")) and\
+               self.rid_exists(collections, row.get("Collection_RID")):
+                row["Study"] = row.get("Sequencing_Study_RID")
+                row["Collection"] = row.get("Collection_RID")
+                data.append(row)
+        entry['dest'].insert(data, nondefaults=set(["RID"]))
+                
 
+    def rid_exists(self, rows, value):
+        for r in rows:
+            if r.get("RID") == value:
+                return True
+        return False
+            
+                   
     def load(self, table_names):
         todo = []
         keys = self.known_tables.keys()
@@ -85,6 +119,10 @@ class DemoLoad:
             self.load_file(entry)
 
     def load_file(self, entry):
+        load_func = entry.get("load_func")
+        if load_func:
+            load_func(entry)
+            return
         src = self.parent.joinpath(entry['src']).open("r")
         data = json.load(src)
         src.close()
@@ -92,9 +130,9 @@ class DemoLoad:
         if transform:
             transform(entry["dest"], data)
         if entry.get("extra_defaults") is None:
-            entry['dest'].insert(data)
+            entry['dest'].insert(data, nondefaults=set(["RID"]))
         else:
-            entry['dest'].insert(data, defaults=entry.get("extra_defaults"))
+            entry['dest'].insert(data, defaults=entry.get("extra_defaults"), nondefaults=set(["RID"]))
 
     def vocab_to_vocabulary(self, table, data):
         for row in data:

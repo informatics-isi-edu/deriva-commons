@@ -72,19 +72,27 @@ class RBKDump:
         stage=self.pb.Vocabulary.Developmental_Stage
         anatomy=self.pb.Vocabulary.Anatomy
         tissue=self.pb.Gene_Expression.Specimen_Tissue
+        stage=self.pb.Vocabulary.Developmental_Stage
 
         path = experiment.filter(experiment.Species=='Mus musculus')\
            .filter(experiment.Sequencing_Type=="mRNA-Seq")\
            .link(replicate)\
            .link(specimen.alias("S"))\
            .link(tissue.alias("T"), on=specimen.RID==tissue.Specimen_RID, join_type="left")
+
         data = path.attributes(
+            path.S.RID,
             path.S.Species,path.S.Sex, path.S.Stage_ID, path.S.Assay_Type, path.S.Internal_ID,
             path.T.Tissue
         )
+        stage_map = dict()
+        for row in stage.entities():
+            stage_map[row['ID']] = row['Name']
+        for row in data:
+            row["Stage"] = stage_map.get(row.get("Stage_ID"))
         print(len(data))
         json.dump(list(data), file)
-        file.close()        
+        file.close()
         
     def dump_anatomy(self):
         file = Path("./data/Vocabulary/Anatomy.json").open("w")
