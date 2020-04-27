@@ -27,5 +27,9 @@ python3 load_tables.py --all <hostname> <catalog_number>
 ```
 where <source_directory> is the directory where this README is located.
 
-6. The data was extracted from rbk with the _dump_rbk_tables.py_ script.
+Additional scripts: `hatrac-init.sh` creates the hatrac `resources` namespace.
+
+I've also included the `dump_rbk_tables.py` script, which was used to extract data from RBK.
+
+
 
