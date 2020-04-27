@@ -40,12 +40,6 @@ class DemoLoad:
                 "extra_defaults" : ["ID", "URI"],
                 "transform_func": self.vocab_to_vocabulary
             },            
-            "Sequencing_Type": {
-                "src": "Vocabulary/Sequencing_Type.json",
-                "dest": self.pb.Vocabulary.Sequencing_Type,
-                "extra_defaults" : ["ID", "URI"],
-                "transform_func": self.vocab_to_vocabulary
-            },
             "Molecule_Type": {
                 "src": "Vocabulary/Molecule_Type.json",
                 "dest": self.pb.Vocabulary.Molecule_Type,

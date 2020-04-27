@@ -66,11 +66,6 @@ class DemoCatalog:
                                             comment="Anatomical Region")
         self.try_create_table(schema, table_def)
 
-        table_def = Table.define_vocabulary("Sequencing_Type", "deriva-demo:{RID}", 
-                                            provide_system=True, key_defs=[Key.define(['Name'])],
-                                            comment="Type of sequencing performed")
-        self.try_create_table(schema, table_def)
-
         table_def = Table.define_vocabulary("Molecule_Type", "deriva-demo:{RID}", 
                                             provide_system=True, key_defs=[Key.define(['Name'])],
                                             comment="Type of molecule (e.g., DNA, RNA)")
@@ -140,7 +135,6 @@ class DemoCatalog:
                 Column.define("Internal_ID", builtin_types.text, nullok=False, comment="data-provider-defined unique identifier"),
                 Column.define("Study", builtin_types.text, nullok=False, comment="study that this experiment is part of"),
                 Column.define("Molecule_Type", builtin_types.text, nullok=False),                
-                Column.define("Sequencing_Type", builtin_types.text, nullok=True),
                 Column.define("Cell_Count", builtin_types.int4, nullok=True),
                 Column.define("Notes", builtin_types.markdown, nullok=True),
                 ],
@@ -151,9 +145,7 @@ class DemoCatalog:
                 ForeignKey.define(["Study"], self.DATA, "Study", ["RID"],
                                   constraint_names=[[self.DATA, "Experiment_Study_fkey"]]),
                 ForeignKey.define(["Molecule_Type"], self.VOCABULARY, "Molecule_Type", ["Name"],
-                                  constraint_names=[[self.DATA, "Experiment_Molecule_Type_fkey"]]),
-                ForeignKey.define(["Sequencing_Type"], self.VOCABULARY, "Sequencing_Type", ["Name"],
-                                  constraint_names=[[self.DATA, "Experiment_Sequencing_Type_fkey"]])
+                                  constraint_names=[[self.DATA, "Experiment_Molecule_Type_fkey"]])
                 ],
             comment="A sequencing or metabolomics experiment"
         )
@@ -169,7 +161,7 @@ class DemoCatalog:
                 Column.define("Technical_Replicate_Number", builtin_types.int4, nullok = False),
                 Column.define("Mapped_Reads", builtin_types.float8, nullok = True),                
                 Column.define("RNA_Reads", builtin_types.float8, nullok = True),
-                Column.define("Specimen", builtin_types.text, nullok=True),
+                Column.define("Specimen", builtin_types.text, nullok=False),
                 Column.define("Description", builtin_types.text, nullok = True)
                 ],
             key_defs = [

@@ -16,5 +16,5 @@
 	"isrd-write" : {"owner" : "isrd-systems", "write": "isrd-all", "select": "public"}	
     },
 
-    "catalog_acl" : {"acl" : "isrd-read"}
+    "catalog_acl" : {"acl" : "isrd-write"}
 }

@@ -1,5 +1,64 @@
 {
     "catalog_annotations" : [
+	{
+	    "uri":"tag:isrd.isi.edu,2019:chaise-config",
+	    "value": {
+		"navbarMenu" : {
+		    "newTab": true,
+		    "children": [
+			{
+			    "name" : "Search",
+			    "children" : [
+				{
+				    "name": "Collections",
+				    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Collection"
+				},
+				{
+				    "name": "Sequencing Data",
+				    "children" : [
+					{
+					    "name": "Studies",
+					    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Study"
+					},
+					{
+					    "name": "Experiments",
+					    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Experiment"
+					},
+					{
+					    "name": "Replicates",
+					    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Replicate"
+					},
+					{
+					    "name": "Files",
+					    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:File"
+					}
+				    ]
+				},
+				{
+				    "name": "Specimens",
+				    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Specimen"
+				}
+			    ]
+			},
+			{
+			    "name" : "Help",
+			    "children": [
+				{
+				    "name" : "Deriva Tutorial",
+				    "url": "/"
+				},
+				{
+				    "name": "Full Deriva Documentation",
+				    "url": "https://docs.derivacloud.org"
+				}
+			    ]
+			}
+
+		    ]
+		},
+		"footerMarkdown": "This is a very simplified view of data from the RBK and GUDMAP projects (https://www/rebuildingakidney.org and https://www.gudmap.org)"
+	    }
+	},
 	{	    
 	    "uri": "tag:isrd.isi.edu,2017:bulk-upload",
 	    "value":
@@ -160,7 +219,9 @@
             "tag:isrd.isi.edu,2018:citation",
             "tag:isrd.isi.edu,2018:required",
             "tag:isrd.isi.edu,2019:export",
-            "tag:isrd.isi.edu,2019:source-definitions"
+            "tag:isrd.isi.edu,2019:source-definitions",
+	    "tag:isrd.isi.edu,2017:bulk-upload",
+	    "tag:isrd.isi.edu,2019:chaise-config"
 	]
     },
     "schema_annotations" : [
@@ -287,7 +348,6 @@
 		    "Title",
 		    ["Data", "Experiment_Study_fkey"],
 		    ["Data", "Experiment_Molecule_Type_fkey"],
-		    ["Data", "Experiment_Sequencing_Type_fkey"],
 		    "Cell_Count",
 		    "Notes",
 		    "RCT",
