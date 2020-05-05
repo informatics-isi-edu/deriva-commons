@@ -27,7 +27,12 @@ python3 load_tables.py --all <hostname> <catalog_number>
 ```
 where <source_directory> is the directory where this README is located.
 
-6. Upload the files:
+6. Create the hatrac namespaces:
+```
+sh hatrac-init.sh
+```
+
+7. Upload the files:
 ```
 mydir=`pwd`
 cd <some scratch directory>
@@ -38,8 +43,6 @@ deriva-upload-cli <any necessary credential options> tutorial.derivacloud.org <c
 ```
 
 Please run the bdbag command as an *unauthenticated* user (those files are public as of this writing, but in theory that could change). The expanded asset directory will take up about 28G of space.
-
-Additional scripts: `hatrac-init.sh` creates the hatrac `resources` namespace.
 
 I've also included the `dump_rbk_tables.py` script, which was used to extract data from RBK.
 
