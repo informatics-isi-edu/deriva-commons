@@ -29,7 +29,6 @@
 				    "name": "Files",
 				    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:File"
 				},
-				},
 				{
 				    "name": "Specimens",
 				    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Specimen"
