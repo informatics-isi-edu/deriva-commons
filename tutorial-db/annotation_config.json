@@ -14,25 +14,21 @@
 				    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Collection"
 				},
 				{
-				    "name": "Sequencing Data",
-				    "children" : [
-					{
-					    "name": "Studies",
-					    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Study"
-					},
-					{
-					    "name": "Experiments",
-					    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Experiment"
-					},
-					{
-					    "name": "Replicates",
-					    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Replicate"
-					},
-					{
-					    "name": "Files",
-					    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:File"
-					}
-				    ]
+				    "name": "Studies",
+				    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Study"
+				},
+				{
+				    "name": "Experiments",
+				    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Experiment"
+				},
+				{
+				    "name": "Replicates",
+				    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:Replicate"
+				},
+				{
+				    "name": "Files",
+				    "url": "/chaise/recordset/#{{$catalog.snapshot}}/Data:File"
+				},
 				},
 				{
 				    "name": "Specimens",
@@ -416,6 +412,29 @@
 		]
             }
 	}
+    ],
+    "foreign_key_annotations" : [
+	{
+	    "foreign_key": "Study_Collection_Study_fkey",
+	    "foreign_key_schema": "Data",
+	    "schema" : "Data",
+            "table" : "Study_Collection",
+            "uri" : "tag:isrd.isi.edu,2016:foreign-key",
+            "value" : {
+		"to_name" : "Study"
+            }
+	},
+	{
+	    "foreign_key": "Study_Collection_Collection_fkey",
+	    "foreign_key_schema": "Data",
+	    "schema" : "Data",
+            "table" : "Study_Collection",
+            "uri" : "tag:isrd.isi.edu,2016:foreign-key",
+            "value" : {
+		"to_name" : "Collection"
+            }
+	}	
+	 
     ]
 }
     
