@@ -1,4 +1,3 @@
-from pprint import pprint
 from deriva.core import DerivaServer, BaseCLI, get_credential
 from deriva.core.ermrest_model import Schema, Table, Column, Key, ForeignKey, builtin_types
 

@@ -65,8 +65,8 @@
 	    {
 		"asset_mappings": [
 		    {
-			"file_pattern": "(?i)^.*/data/replicate/(?P<replicate_rid>[^/]+)/(?P<custom>[^/]*?)[.][^/]+$",
-			"ext_pattern": "(?P<file_ext>([IR][0-2][.])[a-zA-Z0-9_+]+([.]gz)?$)",
+			"file_pattern": "(?i)^.*/assets/replicate/(?P<replicate_rid>[^/]+)/(?P<custom>[^/]*?)[.][^/]+$",
+			"ext_pattern": "(?P<file_ext>([IR][0-2][.])?[a-zA-Z0-9_+]+([.]gz)?$)",
 			"target_table": ["Data", "File"],
 			"create_record_before_upload": "False",
 			"record_query_template": "/entity/{target_table}/File_MD5={md5}",
