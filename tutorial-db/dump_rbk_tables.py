@@ -38,20 +38,14 @@ class RBKDump:
     def finalize_and_write(self, basename, schema, records):
         if schema == "Vocab":
             schema = self.VOCABULARY
-        addlist = self.get_manual_changes("./data_adjustments/{s}/{b}.additions.json".format(s=schema, b=basename))
         dellist = self.get_manual_changes("./data_adjustments/{s}/{b}.deletions.json".format(s=schema, b=basename))
         outfile = open("./data/{s}/{b}.json".format(s=schema, b=basename), "w")
-
-        if addlist:
-            pprint(addlist)
 
         if dellist:
             for i in range(0, len(records)):
                 if records[i].get("RID") in dellist:
                     records.pop(i)
                     break
-        if addlist:
-            records = records + addlist
 
         json.dump(records, outfile, indent=4)
             

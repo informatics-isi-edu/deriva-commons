@@ -5,14 +5,17 @@ from pathlib import Path
 from collections import OrderedDict
 import json
 import sys
+import re
 
 class DemoLoad:
-    def __init__(self, host, catalog, credentials, data_directory):
+    def __init__(self, host, catalog, credentials, data_directory="./data", additions_directory="./data_adjustments"):
         self.server = DerivaServer("https", host, credentials)
         self.catalog = self.server.connect_ermrest(catalog)
         self.catalog.dcctx['cid'] = "oneoff/load_tables.py";
         self.pb = self.catalog.getPathBuilder()
         self.parent = Path(data_directory)
+        self.add_parent=Path(additions_directory)
+        self.add_re=re.compile("(.*)\.json")
         self.known_tables = OrderedDict({
             "Species" : {
                 "src" : "Vocabulary/Species.json",
@@ -121,6 +124,17 @@ class DemoLoad:
                     todo.append(self.known_tables[key])
         for entry in todo:
             self.load_file(entry)
+        # do this last to avoid RID conflicts
+        for entry in todo:
+            self.load_additions(entry)
+
+    def load_additions(self, entry):
+        match=self.add_re.match(entry.get("src"))
+        infile = self.add_parent.joinpath("{base}.additions.json".format(base=match.group(1)))
+        if infile.exists():
+            data=json.load(infile.open("r"))
+            entry['dest'].insert(data)
+            infile.close()
 
     def load_file(self, entry):
         load_func = entry.get("load_func")
@@ -149,7 +163,7 @@ if __name__ == '__main__':
     cli = BaseCLI("load tables into demo server", None, hostname_required=True)
     cli.parser.add_argument("--directory", "-d", type=str, help="Parent directory of data files", default="./data")
     cli.parser.add_argument("--all", "-a", action = "store_const", const=True, help="load all tables")
-    cli.parser.add_argument("catalog", type=int, default=None)
+    cli.parser.add_argument("catalog", type=int)
     cli.parser.add_argument("--table", type=str, action = "append", help="table(s) to load")
     args=cli.parse_cli()
     credentials = get_credential(args.host)
@@ -157,6 +171,7 @@ if __name__ == '__main__':
     if not (args.table or args.all):
         print("Specify --all or at least one table")
         sys.exit(1)
+
     dl.load(args.table if args.table else None)
     
         

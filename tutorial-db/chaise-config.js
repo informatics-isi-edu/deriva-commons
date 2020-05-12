@@ -3,9 +3,8 @@
 var chaiseConfig = {
     deleteRecord: true,
     editRecord: true,
-    showFaceting: true
+    showFaceting: true,
+    defaultCatalog: 1
 };
 
-if (typeof module === 'object' && module.exports && typeof require === 'function') {
-    exports.config = chaiseConfig;
-}
+
