@@ -5,6 +5,8 @@ from pathlib import Path
 import json
 
 class RBKDump:
+    VOCABULARY="Vocabulary"
+    DATA="Data"
     def __init__(self, host, catalog):
         # Don't authenticate - get only publicly-readable data
         server = DerivaServer("https", host)
@@ -14,13 +16,13 @@ class RBKDump:
         self.schema_map = { "Vocab" : "Vocabulary"}
 
     def dump_all(self):
-        for d in ["Vocabulary", "Data"]:
+        for d in [self.VOCABULARY, self.DATA]:
             Path("./data/{d}".format(d=d)).mkdir(parents=True, exist_ok=True)
         
         for table in [self.pb.Vocabulary.Species, self.pb.Vocabulary.Developmental_Stage, self.pb.Vocabulary.Sex,
                       self.pb.Vocabulary.Assay_Type, self.pb.Vocab.Sequencing_Type,
                       self.pb.Vocab.File_Type, self.pb.Vocab.Molecule_Type]:
-            self.dump_file(table)
+            self.dump_table(table)
 
         self.dump_experiment()
         self.dump_study()
@@ -30,11 +32,39 @@ class RBKDump:
         self.dump_study_collection()
         self.dump_collection()
 
+    def dump_table(self, table):
+        self.finalize_and_write(table.name, table.sname, list(table.entities()))
 
-    def dump_file(self, table):
-        file=Path("./data/{s}/{t}.json".format(s=self.transform_schema(table.sname), t=table.name)).open('w')
-        json.dump(list(table.entities()), file)
-        file.close()
+    def finalize_and_write(self, basename, schema, records):
+        if schema == "Vocab":
+            schema = self.VOCABULARY
+        addlist = self.get_manual_changes("./data_adjustments/{s}/{b}.additions.json".format(s=schema, b=basename))
+        dellist = self.get_manual_changes("./data_adjustments/{s}/{b}.deletions.json".format(s=schema, b=basename))
+        outfile = open("./data/{s}/{b}.json".format(s=schema, b=basename), "w")
+
+        if addlist:
+            pprint(addlist)
+
+        if dellist:
+            for i in range(0, len(records)):
+                if records[i].get("RID") in dellist:
+                    records.pop(i)
+                    break
+        if addlist:
+            records = records + addlist
+
+        json.dump(records, outfile, indent=4)
+            
+    def get_manual_changes(self, filename):
+        changelist = None
+        p = Path(filename)
+        if p.exists():
+           f = p.open()
+           changelist = json.load(f)
+           f.close()
+        return changelist
+        
+
 
     def transform_schema(self, schema):
         if self.schema_map.get(schema) is None:
@@ -43,29 +73,24 @@ class RBKDump:
             return self.schema_map[schema]
 
     def dump_experiment(self):
-        file = Path("./data/Data/Experiment.json").open("w")
         table=self.pb.RNASeq.Experiment
         data = table.filter(table.Species=='Mus musculus').filter(table.Sequencing_Type=="mRNA-Seq").entities()
-        json.dump(list(data), file)
+        self.finalize_and_write("Experiment", self.DATA, list(data))
 
     def dump_study(self):
-        file = Path("./data/Data/Study.json").open("w")
         table=self.pb.RNASeq.Experiment
         data = table.filter(table.Species=='Mus musculus').filter(table.Sequencing_Type=="mRNA-Seq")\
                                                           .link(self.pb.RNASeq.Study).entities()
-        json.dump(list(data), file)
-        file.close()        
+        self.finalize_and_write("Study", self.DATA, list(data))        
 
     def dump_replicate(self):
         file = Path("./data/Data/Replicate.json").open("w")
         table=self.pb.RNASeq.Experiment
         data = table.filter(table.Species=='Mus musculus').filter(table.Sequencing_Type=="mRNA-Seq")\
                                                           .link(self.pb.RNASeq.Replicate).entities()
-        json.dump(list(data), file)
-        file.close()
+        self.finalize_and_write("Replicate", self.DATA, list(data))        
 
     def dump_specimen(self):
-        file = Path("./data/Data/Specimen.json").open("w")
         experiment=self.pb.RNASeq.Experiment
         replicate=self.pb.RNASeq.Replicate
         specimen=self.pb.Gene_Expression.Specimen
@@ -94,30 +119,23 @@ class RBKDump:
             anatomy_map[row['Specimen_RID']] = row['Tissue']
         for row in data:
             row["Anatomy"] = anatomy_map.get(row.get("RID"))
-            
-        print(len(data))
-        json.dump(list(data), file)
-        file.close()
+        self.finalize_and_write("Specimen", self.DATA, list(data))
         
     def dump_anatomy(self):
         file = Path("./data/Vocabulary/Anatomy.json").open("w")
         data = self.pb.Gene_Expression.Specimen_Tissue.link(self.pb.Vocabulary.Anatomy).entities()
-        json.dump(list(data), file)
-        file.close()
+        self.finalize_and_write("Anatomy", self.VOCABULARY, list(data))
 
     def dump_study_collection(self):
-        file = Path("./data/Data/Sequencing_Study_Collection.json").open("w")
         table=self.pb.RNASeq.Experiment
         data = table.filter(table.Species=='Mus musculus')\
                     .filter(table.Sequencing_Type=="mRNA-Seq")\
                     .link(self.pb.RNASeq.Study)\
                     .link(self.pb.RNASeq.Sequencing_Study_Collection)\
                     .entities()
-        json.dump(list(data), file)
-        file.close()        
+        self.finalize_and_write("Sequencing_Study_Collection", self.DATA, list(data))        
 
     def dump_collection(self):
-        file = Path("./data/Data/Collection.json").open("w")
         table=self.pb.RNASeq.Experiment
         data = table.filter(table.Species=='Mus musculus')\
                     .filter(table.Sequencing_Type=="mRNA-Seq")\
@@ -125,9 +143,7 @@ class RBKDump:
                     .link(self.pb.RNASeq.Sequencing_Study_Collection)\
                     .link(self.pb.Common.Collection)\
                     .entities()
-        json.dump(list(data), file)
-        file.close()        
-                          
+        self.finalize_and_write("Collection", self.DATA, list(data))        
         
 
 if __name__ == '__main__':

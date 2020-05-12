@@ -1,1 +1,43 @@
-[{"Collection_RID": "16-E08W", "Sequencing_Study_RID": "16-2CNW", "RID": "16-E08Y", "RCT": "2019-05-10T13:57:20.790228-07:00", "RMT": "2019-05-10T13:57:20.790228-07:00"}, {"Collection_RID": "16-E1GE", "Sequencing_Study_RID": "Q-Y4H2", "RID": "16-E1GG", "RCT": "2019-06-10T08:03:58.181695-07:00", "RMT": "2019-06-10T08:03:58.181695-07:00"}, {"Collection_RID": "16-WK64", "Sequencing_Study_RID": "16-WHYA", "RID": "16-WK66", "RCT": "2019-12-05T17:07:52.0572-08:00", "RMT": "2019-12-05T17:07:52.0572-08:00"}, {"Collection_RID": "16-WK64", "Sequencing_Study_RID": "16-WJNM", "RID": "16-WK68", "RCT": "2019-12-05T17:07:52.0572-08:00", "RMT": "2019-12-05T17:07:52.0572-08:00"}, {"Collection_RID": "16-WK64", "Sequencing_Study_RID": "16-WJNR", "RID": "16-WK6A", "RCT": "2019-12-05T17:07:52.0572-08:00", "RMT": "2019-12-05T17:07:52.0572-08:00"}, {"Collection_RID": "Q-3K58", "Sequencing_Study_RID": "Q-Y4GW", "RID": "W-R85C", "RCT": "2018-06-02T18:09:23.983817-07:00", "RMT": "2018-06-02T18:09:23.983817-07:00"}]
+[
+    {
+        "Collection_RID": "16-E08W",
+        "Sequencing_Study_RID": "16-2CNW",
+        "RID": "16-E08Y",
+        "RCT": "2019-05-10T13:57:20.790228-07:00",
+        "RMT": "2019-05-10T13:57:20.790228-07:00"
+    },
+    {
+        "Collection_RID": "16-WK64",
+        "Sequencing_Study_RID": "16-WHYA",
+        "RID": "16-WK66",
+        "RCT": "2019-12-05T17:07:52.0572-08:00",
+        "RMT": "2019-12-05T17:07:52.0572-08:00"
+    },
+    {
+        "Collection_RID": "16-WK64",
+        "Sequencing_Study_RID": "16-WJNM",
+        "RID": "16-WK68",
+        "RCT": "2019-12-05T17:07:52.0572-08:00",
+        "RMT": "2019-12-05T17:07:52.0572-08:00"
+    },
+    {
+        "Collection_RID": "16-WK64",
+        "Sequencing_Study_RID": "16-WJNR",
+        "RID": "16-WK6A",
+        "RCT": "2019-12-05T17:07:52.0572-08:00",
+        "RMT": "2019-12-05T17:07:52.0572-08:00"
+    },
+    {
+        "Collection_RID": "Q-3K58",
+        "Sequencing_Study_RID": "Q-Y4GW",
+        "RID": "W-R85C",
+        "RCT": "2018-06-02T18:09:23.983817-07:00",
+        "RMT": "2018-06-02T18:09:23.983817-07:00"
+    },
+    {
+        "Sequencing_Study_RID": "16-DW7R",
+        "Collection_RID": "16-E08W",
+        "RMT": "2019-05-10T13:57:20.790228-07:00",
+        "RCT": "2019-05-10T13:57:20.790228-07:00"
+    }
+]

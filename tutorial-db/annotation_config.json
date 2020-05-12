@@ -69,7 +69,7 @@
 			    "/attribute/R:=Data:Replicate/RID={replicate_rid}/biological_replicate_number:=R:Biological_Replicate_Number,technical_replicate_number:=R:Technical_Replicate_Number,experiment:=R:Experiment"
 			],
 			"column_value_templates": {
-			    "caption": "Ex[eriment {experiment} replicate {biological_replicate_number}.{technical_replicate_number}"
+			    "caption": "Experiment {experiment} replicate {biological_replicate_number}.{technical_replicate_number} ({custom})"
 			},
 			"hatrac_templates":{
 			    "hatrac_uri": "/hatrac/resources/Data/File/{replicate_rid}/{md5}.{file_ext}",
@@ -123,6 +123,10 @@
 			"file_ext": "fastq.gz",
 			"file_type": "FastQ",
 			"file_desc": "R reads"
+		    },
+		    "fastq.gz": {
+			"file_ext": "fastq.gz",
+			"file_type": "FastQ"
 		    },
 		    "tpm.csv": {
 			"file_ext": "tpm.csv",

@@ -1,1 +1,58 @@
-[{"Name": "FACS", "Description": "Fluorescence-activated cell sorting; applied in flow cytometry", "RID": "W-RCDW", "RCT": "2018-07-20T14:48:52.843678-07:00", "RMT": "2018-07-20T15:18:02.298491-07:00"}, {"Name": "mRNA-Seq", "Description": null, "RID": "Q-YJXW", "RCT": "2017-06-07T20:10:08.033434-07:00", "RMT": "2017-06-07T20:10:08.033434-07:00"}, {"Name": "ChIP-Seq", "Description": null, "RID": "Q-YJXY", "RCT": "2017-06-07T20:10:08.033434-07:00", "RMT": "2017-06-07T20:10:08.033434-07:00"}, {"Name": "ATAC-Seq", "Description": null, "RID": "Q-YJY0", "RCT": "2017-06-07T20:10:08.033434-07:00", "RMT": "2017-06-07T20:10:08.033434-07:00"}, {"Name": "snRNA-Seq", "Description": "Single nucleus RNA sequencing", "RID": "16-QKNT", "RCT": "2019-06-21T15:17:58.98055-07:00", "RMT": "2019-06-21T15:17:58.98055-07:00"}, {"Name": "scRNA-Seq", "Description": "Single cell RNA sequencing", "RID": "Q-YJY2", "RCT": "2017-07-24T17:37:39.171605-07:00", "RMT": "2019-06-21T15:17:58.98055-07:00"}, {"Name": "Metabolomics", "Description": "Metabolomics experiment", "RID": "16-DYPR", "RCT": "2019-05-06T15:55:30.297917-07:00", "RMT": "2019-06-21T15:17:58.98055-07:00"}, {"Name": "IMC", "Description": "Imaging Mass Cytometry", "RID": "16-R1NA", "RCT": "2019-09-06T17:21:58.595484-07:00", "RMT": "2019-09-06T17:21:58.595484-07:00"}]
+[
+    {
+        "Name": "FACS",
+        "Description": "Fluorescence-activated cell sorting; applied in flow cytometry",
+        "RID": "W-RCDW",
+        "RCT": "2018-07-20T14:48:52.843678-07:00",
+        "RMT": "2018-07-20T15:18:02.298491-07:00"
+    },
+    {
+        "Name": "mRNA-Seq",
+        "Description": null,
+        "RID": "Q-YJXW",
+        "RCT": "2017-06-07T20:10:08.033434-07:00",
+        "RMT": "2017-06-07T20:10:08.033434-07:00"
+    },
+    {
+        "Name": "ChIP-Seq",
+        "Description": null,
+        "RID": "Q-YJXY",
+        "RCT": "2017-06-07T20:10:08.033434-07:00",
+        "RMT": "2017-06-07T20:10:08.033434-07:00"
+    },
+    {
+        "Name": "ATAC-Seq",
+        "Description": null,
+        "RID": "Q-YJY0",
+        "RCT": "2017-06-07T20:10:08.033434-07:00",
+        "RMT": "2017-06-07T20:10:08.033434-07:00"
+    },
+    {
+        "Name": "snRNA-Seq",
+        "Description": "Single nucleus RNA sequencing",
+        "RID": "16-QKNT",
+        "RCT": "2019-06-21T15:17:58.98055-07:00",
+        "RMT": "2019-06-21T15:17:58.98055-07:00"
+    },
+    {
+        "Name": "scRNA-Seq",
+        "Description": "Single cell RNA sequencing",
+        "RID": "Q-YJY2",
+        "RCT": "2017-07-24T17:37:39.171605-07:00",
+        "RMT": "2019-06-21T15:17:58.98055-07:00"
+    },
+    {
+        "Name": "Metabolomics",
+        "Description": "Metabolomics experiment",
+        "RID": "16-DYPR",
+        "RCT": "2019-05-06T15:55:30.297917-07:00",
+        "RMT": "2019-06-21T15:17:58.98055-07:00"
+    },
+    {
+        "Name": "IMC",
+        "Description": "Imaging Mass Cytometry",
+        "RID": "16-R1NA",
+        "RCT": "2019-09-06T17:21:58.595484-07:00",
+        "RMT": "2019-09-06T17:21:58.595484-07:00"
+    }
+]
