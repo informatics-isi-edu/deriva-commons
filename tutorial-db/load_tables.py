@@ -132,9 +132,10 @@ class DemoLoad:
         match=self.add_re.match(entry.get("src"))
         infile = self.add_parent.joinpath("{base}.additions.json".format(base=match.group(1)))
         if infile.exists():
-            data=json.load(infile.open("r"))
+            f = infile.open("r")
+            data=json.load(f)
             entry['dest'].insert(data)
-            infile.close()
+            f.close()
 
     def load_file(self, entry):
         load_func = entry.get("load_func")
