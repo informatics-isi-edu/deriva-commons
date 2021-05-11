@@ -1,0 +1,17 @@
+To refresh gene data (or add data from additional species):
+
+1. Get new files. Uncompress them and put them in /var/www/bulk/etl_util.
+
+Gene info from ftp://ftp.ncbi.nih.gov/gene/DATA/, e.g.:
+
+
+curl -O ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz
+curl -O ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Mus_musculus.gene_info.gz
+
+2. Update gene_file_versions.csv with the properties of the new/updated files.
+
+3. Create a writable directory called /var/scratch/gene_etl
+
+4. Run update_gene_table.sql on a scratch database
+
+5. Dump the scratch database's tables and upload the values to the ermrest catalog
