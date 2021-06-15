@@ -1,0 +1,17 @@
+{
+    "species_schema" : "vocab",
+    "species_table" : "species",
+    "chromosome_schema" : "isa",
+    "chromosome_table" : "chromosome",
+    "gene_type_schema" : "vocab",
+    "gene_type_table" : "gene_type",
+    "gene_schema" : "vocab",
+    "gene_table" : "gene",
+    "dbxref_schema" : "isa",
+    "dbxref_table" : "gene_alternate_id",
+    "source_file_schema" : "isa",
+    "source_file_table" : "gene_source_file",
+    "catalog_id" : 1,
+    "scratch_directory" : "/var/scratch/gene_etl"
+}
+
