@@ -43,6 +43,10 @@ raw_file=`python3 upload_gene_source_file.py \
 	$source_url \
 	$hatrac_parent`
 
+if [[ $raw_file == *.gz ]]; then
+    gunzip $raw_file
+    raw_file=`echo $raw_file | sed -e 's/[.]gz$//'`
+fi
 
 # generate and run script to upload raw file to scratch database
 sh extract-gene-info.sh $raw_file > $scratch_directory/load_raw.sql
