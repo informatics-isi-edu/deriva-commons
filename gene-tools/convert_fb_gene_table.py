@@ -27,6 +27,13 @@ def main(args):
     table.create_column(
         Column.define("Species", builtin_types.text, nullok=True))
 
+    table.create_fkey(
+        ForeignKey.define(["Species"], self.species_schema, self.species_table,
+                          self.adjust_fkey_columns_case(
+                              self.species_schema,
+                              self.species_table,
+                              ["ID"])))
+
     table.create_column(        
         Column.define("Chromosome", builtin_types.text, nullok=True))
         
@@ -42,9 +49,6 @@ def main(args):
     table.create_column(
         Column.define("Alternate_IDs", builtin_types['text[]'], comment="IDs for this gene in other ontologies"))    
 
-    table.create_column(
-            Column.define("Reference_URL", builtin_types.text, comment="Link to source information for this gene"))
-    
     table.create_column(
         Column.define("Has_Data", builtin_types.boolean, nullok=False,
                       default=False, comment="True if any consortium data is associated with this gene"))

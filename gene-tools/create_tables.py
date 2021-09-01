@@ -9,7 +9,8 @@ if __name__ == '__main__':
     cli.parser.add_argument('--skip-gene-type', help='skip gene type table creation', action='store_true')
     cli.parser.add_argument('--skip-gene', help='skip gene table creation', action='store_true')
     cli.parser.add_argument('--skip-dbxref', help='skip gene table creation', action='store_true')    
-    cli.parser.add_argument('--skip-source-file', help='skip source file table creation', action='store_true')    
+    cli.parser.add_argument('--skip-source-file', help='skip source file table creation', action='store_true')
+    cli.parser.add_argument('--skip-ontology', help='skip ontology table creation', action='store_true')    
     cli.parser.add_argument('--extra-boolean-cols', default=[], nargs='+',
                         help='extra boolean columns to create in the gene table\
   (e.g., to indicate existence of data for a particular gene)')
@@ -30,3 +31,5 @@ if __name__ == '__main__':
         gene_utils.create_gene_table()
     if not args.skip_dbxref:
         gene_utils.create_dbxref_table()
+    if not args.skip_ontology:
+        gene_utils.create_ontology_table()

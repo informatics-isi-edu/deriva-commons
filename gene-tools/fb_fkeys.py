@@ -1,9 +1,8 @@
-from deriva.core import DerivaServer, get_credential, BaseCLI
 from deriva.core.ermrest_model import ForeignKey
+from gene_utils import GeneUtils
 
 fkey_specs = {
     'isa' : [
-        ['Gene_Source_File', 'Gene_Source_File_Species_fkey'],
         ['biosample', 'biosample_species_fkey'],
         ['chromosome', 'chromosome_species_fkey'],
         ['clinical_assay', 'clinical_assay_species_fkey'],
@@ -15,11 +14,11 @@ fkey_specs = {
     ]
 }
 
-def main(host, catalog_id=1):
-    credential = get_credential(host)
-    server = DerivaServer('https', host, credential)
-    catalog = server.connect_ermrest(catalog_id)
-    model = catalog.getCatalogModel()
+def main(gu):
+    model = gu.model
+    fkey_specs['isa'].append(
+        [gu.source_file_table, gu.source_file_table + '_Species_fkey']
+    )
 
     for sname in fkey_specs.keys():
         for spec in fkey_specs[sname]:
@@ -33,6 +32,7 @@ def process_fkey(model, sname, tname, fkname):
             return
 
 if __name__ == '__main__':
-    cli = BaseCLI("make facebase species foreign keys 'on update cascade'", None, 1, hostname_required=True)
+    cli = GeneUtils.create_parser("gene table creation tool")
     args = cli.parse_cli()
-    main(args.host)
+    gu = GeneUtils(args)
+    main(gu)

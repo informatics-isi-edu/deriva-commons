@@ -1,10 +1,14 @@
+These steps will create and populate a set of gene-related tables.
+
+![Gene ER Diagram](./gene_er_diagram.png)
+
 ## Initial Setup
 
-To create a new set of gene-related tables:
+1. Create a config file with the names of schemas and tables, etc. (see facebase_gene_defaults.csv for an examle).
 
-0. Create a config file with the names of schemas and tables, etc. (see facebase_gene_defaults.csv for an example).
+2. Create a new scratch database to be used for etl (data will be loaded into this database, transformed, and dumped into csv tables for loading into the ermrest db)
 
-1. Create new tables with create_tables.py:
+3. Create new tables with create_tables.py:
 
 python3 create_tables.py <host> <config_file> <curie_prefix>
 
@@ -15,27 +19,43 @@ this should be pretty obvious -- <host> is the host you want to act on,
 If some of these tables exist, there are options to skip creating them (python3 create_tables.py --help
 to list them all)
 
-2. Make sure your species table has entries for all species you'll need to reference. The ID column for each species should have an NCBI Taxon identifier (e.g., `NCBITaxon:10090`)
-
-3. update some values at the top of load-gene-table.sh:
-- hatrac_parent: a directory in which to put the raw gene files fetched from ncbi
-- config_file: the file you created in step 0.
-- database - your ermrest database
-- scratch_db - an empty database to be used temporarily for etl
-
 ## Data import / update
 
-To add gene (and associated table) entries for a new species or update your gene records with
-a fresh copy from ncbi, do this:
+To import gene info for a species:
+
+1. Make sure your species table has entries for that species. The ID column for each species should have an NCBI Taxon identifier (e.g., `NCBITaxon:10090`)
+
+2. Add (or update) the data:
 
 ```
-sh load-gene-table.sh 
+sh load-gene-table.sh <host> <config-file> <species> <source_url>
 ```
-sh load-gene-table.sh <host> <species> <source_url>
-```
-for example:
+
+For example:
 
 ```
-sh load-gene-table.sh dev.facebase.org "Homo sapiens" \
+sh load-gene-table.sh dev.facebase.org facebase_gene_defaults.json "Homo sapiens" \
    ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz
 ```
+
+## Config file
+
+These are the definitions for all the parameters in the config file (see also the [facebase config file](./facebase_gene_defaults.json) for an example).
+
+| name | value |
+| ---- | ----- |
+| scratch_db : scratch database to be used for etl |
+| scratch_directory | scrach directory to be used for etl |
+| database | database used by the ermrest catalog |
+| catalog_id | ermrest catalog id |
+| hatrac_parent | parent directory for local copies of gene source files |
+| species_schema, species_table | where to find/create the species table |
+| chromosome_schema, chromosome_table | where to find/create the chromosome table |
+| gene_type_schema, gene_type_table | where to find/create the gene type (with terms like "protein coding", etc.) |
+| gene_schema, gene_table | where to find/create the gene table |
+| dbxref_schema, dbxref_table | where to find/create the dbxref (alternate ids) table |
+| source_file_schema, source_file_table | where to find/create the table with information about source files (e.g., NCBI tarballs) for each species) |
+| ontology_schema, ontology_table | where to find/create the table with information about ontologies used in the dbxref (alternate id) table |
+
+
+

@@ -10,9 +10,9 @@ fi
 host=$1; shift
 curie_prefix=$1; shift
 
-python3 create_tables.py --host $host --skip-gene $curie_prefix
-python3 fb_keys.py --config-file facebase_gene_defaults.json $host
-python3 convert_fb_gene_table.py --config-file facebase_gene_defaults.json $host
+python create_tables.py $host facebase_gene_defaults.json $curie_prefix
+python fb_fkeys.py $host facebase_gene_defaults.json
+python convert_fb_gene_table.py $host facebase_gene_defaults.json
 
 cat | sudo -u ermrest psql facebasedb << EOF
 update vocab.species set id = regexp_replace(id, 'NCBITAXON', 'NCBITaxon');

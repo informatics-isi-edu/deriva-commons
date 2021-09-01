@@ -1,4 +1,6 @@
 {
+    "database" : "facebasedb",
+    "hatrac_parent": "/hatrac/facebase/gene_source_files",
     "species_schema" : "vocab",
     "species_table" : "species",
     "chromosome_schema" : "isa",
@@ -11,7 +13,10 @@
     "dbxref_table" : "gene_alternate_id",
     "source_file_schema" : "isa",
     "source_file_table" : "gene_source_file",
+    "ontology_schema": "vocab",
+    "ontology_table": "ontology",
     "catalog_id" : 1,
+    "scratch_db" : "gene_etl",
     "scratch_directory" : "/var/scratch/gene_etl"
 }
 

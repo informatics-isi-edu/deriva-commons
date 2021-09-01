@@ -2,12 +2,13 @@ from deriva.core import DerivaServer, get_credential, BaseCLI
 from deriva.core.ermrest_model import Table, Column, Key, ForeignKey, builtin_types
 import argparse
 import json
-from pprint import pprint
 import sys
 
 class GeneUtils:
     def __init__(self, values, connect_to_ermrest=True):
         self.attrs = [
+            "database",
+            "hatrac_parent",
             "species_schema",
             "species_table",
             "chromosome_schema",
@@ -23,6 +24,9 @@ class GeneUtils:
             "curie_prefix",
             "source_file_schema",
             "source_file_table",
+            "ontology_schema",
+            "ontology_table",
+            "scratch_db",
             "scratch_directory"
         ]
 
@@ -112,6 +116,18 @@ class GeneUtils:
                                     uri_template='https://{host}/id/{{RID}}'.format(host=self.host),
                                     comment="Gene types"))
 
+    def create_ontology_table(self):
+        schema = self.model.schemas[self.ontology_schema]
+        table = schema.create_table(
+            Table.define_vocabulary(self.ontology_table,
+                                    '{prefix}:{{RID}}'.format(prefix=self.curie_prefix),
+                                    key_defs=[Key.define(['Name'])],
+                                    uri_template='https://{host}/id/{{RID}}'.format(host=self.host),
+                                    comment="Ontologies"))
+        table.create_column(Column.define("Ontology_Home", builtin_types.text, nullok=True,
+                                          comment="Home page for this ontology"))
+        
+        
     def create_gene_table(self, extra_boolean_cols=[]):
         schema = self.model.schemas[self.gene_schema]
         common_cols = [
@@ -119,8 +135,7 @@ class GeneUtils:
             Column.define("Species", builtin_types.text, nullok=False),
             Column.define("Chromosome", builtin_types.text),
             Column.define("Location", builtin_types.text, comment="Location on chromosome"),
-            Column.define("Source_Date", builtin_types.date, comment="Last-updated date reported by the gene data source´"),
-            Column.define("Reference_URL", builtin_types.text, comment="Link to source information for this gene")
+            Column.define("Source_Date", builtin_types.date, comment="Last-updated date reported by the gene data source´")
         ]
         for colname in extra_boolean_cols:
             common_cols.append(Column.define(colname, builtin_types.boolean))
@@ -168,6 +183,11 @@ class GeneUtils:
                                       self.adjust_fkey_columns_case(
                                           self.gene_schema,
                                           self.gene_table,
+                                          ["ID"])),
+                    ForeignKey.define(["Alternate_Ontology"], self.ontology_schema, self.ontology_table,
+                                      self.adjust_fkey_columns_case(
+                                          self.ontology_schema,
+                                          self.ontology_table,
                                           ["ID"]))
                 ],
                 comment= 'Alternate gene identifiers from different ontologies')
@@ -207,6 +227,7 @@ class GeneUtils:
                 [
                     Column.define("Species", builtin_types.text, nullok=False, comment="Species this file represents"),
                     Column.define("Downloaded_From", builtin_types.text, comment="URL of remote file (e.g., from NCBI) that this was downladoed from"),
+                    Column.define("File_Name", builtin_types.text, nullok=False),
                     Column.define("File_URL", builtin_types.text, nullok=False),
                     Column.define("File_Bytes", builtin_types.int4, nullok=False),
                     Column.define("File_MD5", builtin_types.text, nullok=False)

@@ -33,21 +33,23 @@ def main(gu, species, source_url, hatrac_parent, skip_hatrac):
     
     # upload and add record to catalog
     if not skip_hatrac:
-        desturl = hatrac_parent + '/' + species_id + '/' + filename    
+        desturl = hatrac_parent + '/' + parse.quote(species_id) + '/' + parse.quote(filename)
+        print(desturl)
         url = hatrac_server.put_obj(desturl, scratchpath, parents=True)
-        table = gu.pb.schemas.get(gu.source_file_schema).tables(gu.source_file_table)
+        table = gu.pb.schemas.get(gu.source_file_schema).tables[gu.source_file_table]
         record = {
             'Species' : species_id,
             'Downloaded_From' : source_url,
+            'File_Name': filename,
             'File_URL' : url,
             'File_Bytes' : scratchpath.stat().st_size,
             'File_MD5' : hash_utils.compute_file_hashes(str(scratchpath), hashes=['md5'])['md5'][0]
         }
         
         try:
-            table.insert(record)
+            table.insert([record])
         except DataPathException:
-            table.update(record, ['Species'])
+            table.update([record], ['Species'])
 
     # output the name of the scratch file that was created
     print(str(scratchpath))

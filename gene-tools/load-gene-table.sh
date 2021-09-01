@@ -1,30 +1,14 @@
 #!/bin/bash
 
-usage="$0 host species source_url"
-hatrac_parent=/hatrac/facebase/gene_source_files
-config_file=facebase_gene_defaults.json
-database=facebasedb
-hatrac_parent=/hatracn/facebase/gene_source_files
-scratch_db=gene_etl
-#import_script=import_tables.sql
+usage="$0 host config_file species source_url"
 
-# for arg in "$@"; do
-#     case $arg in
-# 	--import-script)
-# 	    import_script=$2
-# 	    shift; shift
-# 	    ;;
-# 	*)
-# 	    break
-#     esac
-# done
-
-if [ $# -ne 3 ]; then
+if [ $# -ne 4 ]; then
     echo $usage
     exit 1
 fi
 
 host=$1; shift
+config_file=$1; shift
 species=$1; shift
 source_url=$1; shift
 
@@ -33,7 +17,7 @@ eval `python3 set_shell_env.py $host $config_file`
 mkdir -p $scratch_directory
 
 # fetch the file from NCBI and store in scratch directory
-# skip-hatrac here until I get hatrac write perms
+
 raw_file=`python3 upload_gene_source_file.py \
 	--scratch-directory $scratch_directory \
         --skip-hatrac \
@@ -56,9 +40,9 @@ psql -f $scratch_directory/load_raw.sql $scratch_db
 
 mkdir -p $scratch_directory/transformed
 
-# Create versions of the gene, etc. tables in the scratch directory,
+# Create versions of the gene, etc. tables in the scratch database
 # then dump them as csv into the scratch directory
-psql -f transform_gene_table.sql gene_etl
+psql -f transform_gene_table.sql $scratch_db
 
 gene_type_file=$scratch_directory/transformed/gene_type.csv
 psql gene_etl > $gene_type_file <<EOF
@@ -81,7 +65,7 @@ insert into "${gene_type_schema}"."${gene_type_table}"("Name", "Description", "S
    "Synonyms" = EXCLUDED."Synonyms"
 EOF
 
-chrome_file=$scratch_directory/transformed/chromosme.csv
+chrome_file=$scratch_directory/transformed/chromosome.csv
 psql gene_etl > ${chrome_file} <<EOF
 copy (
      select "Name", "Species" from transformed."Chromosome")
@@ -149,6 +133,32 @@ on conflict("id") do update
      "synonyms" = EXCLUDED."synonyms";
 EOF
 
+ontology_file=$scratch_directory/transformed/ontology.csv
+psql gene_etl > ${ontology_file} <<EOF
+copy (
+     select "Name", "Description", "Synonyms", "Ontology_Home"
+     from transformed."Ontology")
+     to STDOUT with csv header;
+EOF
+
+sudo -u ermrest psql $database <<EOF
+create temporary table tmp_ontology (
+    "Name" text,
+    "Description" text,
+    "Synonyms", text[],
+    "Ontology_Home" text
+)
+
+\copy tmp_ontology("Name", "Description", "Synonyms", "Ontology_Home") from ${ontology_file} with csv header
+
+insert into "${ontology_schema}"."${ontology_table}" (
+  "Name", "Description", "Synonyms", "Ontology_Home"
+)
+select "Name", "Description", "Synonyms", "Ontology_Home"
+from tmp_ontology
+on conflict do nothing;
+EOF
+
 dbxref_file=$scratch_directory/transformed/alternate_id.csv
 psql gene_etl > ${dbxref_file} <<EOF
 copy (
@@ -164,8 +174,11 @@ create temporary table tmp_dbxref (
    "Alternate_Ontology" text
    );
 \copy tmp_dbxref("Gene", "Alternate_ID", "Alternate_Ontology") from '${dbxref_file}' with csv header
+
 insert into "${dbxref_schema}"."${dbxref_table}"("Gene", "Alternate_ID", "Alternate_Ontology")
-  select "Gene", "Alternate_ID", "Alternate_Ontology" from tmp_dbxref
+  select "Gene", "Alternate_ID", o."ID" 
+  from tmp_dbxref d
+  join "${ontology_schema}"."${ontology_table}" o on o."Name" = d."Alternate_Ontology"
   on conflict("Gene", "Alternate_ID") do update set "Alternate_Ontology" = EXCLUDED."Alternate_Ontology";
 create temporary table db_prefix(
   db text,
@@ -180,7 +193,10 @@ update "${dbxref_schema}"."${dbxref_table}" d
       coalesce(m.pre_species_prefix, '') ||
       regexp_replace(d."Alternate_ID", ' ', coalesce(m.space_replacement, ''), 'g') ||
       coalesce(m.post_species_prefix, '')
-   from db_prefix m where m.db = d."Alternate_Ontology";;
+   from "${ontology_schema}"."${ontology_table}" o
+   join db_prefix m on m.db = o."Name"
+   where o."ID" = d."Alternate_Ontology"
+;
 
 -- More complicated external links
 update "${dbxref_schema}"."${dbxref_table}" d
@@ -190,8 +206,10 @@ update "${dbxref_schema}"."${dbxref_table}" d
        d."Alternate_ID"
    from "${gene_schema}"."${gene_table}" g 
    join "${species_schema}"."${species_table}" s on g."Species" = s."id"
-   where d."Alternate_Ontology" = 'Ensembl'
-   and g."id" = d."Gene";
+   where g."id" = d."Gene"
+   and d."Alternate_Ontology" = 
+      (select "ID" from "${ontology_schema}"."${ontology_table}" where "Name" = 'Ensembl')
+;
 
 update "${dbxref_schema}"."${dbxref_table}" d
    set "Reference_URL" = 'http://www.imgt.org/genedb/GENElect?query=2+' ||
@@ -200,6 +218,7 @@ update "${dbxref_schema}"."${dbxref_table}" d
    regexp_replace(s.name, ' ', '+', 'g')
    from "${gene_schema}"."${gene_table}" g 
    join "${species_schema}"."${species_table}" s on g."Species" = s."id"
-   where d."Alternate_Ontology" = 'IMGT/GENE-DB'
-   and g."id" = d."Gene";
+   where g."id" = d."Gene"
+   and d."Alternate_Ontology" = 
+      (select "ID" from "${ontology_schema}"."${ontology_table}" where "Name" = 'IMGT/GENE-DB')
 EOF

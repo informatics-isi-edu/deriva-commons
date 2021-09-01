@@ -1,7 +1,9 @@
 db,pre_species_prefix,space_replacement,post_species_prefix
 HGNC,http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=,,
-MIM,http://omim.org/entry/,,
-Vega,http://vega.sanger.ac.uk/,_,/Gene/Summary?g=
-MGI,http://www.informatics.jax.org/marker/,,
 IMGT/GENE-DB,http://www.imgt.org/IMGT_GENE-DB/GENElect?species=,+,&query=2+
+MGI,http://www.informatics.jax.org/marker/,,
+MIM,http://omim.org/entry/,,
 miRBase,http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=,,
+Vega,http://vega.sanger.ac.uk/,_,/Gene/Summary?g=
+VGNC,https://vertebrate.genenames.org/data/gene-symbol-report/#!/vgnc_id/,,
+ZFIN,https://zfin.org/,,

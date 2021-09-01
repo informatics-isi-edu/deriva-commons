@@ -11,6 +11,5 @@ host=$1; shift
 curie=$1; shift
 
 python3 create_tables.py \
-	--config-file facebase_gene_defaults.json \
 	--skip-gene --skip-species \
-	$host $curie
+	$host facebase_gene_defaults.json $curie

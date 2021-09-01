@@ -39,6 +39,15 @@ create table if not exists transformed."Gene_Alternate_ID" (
 );
 truncate table transformed."Gene_Alternate_ID";
 
+create table if not exists transformed."Ontology" (
+     "Name" text not null,
+     "Description" text not null,
+     "Synonyms" text[],
+     "Ontology_Home" text,
+     unique("Name")
+);
+truncate table transformed."Ontology";
+
 
 insert into transformed."Gene_Type"("Name") select distinct type_of_gene from gene_info on conflict do nothing;
 insert into transformed."Chromosome"("Name", "Species") select distinct chromosome, 'NCBITaxon:' || tax_id from gene_info where chromosome is not null and tax_id is not null on conflict do nothing;
@@ -78,6 +87,11 @@ insert into "Gene" (
        "Location" = EXCLUDED."Location",
        "Source_Date" = EXCLUDED."Source_Date"    
 ;
+
+\copy transformed."Ontology"("Name","Description","Synonyms","Ontology_Home") from './default_ontologies.csv' with csv header
+
+insert into transformed."Ontology"("Name", "Description")
+   select distinct db, db from raw.dbxrefs on conflict do nothing;
 
 insert into transformed."Gene_Alternate_ID" (
    "Gene",
