@@ -4,7 +4,7 @@ These steps will create and populate a set of gene-related tables.
 
 ## Initial Setup
 
-1. Create a config file with the names of schemas and tables, etc. (see facebase_gene_defaults.csv for an examle).
+1. Create a config file with the names of schemas and tables, etc. (see [facebase_gene_defaults.json](facebase_gene_defaults.json) for an example).
 
 2. Create a new scratch database to be used for etl (data will be loaded into this database, transformed, and dumped into csv tables for loading into the ermrest db)
 
