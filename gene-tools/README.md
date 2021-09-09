@@ -44,7 +44,7 @@ These are the definitions for all the parameters in the config file (see also th
 
 | name | value |
 | ---- | ----- |
-| scratch_db : scratch database to be used for etl |
+| scratch_db | scratch database to be used for etl |
 | scratch_directory | scrach directory to be used for etl |
 | database | database used by the ermrest catalog |
 | catalog_id | ermrest catalog id |
