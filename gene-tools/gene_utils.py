@@ -80,11 +80,12 @@ class GeneUtils:
 
     def create_species_table(self):
         schema = self.model.schemas[self.species_schema]
-        schema.create_table(
+        table =schema.create_table(
             Table.define_vocabulary(self.species_table,
                                     '{prefix}:{{RID}}'.format(prefix=self.curie_prefix),
                                     key_defs=[Key.define(['Name'])],
                                     comment="Species"))
+        table.columns["Alternate_IDs"].drop()
 
     def create_chromosome_table(self):
         schema = self.model.schemas[self.chromosome_schema]
@@ -135,7 +136,7 @@ class GeneUtils:
             Column.define("Species", builtin_types.text, nullok=False),
             Column.define("Chromosome", builtin_types.text),
             Column.define("Location", builtin_types.text, comment="Location on chromosome"),
-            Column.define("Source_Date", builtin_types.date, comment="Last-updated date reported by the gene data source´")
+            Column.define("Source_Date", builtin_types.date, comment="Last-updated date reported by the gene data source")
         ]
         for colname in extra_boolean_cols:
             common_cols.append(Column.define(colname, builtin_types.boolean))
@@ -157,10 +158,13 @@ class GeneUtils:
             ["NCBI_GeneID"]
         ]
 
-        schema.create_table(
-            table_def = Table.define_vocabulary(self.gene_table,
-                                                '{prefix}:{{RID}}'.format(prefix=self.curie_prefix),
-                                                comment="Genes"))
+        table = schema.create_table(
+            Table.define_vocabulary(self.gene_table,
+                                    '{prefix}:{{RID}}'.format(prefix=self.curie_prefix),
+                                    column_defs=column_defs,
+                                    key_defs=key_defs,
+                                    fkey_defs=fkey_defs,
+                                    comment="Genes"))
 
             
             
