@@ -1,0 +1,10 @@
+Name,Description,Synonyms,Ontology_Home
+Ensembl,Ensembl,,https://uswest.ensembl.org/
+MGI,Mouse Genome Informatics,,http://www.informatics.jax.org/
+HGNC,HUGO Gene Nomenclature Committee,,https://www.genenames.org/
+ZFIN,Zebrafish Information Network,,https://zfin.org/
+MIM,Online Mendelian Inheritance in Man,{OMIM},https://omim.org/
+VGNC,Vertebrate Gene Nomenclature Committee,,https://vertebrate.genenames.org/
+miRBase,MicroRNA Database,,https://mirbase.org/
+IMGT/GENE-DB,international ImMunoGeneTics information system,,http://imgt.org/genedb/
+local,locally-defined terms,,
