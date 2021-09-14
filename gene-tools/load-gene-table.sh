@@ -145,7 +145,7 @@ sudo -u ermrest psql $database <<EOF
 create temporary table tmp_ontology (
     "Name" text,
     "Description" text,
-    "Synonyms", text[],
+    "Synonyms" text[],
     "Ontology_Home" text
 )
 
