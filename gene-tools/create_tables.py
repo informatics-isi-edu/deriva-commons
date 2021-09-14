@@ -29,7 +29,8 @@ if __name__ == '__main__':
         gene_utils.create_gene_type_table()
     if not args.skip_gene:
         gene_utils.create_gene_table()
-    if not args.skip_dbxref:
-        gene_utils.create_dbxref_table()
     if not args.skip_ontology:
         gene_utils.create_ontology_table()
+    if not args.skip_dbxref:
+        gene_utils.create_dbxref_table()
+
