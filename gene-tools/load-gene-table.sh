@@ -147,7 +147,7 @@ create temporary table tmp_ontology (
     "Description" text,
     "Synonyms" text[],
     "Ontology_Home" text
-)
+);
 
 \copy tmp_ontology("Name", "Description", "Synonyms", "Ontology_Home") from ${ontology_file} with csv header
 
