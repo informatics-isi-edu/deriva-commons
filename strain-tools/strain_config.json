@@ -1,0 +1,15 @@
+{
+  "schema": "Vocab",
+  "table": "Strain",
+  "curie_template": "MYPROJECT:{RID}",
+  "uri_template": "/id/{RID}",
+  "mgi_uri_template": "http://www.informatics.jax.org/strain/{MGI_ID}",
+  "column_map": {
+    "ID": "ID",
+    "URI": "URI",
+    "Name": "Name",
+    "Description": "Description",
+    "Display_Name": "Display_Name",
+    "Type": "Type"
+  }
+}
