@@ -60,7 +60,7 @@ def main():
                     cname_fn('ID'): row['MGI Strain ID'],
                     cname_fn('URI'): uri,
                     cname_fn('Name'): row['Strain Name'],
-                    cname_fn('Description'): f'For more information on strain "{display_name}" go to [{row["MGI Strain ID"]}]({uri}).',
+                    cname_fn('Description'): f'For details, visit [{row["MGI Strain ID"]}]({uri}).',
                     cname_fn('Type'): row['Strain Type'],
                     cname_fn('Display_Name'): display_name
                 }
