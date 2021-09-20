@@ -8,7 +8,7 @@ The model consists of a single table based on the standard deriva-py vocabulary 
 
 ## Mouse Strain Data
 
-First, get the [Official Strain Nomenclature (tab-delimited)](http://www.informatics.jax.org/downloads/reports/MGI_Strain.rpt) report from the [MGI Data and Statistical Reports](http://www.informatics.jax.org/downloads/reports/index.html) site. See the associated [WARRANTY DISCLAIMER AND COPYRIGHT NOTICE](http://www.informatics.jax.org/mgihome/other/copyright.shtml).
+First, get the [Official Strain Nomenclature (tab-delimited)](http://www.informatics.jax.org/downloads/reports/MGI_Strain.rpt) and/or the [Unreviewed Nonstandard Mouse Strain and Stock Nomenclature (tab-delimited)](http://www.informatics.jax.org/downloads/reports/MGI_Nonstandard_Strain.rpt) report(s) from the [MGI Data and Statistical Reports](http://www.informatics.jax.org/downloads/reports/index.html) site. See the associated [WARRANTY DISCLAIMER AND COPYRIGHT NOTICE](http://www.informatics.jax.org/mgihome/other/copyright.shtml).
 
 ## Configuration File
 
